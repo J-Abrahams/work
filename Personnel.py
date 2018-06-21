@@ -3,6 +3,7 @@ import pyautogui
 import time
 import pyperclip
 import csv
+import pandas
 from Cordinates import prospect_search, prospect_record
 
 def search_pid(pid):
@@ -18,10 +19,10 @@ def select_tour():
     audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png',
                                               region=(514, 245, 889, 566))
     if audition == None:
-        pyautogui.doubleClick(x, y + 12)
+        pyautogui.doubleClick(x + 350, y + 65)
 
     else:
-        pyautogui.doubleClick(x, y + 24)
+        pyautogui.doubleClick(x + 350, y + 75)
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
     pyautogui.click(900, 570)
@@ -164,17 +165,22 @@ for pid, status in pids:
         confirm_sol_in_userfields(sol_num)
     add_personnel(sol_num, status)"""
 
+import pandas as pd
+xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\1.xlsx")
+df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
+df.to_csv('file.csv')
+
 with open('file.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
-        pids = row['PID']
+        pids = row['Prospect']
         pids = pids[:-2]
-        conf = row['Conf']
-        cxl = row['Cxl']
-        rxl = row['Fix!']
+        conf = row['CONF']
+        cxl = row['CXL']
+        rxl = row['RXL']
         search_pid(pids)
         select_tour()
-        add_personnel('sol23521', conf, cxl, rxl)
+        add_personnel('sol25688', conf, cxl, rxl)
 
 
 

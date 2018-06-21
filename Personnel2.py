@@ -3,6 +3,7 @@ import pyautogui
 import time
 import pyperclip
 import csv
+import pandas
 
 
 def search_pid(pid):
@@ -91,10 +92,10 @@ def add_personnel(sol, conf, cxl, rxl):
     x, y = image
     pyautogui.click(x + 200, y + 220) #Personnel Tab
     pyautogui.click(x + 275, y + 440) #Insert Button
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_menu.png',
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                            region=(514, 245, 889, 566))
     while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_menu.png',
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
     pyautogui.click(x_1 + 75, y_1 + 25) #By Personnel Number Tab
@@ -107,11 +108,11 @@ def add_personnel(sol, conf, cxl, rxl):
                                                region=(514, 245, 889, 566))
     x_3, y_3 = image
     pyautogui.click(x_3 + 75, y_3 + 150) #Close
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_adding_records_menu.png',
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                            region=(514, 245, 889, 566))
     while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_adding_records_menu.png',
-                                               region=(514, 245, 889, 566))
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
+                                           region=(514, 245, 889, 566))
     x_4, y_4 = image
     try: 
         x_5, y_5 = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png', region=(514, 245, 889, 566))
@@ -120,13 +121,13 @@ def add_personnel(sol, conf, cxl, rxl):
         keyboard.write("cc")
     pyautogui.click(x_4 + 90, y_4 + 105)
     
-    if conf == "X":
+    if conf == "X" or conf == "x":
         keyboard.write("cc")
 
-    if cxl == "X":
+    if cxl == "X" or cxl == "x":
         keyboard.write("c")
     
-    if rxl == "X":
+    if rxl == "X" or rxl == "x":
         keyboard.write("r")
         
     """elif status == "t":
@@ -174,14 +175,34 @@ for pid, status in pids:
         confirm_sol_in_userfields(sol_num)
     add_personnel(sol_num, status)"""
 
+import pandas as pd
+xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\3.xlsx")
+df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
+df.to_csv('file.csv')
+
+'''df = pd.read_csv("file.csv", header=None, skiprows=3)
+for row in df:
+    pids = row['PID']
+    print(pids)
+    pids = pids[:-2]
+    conf = row['CONF']
+    cxl = row['CXL']
+    rxl = row['RXL']
+    search_pid(pids)
+    select_tour()
+    add_personnel('sol25688', conf, cxl, rxl)
+
+df.SP.head(2)'''
+
+
 with open('file.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         pids = row['PID']
-        pids = pids[:-2]
-        conf = row['Conf']
-        cxl = row['Cxl']
-        rxl = row['Fix!']
+        #pids = pids[:-2]
+        conf = row['Confirm']
+        cxl = row['cxl']
+        rxl = row['rxl']
         search_pid(pids)
         select_tour()
-        add_personnel('sol23521', conf, cxl, rxl)
+        add_personnel('sol4809', conf, cxl, rxl)

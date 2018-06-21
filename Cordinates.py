@@ -15,6 +15,6 @@ pyautogui.click(x + 380, y + 540)
 
 prospect_record = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingaprospect.png',
                                        region=(514, 245, 889, 566))
-while prospect_search == None:
-    prospect_search = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingaprospect.png',
+while prospect_record == None:
+    prospect_record = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingaprospect.png',
                                            region=(514, 245, 889, 566))
