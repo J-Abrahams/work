@@ -118,9 +118,9 @@ def audit_refund(department):
         pyautogui.click(x - 20, y + 425)
 
 
-pids = [1413552, 1413765, 1413777, 1413789, 1413795, 1413821]
+pids = [1414618, 1414679, 1414715, 1414748]
 for pid in map(str, pids):
     search_pid(pid)
     select_tour()
     #  San Diego is cm
-    audit_refund('cm')
+    audit_refund('ae')

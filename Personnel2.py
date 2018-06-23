@@ -9,7 +9,7 @@ import pandas
 def search_pid(pid):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
                                                region=(514, 245, 889, 566))
     x, y = image
@@ -20,40 +20,33 @@ def search_pid(pid):
 
 
 def select_tour():
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                               region=(514, 245, 889, 566))
+    search_for = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                region=(514, 245, 889, 566))
+    while search_for is None:
+        search_for = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                    region=(514, 245, 889, 566))
     x, y = image
     audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png',
                                               region=(514, 245, 889, 566))
-    if audition == None:
+    if audition is None:
         pyautogui.doubleClick(x, y + 12)
 
     else:
-        pyautogui.doubleClick(x, y + 24)
+        audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\audition_2.png',
+                                                  region=(514, 245, 889, 566))
+        if audition is None:
+            pyautogui.doubleClick(x, y + 24)
+        else:
+            pyautogui.doubleClick(x, y + 36)
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
     pyautogui.click(900, 570)
-    """img = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date2.png')
-    if img == None:
-        x, y = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_yes.png')
-        pyautogui.doubleClick(x, y)
-        time.sleep(1)"""
-
-
-"""x, y = pyautogui.locateCenterOnScreen("minivac_showed_sh.png")
-pyautogui.doubleClick(x, y)
-pyautogui.click(x=900, y=560)
-
-time.sleep(3)"""
 
 
 def confirm_sol_in_userfields(sol):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                region=(514, 245, 889, 566))
     x, y = image
@@ -219,11 +212,11 @@ def add_personnel(sol, conf, cxl, rxl, ug):
     if ug != "":
         keyboard.write("u")
         
-    """elif status == "u":
+    elif status == "u":
         keyboard.write("u")
 
     elif status == "tav":
-        keyboard.write("t")"""
+        keyboard.write("t")
     
     pyautogui.click(x_4 + 90, y_4 + 350)
 
@@ -401,7 +394,7 @@ for row in df:
 
 df.SP.head(2)'''
 
-sol = 'sol23345'
+sol = 'SOL26834'
 import pandas as pd
 xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\1.xlsx")
 df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
@@ -416,7 +409,7 @@ with open('file.csv') as csvfile:
         cxl = row['cxl']
         rxl = row['rxl']
         ug = row['ug']
-        tav = row['TAV']
+        #tav = row['TAV']
         search_pid(pids)
         select_tour()
         if conf == "X" or conf == "x":
@@ -427,8 +420,8 @@ with open('file.csv') as csvfile:
             cancel(sol)
         if ug == "X" or ug == "x":
             upgrade(sol)
-        if tav == "X" or tav == "x":
-            travel_allowance(sol)
+        #if tav == "X" or tav == "x":
+            #travel_allowance(sol)
 
         keep_going = input("Everything ok?")
         if keep_going != '':
