@@ -1,3 +1,3 @@
 import pyautogui
 
-pyautogui.screenshot('screenshotd9.png')
+pyautogui.screenshot('screenshotf9.png')
