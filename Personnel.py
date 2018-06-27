@@ -5,6 +5,7 @@ import pyperclip
 import csv
 from Cordinates import prospect_search, prospect_record
 
+
 def search_pid(pid):
     x, y = prospect_search
     pyautogui.doubleClick(x + 50, y + 42)
