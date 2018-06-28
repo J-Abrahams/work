@@ -20,11 +20,11 @@ def search_pid(pid):
 
 
 def select_tour():
-    search_for = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                region=(514, 245, 889, 566))
-    while search_for is None:
-        search_for = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                    region=(514, 245, 889, 566))
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                           region=(514, 245, 889, 566))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                               region=(514, 245, 889, 566))
     x, y = image
     audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png',
                                               region=(514, 245, 889, 566))
@@ -394,7 +394,7 @@ for row in df:
 
 df.SP.head(2)'''
 
-sol = 'SOL26834'
+sol = 'SOL2919'
 import pandas as pd
 xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\1.xlsx")
 df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
@@ -409,7 +409,7 @@ with open('file.csv') as csvfile:
         cxl = row['cxl']
         rxl = row['rxl']
         ug = row['ug']
-        #tav = row['TAV']
+        tav = row['TAV']
         search_pid(pids)
         select_tour()
         if conf == "X" or conf == "x":
@@ -420,8 +420,8 @@ with open('file.csv') as csvfile:
             cancel(sol)
         if ug == "X" or ug == "x":
             upgrade(sol)
-        #if tav == "X" or tav == "x":
-            #travel_allowance(sol)
+        if tav == "X" or tav == "x":
+            travel_allowance(sol)
 
         keep_going = input("Everything ok?")
         if keep_going != '':
