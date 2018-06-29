@@ -52,10 +52,10 @@ def search_pid(pid):
 
 
 def enter_prospect_info(info):
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingaprospect.png',
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_a_prospect.png',
                                            region=(514, 245, 889, 566))
     while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingaprospect.png',
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_a_prospect.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.doubleClick(x + 135, y + 85)
@@ -155,7 +155,7 @@ data_dict = {
     'deposit_amount': '99',
     'expiration_date': '8/19',
     'cvv_code': '818',
-    'credit_card_#': '4815881027267355',
+    'credit_card_#': '',
     'accommodation': 'vvl',
     'arrival_date': '8/5',
     'number_of_nights': '2',
