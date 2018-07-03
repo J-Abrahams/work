@@ -13,15 +13,26 @@ def get_m1_coordinates():
         m1_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
                                                   region=(514, 245, 889, 566))
     m1[search] = (m1_title[0] + 50, m1_title[1])
-
+    m1[find_now] = (m1_title[0] + 650, m1_title[1])
+    m1[change] = (m1_title[0] + 400, m1_title[1] + 500)
     return m1
 
 
+def get_m2_coordinates():
+    m2 = {}
+    m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                              region=(514, 245, 889, 566))
+    while m2_title is None:
+        m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                  region=(514, 245, 889, 566))
+
+
 def search_pid(pid):
-    pyautogui.doubleClick(x + 50, y)
+    get_m1_coordinates()
+    pyautogui.doubleClick(m1[search])
     keyboard.write(pid)
-    pyautogui.click(x + 650, y)
-    pyautogui.click(x + 400, y + 500)
+    pyautogui.click(m1[find_now])
+    pyautogui.click(m1[change])
 
 
 def select_tour():
