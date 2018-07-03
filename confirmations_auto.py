@@ -3,10 +3,15 @@ import pyautogui
 import time
 import pyperclip
 import csv
+import pandas as pd
+
+m1 = {}
+m2 = {}
+m3 = {}
 
 
 def get_m1_coordinates():
-    m1 = {}
+    global m1
     m1_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
                                               region=(514, 245, 889, 566))
     while m1_title is None:
@@ -19,13 +24,14 @@ def get_m1_coordinates():
 
 
 def get_m2_coordinates():
-    m2 = {}
+    global m2
     m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_a_prospect.png',
                                               region=(514, 245, 889, 566))
     while m2_title is None:
         m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles'
                                                   '\\changing_a_prospect.png',
                                                   region=(514, 245, 889, 566))
+    m2['title'] = (m2_title[0], m2_title[1])
     m2['first_tour'] = (m2_title[0] + 375, m2_title[1] + 65)
     m2['second_tour'] = (m2_title[0] + 375, m2_title[1] + 78)
     m2['third_tour'] = (m2_title[0] + 375, m2_title[1] + 91)
@@ -45,6 +51,82 @@ def get_m2_coordinates():
     m2['fax'] = (m2_title[0] + 129, m2_title[1] + 328)
     m2['email'] = (m2_title[0] + 271, m2_title[1] + 353)
     return m2
+
+
+def get_m3_coordinates():
+    global m3
+    m3_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\changing_a_tour.png',
+                                              region=(514, 245, 889, 566))
+    while m3_title is None:
+        m3_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\changing_a_tour.png',
+                                                  region=(514, 245, 889, 566))
+    m3['title'] = (m3_title[0], m3_title[1])
+    m3['tour'] = (m3_title[0] - 45, m3_title[1] + 20)
+    m3['user_fields'] = (m3_title[0] + 5, m3_title[1] + 20)
+    m3['notes'] = (m3_title[0] + 55, m3_title[1] + 20)
+    m3['accommodations'] = (m3_title[0] + 242, m3_title[1] + 24)
+    m3['tour_packages'] = (m3_title[0] + 324, m3_title[1] + 24)
+    m3['premiums'] = (m3_title[0] + 397, m3_title[1] + 24)
+    m3['personnel'] = (m3_title[0] + 225, m3_title[1] + 217)
+    m3['prospect'] = (m3_title[0] + 143, m3_title[1] + 45)
+    m3['prospect_id'] = (m3_title[0] + 84, m3_title[1] + 69)
+    m3['tour_id'] = (m3_title[0] + 84, m3_title[1] + 89)
+    m3['campaign'] = (m3_title[0] + 166, m3_title[1] + 122)
+    m3['tour_type'] = (m3_title[0] + 143, m3_title[1] + 149)
+    m3['tour_status'] = (m3_title[0] + 143, m3_title[1] + 175)
+    m3['tour_date'] = (m3_title[0] + 143, m3_title[1] + 203)
+    m3['tour_location'] = (m3_title[0] + 143, m3_title[1] + 227)
+    m3['wave'] = (m3_title[0] + 143, m3_title[1] + 251)
+    m3['team'] = (m3_title[0] + 143, m3_title[1] + 278)
+    m3['insert'] = (m3_title[0] + 314, m3_title[1] + 439)
+    m3['premium_1'] = (m3_title[0] + 333, m3_title[1] + 64)
+    m3['premium_2'] = (m3_title[0] + 333, m3_title[1] + 78)
+    m3['premium_3'] = (m3_title[0] + 333, m3_title[1] + 90)
+    m3['premium_4'] = (m3_title[0] + 333, m3_title[1] + 102)
+    m3['premium_5'] = (m3_title[0] + 333, m3_title[1] + 114)
+    m3['premium_6'] = (m3_title[0] + 333, m3_title[1] + 126)
+    return m3
+
+
+def count_number_of_premiums():
+    m3 = get_m3_coordinates()
+    pyautogui.click(m3['premium_6'])
+    x, y = m3['premium_6']
+    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
+        print("6 Premiums")
+        return
+    else:
+        pyautogui.click(m3['premium_5'])
+    x, y = m3['premium_5']
+    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
+        print("5 Premiums")
+        return
+    else:
+        pyautogui.click(m3['premium_4'])
+    x, y = m3['premium_4']
+    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
+        print("4 Premiums")
+        return
+    else:
+        pyautogui.click(m3['premium_3'])
+    x, y = m3['premium_3']
+    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
+        print("3 Premiums")
+        return
+    else:
+        pyautogui.click(m3['premium_2'])
+    x, y = m3['premium_2']
+    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
+        print("2 Premiums")
+        return
+    else:
+        pyautogui.click(m3['premium_1'])
+    x, y = m3['premium_1']
+    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
+        print("1 Premiums")
+        return
+    else:
+        print("No Premiums")
 
 
 def search_pid(pid_number):
@@ -74,6 +156,59 @@ def select_tour():
     pyautogui.click(m2['yes_change_sites'])
 
 
+def confirm_tour_status_confirm():
+    x, y = m3['title']
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\confirmed.png',
+                                           region=(x + 27, y + 132, 131, 103))
+    attempts = 0
+    while image is None and attempts <= 2:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\confirmed.png',
+                                               region=(514, 245, 889, 566))
+        attempts += 1
+    if image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\showed.png',
+                                               region=(x + 27, y + 132, 131, 103))
+    if image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\on_tour.png',
+                                               region=(x + 27, y + 132, 131, 103))
+    if image is None:
+        print("TOUR STATUS MIGHT BE INCORRECT")
+    else:
+        print("Tour status is good")
+
+
+def confirm_tour_status_reschedule():
+    x, y = m3['title']
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\rescheduled.png',
+                                           region=(x + 27, y + 132, 131, 103))
+    attempts = 0
+    while image is None and attempts <= 2:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\rescheduled.png',
+                                               region=(x + 27, y + 132, 131, 103))
+        attempts += 1
+
+    if image is None:
+        print("TOUR STATUS MIGHT BE INCORRECT")
+    else:
+        print("Tour status is good")
+
+
+def confirm_tour_status_cancel():
+    x, y = m3['title']
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\canceled.png',
+                                           region=(x + 27, y + 132, 131, 103))
+    attempts = 0
+    while image is None and attempts <= 2:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\canceled.png',
+                                               region=(x + 27, y + 132, 131, 103))
+        attempts = + 1
+
+    if image is None:
+        print("TOUR STATUS MIGHT BE INCORRECT")
+    else:
+        print("Tour status is good")
+
+
 def confirm_sol_in_userfields(sol):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
@@ -88,12 +223,13 @@ def confirm_sol_in_userfields(sol):
         pyautogui.doubleClick(x + 115, y + 222)
         keyboard.press_and_release('ctrl + c')
         tsw_sol = str(pyperclip.paste())
+        time.sleep(1)
         print(tsw_sol + " changed to " + sol)
         pyperclip.copy(sol)
         keyboard.press_and_release('ctrl + v')
 
     except TypeError:
-        print("Sol number was good")
+        print("Sol number is good")
 
     pyautogui.click(x - 65, y + 18)
 
@@ -101,7 +237,7 @@ def confirm_sol_in_userfields(sol):
 def check_deposit():
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                region=(514, 245, 889, 566))
     x, y = image
@@ -109,18 +245,14 @@ def check_deposit():
 
 
 def confirm(sol):
+    get_m3_coordinates()
+    confirm_tour_status_confirm()
     confirm_sol_in_userfields(sol)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 200, y + 220)  # Personnel Tab
-    pyautogui.click(x + 275, y + 440)  # Insert Button
+    pyautogui.click(m3['personnel'])
+    pyautogui.click(m3['insert'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
@@ -129,14 +261,14 @@ def confirm(sol):
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                                region=(514, 245, 889, 566))
     x_3, y_3 = image
     pyautogui.click(x_3 + 75, y_3 + 150)  # Close
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                                region=(514, 245, 889, 566))
     x_4, y_4 = image
@@ -152,17 +284,13 @@ def confirm(sol):
 
 
 def reschedule(sol):
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 200, y + 220)  # Personnel Tab
-    pyautogui.click(x + 275, y + 440)  # Insert Button
+    get_m3_coordinates()
+    confirm_tour_status_reschedule()
+    pyautogui.click(m3['personnel'])
+    pyautogui.click(m3['insert'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
@@ -171,14 +299,14 @@ def reschedule(sol):
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                                region=(514, 245, 889, 566))
     x_3, y_3 = image
     pyautogui.click(x_3 + 75, y_3 + 150)  # Close
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                                region=(514, 245, 889, 566))
     x_4, y_4 = image
@@ -193,90 +321,14 @@ def reschedule(sol):
     pyautogui.click(x_4 + 90, y_4 + 350)
 
 
-def add_personnel(sol, conf, cxl, rxl, ug):
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 200, y + 220)  # Personnel Tab
-    pyautogui.click(x + 275, y + 440)  # Insert Button
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
-                                               region=(514, 245, 889, 566))
-    x_1, y_1 = image
-    pyautogui.click(x_1 + 75, y_1 + 25)  # By Personnel Number Tab
-    keyboard.write(sol)
-    pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
-                                               region=(514, 245, 889, 566))
-    x_3, y_3 = image
-    pyautogui.click(x_3 + 75, y_3 + 150)  # Close
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
-                                               region=(514, 245, 889, 566))
-    x_4, y_4 = image
-    try:
-        x_5, y_5 = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png',
-                                                  region=(514, 245, 889, 566))
-    except Exception:
-        pyautogui.click(x_4 + 90, y_4 + 80)
-        keyboard.write("cc")
-    pyautogui.click(x_4 + 90, y_4 + 105)
-
-    if conf == "X" or conf == "x":
-        keyboard.write("cc")
-
-    if cxl == "X" or cxl == "x":
-        keyboard.write("c")
-
-    if rxl == "X" or rxl == "x":
-        keyboard.write("r")
-
-    if ug != "":
-        keyboard.write("u")
-
-    elif status == "u":
-        keyboard.write("u")
-
-    elif status == "tav":
-        keyboard.write("t")
-
-    pyautogui.click(x_4 + 90, y_4 + 350)
-
-    keep_going = input("Everything ok?")
-
-    if keep_going != '':
-        pyautogui.click(x + 265, y + 475)
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                               region=(514, 245, 889, 566))
-        while image == None:
-            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                   region=(514, 245, 889, 566))
-        x, y = image
-        pyautogui.click(x - 20, y + 425)
-
-
 def cancel(sol):
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 200, y + 220)  # Personnel Tab
-    pyautogui.click(x + 275, y + 440)  # Insert Button
+    get_m3_coordinates()
+    confirm_tour_status_cancel()
+    pyautogui.click(m3['personnel'])
+    pyautogui.click(m3['insert'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
@@ -285,14 +337,14 @@ def cancel(sol):
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                                region=(514, 245, 889, 566))
     x_3, y_3 = image
     pyautogui.click(x_3 + 75, y_3 + 150)  # Close
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                                region=(514, 245, 889, 566))
     x_4, y_4 = image
@@ -308,17 +360,12 @@ def cancel(sol):
 
 
 def upgrade(sol):
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 200, y + 220)  # Personnel Tab
-    pyautogui.click(x + 275, y + 440)  # Insert Button
+    get_m3_coordinates()
+    pyautogui.click(m3['personnel'])
+    pyautogui.click(m3['insert'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
@@ -327,14 +374,14 @@ def upgrade(sol):
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                                region=(514, 245, 889, 566))
     x_3, y_3 = image
     pyautogui.click(x_3 + 75, y_3 + 150)  # Close
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                                region=(514, 245, 889, 566))
     x_4, y_4 = image
@@ -350,17 +397,12 @@ def upgrade(sol):
 
 
 def travel_allowance(sol):
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 200, y + 220)  # Personnel Tab
-    pyautogui.click(x + 275, y + 440)  # Insert Button
+    get_m3_coordinates()
+    pyautogui.click(m3['personnel'])
+    pyautogui.click(m3['insert'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
@@ -369,14 +411,14 @@ def travel_allowance(sol):
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                                region=(514, 245, 889, 566))
     x_3, y_3 = image
     pyautogui.click(x_3 + 75, y_3 + 150)  # Close
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                                region=(514, 245, 889, 566))
     x_4, y_4 = image
@@ -426,8 +468,8 @@ for row in df:
 
 df.SP.head(2)'''
 
+print('Justin Locke: SOL4967')
 sol = input("SOL #:")
-import pandas as pd
 
 xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\1.xlsx")
 df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
@@ -437,37 +479,43 @@ with open('file.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         pids = row['PID']
-        # pids = pids[:-2]
+        #  pids = pids[:-2]
         conf = row['conf']
         cxl = row['cxl']
         rxl = row['rxl']
-        # ug = row['ug']
-        # tav = row['TAV']
         search_pid(pids)
         select_tour()
+        try:
+            ug = row['ug']
+            if ug == "X" or ug == "x":
+                upgrade(sol)
+        except KeyError:
+            pass
+        try:
+            tav = row['tav']
+            if tav == "X" or tav == "x":
+                travel_allowance(sol)
+        except KeyError:
+            pass
         if conf == "X" or conf == "x":
             confirm(sol)
         if rxl == "X" or rxl == "x":
             reschedule(sol)
         if cxl == "X" or cxl == "x":
             cancel(sol)
-        # if ug == "X" or ug == "x":
-        # upgrade(sol)
-        # if tav == "X" or tav == "x":
-        # travel_allowance(sol)
 
         keep_going = input("Everything ok?")
         if keep_going != '':
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                    region=(514, 245, 889, 566))
-            while image == None:
+            while image is None:
                 image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                        region=(514, 245, 889, 566))
             x, y = image
             pyautogui.click(x + 265, y + 475)
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                    region=(514, 245, 889, 566))
-            while image == None:
+            while image is None:
                 image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                        region=(514, 245, 889, 566))
             x, y = image

@@ -3,10 +3,62 @@ import pyautogui
 import time
 import pyperclip
 
+
+def get_m1_coordinates():
+    m1 = {}
+    m1_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
+                                              region=(514, 245, 889, 566))
+    while m1_title is None:
+        m1_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
+                                                  region=(514, 245, 889, 566))
+    m1['search'] = (m1_title[0] + 50, m1_title[1])
+    m1['find_now'] = (m1_title[0] + 650, m1_title[1])
+    m1['change'] = (m1_title[0] + 400, m1_title[1] + 500)
+    m1['insert'] = (m1_title[0] + 300, m1_title[1] + 500)
+    return m1
+
+
+def get_m2_coordinates():
+    m2 = {}
+    m2_t2 = {}
+    m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_a_prospect.png',
+                                              region=(514, 245, 889, 566))
+    while m2_title is None:
+        m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles'
+                                                  '\\adding_a_prospect.png',
+                                                  region=(514, 245, 889, 566))
+    m2['first_tour'] = (m2_title[0] + 338, m2_title[1] + 65)
+    m2['second_tour'] = (m2_title[0] + 338, m2_title[1] + 78)
+    m2['third_tour'] = (m2_title[0] + 338, m2_title[1] + 91)
+    m2['yes_change_sites'] = (m2_title[0] + 275, m2_title[1] + 266)
+    m2['prospect_id'] = (m2_title[0] + 28, m2_title[1] + 52)
+    m2['type'] = (m2_title[0] + 248, m2_title[1] + 52)
+    m2['last_name'] = (m2_title[0] + 92, m2_title[1] + 85)
+    m2['first_name'] = (m2_title[0] + 234, m2_title[1] + 85)
+    m2['salutation'] = (m2_title[0] + 236, m2_title[1] + 110)
+    m2['company'] = (m2_title[0] + 234, m2_title[1] + 137)
+    m2['address'] = (m2_title[0] + 234, m2_title[1] + 161)
+    m2['city'] = (m2_title[0] + 129, m2_title[1] + 223)
+    m2['county'] = (m2_title[0] + 234, m2_title[1] + 223)
+    m2['state'] = (m2_title[0] + 103, m2_title[1] + 249)
+    m2['postal_code'] = (m2_title[0] + 234, m2_title[1] + 249)
+    m2['country'] = (m2_title[0] + 137, m2_title[1] + 276)
+    m2['phone1'] = (m2_title[0] + 92, m2_title[1] + 302)
+    m2['phone2'] = (m2_title[0] + 234, m2_title[1] + 302)
+    m2['fax'] = (m2_title[0] + 92, m2_title[1] + 328)
+    m2['camp_type'] = (m2_title[0] + 92, m2_title[1] + 399)
+    m2['status'] = (m2_title[0] + 92, m2_title[1] + 427)
+    m2_t2['marital_status'] = (m2_title[0] + 136, m2_title[1] + 85)
+    m2_t2['occupation'] = (m2_title[0] + 234, m2_title[1] + 111)
+    m2_t2['income'] = (m2_title[0] + 34, m2_title[1] + 162)
+    m2_t2['income'] = (m2_title[0] + 136, m2_title[1] + 188)
+    return m2
+
+
 def switch_site(site):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\windows_closed.png',
-                                       region=(514, 245, 300, 300))
-    if image == None:
+                                           region=(514, 245, 300, 300))
+    if image is None:
         print("Close all windows")
         raise SystemExit(0)
 
@@ -38,104 +90,34 @@ def switch_site(site):
     pyautogui.click(10, 45)
 
 
-def search_pid(pid):
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.doubleClick(x + 50, y)
-    keyboard.write(data_dict['pid'])
-    pyautogui.click(x + 650, y)
-    pyautogui.click(x + 400, y + 500)
+def insert_new_pid(pid_number):
+    m1 = get_m1_coordinates()
+    pyautogui.click(m1['insert'])
 
 
-def enter_prospect_info(info):
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_a_prospect.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_a_prospect.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.doubleClick(x + 135, y + 85)
-    for i in range(35):
-        keyboard.send('backspace')
+def enter_prospect_info():
+    m2 = get_m2_coordinates()
+    pyautogui.click(m2['last_name'])
     keyboard.write(data_dict['last name'])
-    pyautogui.doubleClick(x + 280, y + 85)
-    for i in range(35):
-        keyboard.send('backspace')
+    pyautogui.click(m2['first_name'])
     keyboard.write(data_dict['first_name'])
-    pyautogui.doubleClick(x + 135, y + 300)
-    time.sleep(0.3)
-    keyboard.press_and_release('ctrl + c')
-    time.sleep(0.3)
-    copied_number_1 = pyperclip.paste()
-    pyautogui.doubleClick(x + 280, y + 300)
-    time.sleep(0.3)
-    keyboard.press_and_release('ctrl + c')
-    copied_number_2 = pyperclip.paste()
-    print(data_dict['home_phone'])
-    print(copied_number_1)
-    print(copied_number_2)
-    if data_dict['home_phone'] != copied_number_1 and copied_number_2:
-        pyautogui.doubleClick(x + 135, y + 300)
-        keyboard.write(data_dict['home_phone'])
-    if data_dict['email'] != '':
-        pyautogui.doubleClick(x + 280, y + 350)
-    pyautogui.doubleClick(x + 60, y + 25)
-    if data_dict['spouse_first_name'] and data_dict['spouse_last_name'] != '':
-        pyautogui.doubleClick(x + 280, y + 115)
-        for i in range(35):
-            keyboard.send('backspace')
-        keyboard.write(data_dict['spouse_first_name'] + ' ' + data_dict['spouse_last_name'])
-    pyautogui.doubleClick(x + 225, y + 380)
-    keyboard.write(data_dict['credit_card_#'])
-    pyautogui.doubleClick(x + 135, y + 425)
-    keyboard.write(data_dict['expiration_date'])
-    keyboard.send('tab')
-    pyautogui.click(x + 480, y + 180)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x_1, y_1 = image
-    pyautogui.click(x_1 + 155, y_1 + 125)
-    pyautogui.click(x_1 - 125, y_1 + 5)
-    keyboard.write(data_dict['source_code'])
-    keyboard.send('enter')
-    pyautogui.click(x_1 - 125, y_1 + 60)
-    pyautogui.click(x_1 - 60, y_1 + 325)
-    pyautogui.click(x_1 + 130, y_1 + 150)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\minivac.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\minivac.png',
-                                               region=(514, 245, 889, 566))
-    x_2, y_2 = image
-    pyautogui.click(x_2, y_2)
-    pyautogui.click(x_1 + 130, y_1 + 175)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\booked.png',
-                                           region=(514, 245, 889, 566))
-    while image == None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\booked.png',
-                                               region=(514, 245, 889, 566))
-    x_2, y_2 = image
-    pyautogui.click(x_2, y_2)
-    pyautogui.click(x_1 + 130, y_1 + 200)
-    keyboard.write(data_dict['tour_date'])
-    pyautogui.click(x_1 + 325, y_1 + 180)
+    pyautogui.click(m2['address'])
 
-    '''time.sleep(1)
-    keyboard.write('m')
-    keyboard.send('tab')
-    keyboard.write('b')
-    keyboard.send('tab')
-    keyboard.write(data_dict['tour_date'])
-    keyboard.send('tab')
-    for i in range(10):
-        keyboard.send('down')'''
+    pyautogui.click(m2['city'])
+
+    pyautogui.click(m2['state'])
+
+    pyautogui.click(m2['postal_code'])
+
+    pyautogui.click(m2['country'])
+
+    pyautogui.click(m2['phone1'])
+    keyboard.write(data_dict['phone1'])
+    if data_dict['email'] != '':
+        pyautogui.click(m2['email'])
+        keyboard.write(data_dict['email'])
+    if data_dict['spouse_first_name'] and data_dict['spouse_last_name'] != '':
+
 
 data_dict = {
     'agent_name': 'Borges',
@@ -163,8 +145,6 @@ data_dict = {
     'number_of_kids': '0'
 }
 
-
 switch_site(data_dict)
 search_pid(data_dict)
 enter_prospect_info(data_dict)
-
