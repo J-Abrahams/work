@@ -3,7 +3,8 @@ import pyautogui
 import time
 import pyperclip
 import csv
-
+import mss
+import mss.tools
 
 m1 = {}
 m2 = {}
@@ -88,45 +89,64 @@ def get_m3_coordinates():
     return m3
 
 
-def count_number_of_premiums():
+def check_for_duplicate_premiums():
+    premiums = []
     m3 = get_m3_coordinates()
+    pyautogui.click(m3['premiums'])
     pyautogui.click(m3['premium_6'])
     x, y = m3['premium_6']
     if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
-        print("6 Premiums")
-        return
-    else:
-        pyautogui.click(m3['premium_5'])
+        with mss.mss() as sct:
+            monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            premium_6 = mss.tools.to_png(im.rgb, im.size)
+            premiums.append(premium_6)
+    pyautogui.click(m3['premium_5'])
     x, y = m3['premium_5']
     if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
-        print("5 Premiums")
-        return
-    else:
-        pyautogui.click(m3['premium_4'])
+        with mss.mss() as sct:
+            monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            premium_5 = mss.tools.to_png(im.rgb, im.size)
+            premiums.append(premium_5)
+    pyautogui.click(m3['premium_4'])
     x, y = m3['premium_4']
     if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
-        print("4 Premiums")
-        return
-    else:
-        pyautogui.click(m3['premium_3'])
+        with mss.mss() as sct:
+            monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            premium_4 = mss.tools.to_png(im.rgb, im.size)
+            premiums.append(premium_4)
+    pyautogui.click(m3['premium_3'])
     x, y = m3['premium_3']
     if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
-        print("3 Premiums")
-        return
-    else:
-        pyautogui.click(m3['premium_2'])
+        with mss.mss() as sct:
+            monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            premium_3 = mss.tools.to_png(im.rgb, im.size)
+            premiums.append(premium_3)
+    pyautogui.click(m3['premium_2'])
     x, y = m3['premium_2']
     if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
-        print("2 Premiums")
-        return
-    else:
-        pyautogui.click(m3['premium_1'])
+        with mss.mss() as sct:
+            monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            premium_2 = mss.tools.to_png(im.rgb, im.size)
+            premiums.append(premium_2)
+    pyautogui.click(m3['premium_1'])
     x, y = m3['premium_1']
     if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is True:
-        print("1 Premiums")
-        return
+        with mss.mss() as sct:
+            monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            premium_1 = mss.tools.to_png(im.rgb, im.size)
+            premiums.append(premium_1)
     else:
         print("No Premiums")
+    if len(premiums) != len(set(premiums)):
+        print("Duplicate premiums")
+    else:
+        print("No duplicate premiums")
 
 
 def search_pid(pid_number):
@@ -434,38 +454,42 @@ def travel_allowance(sol):
 
 
 # c = confirm, x = cancel, r = reschedule, t = TAV, u = upgrade
-sol_num = "sol2956"
+type_of_sheet = input('Confirmation (C) or Activation (A):')
 status = 'r'
-pids = ['1411763', '1331282', '1415096', '', '', '', '', '', '', '',
+pids = ['1399641', '1311090', '1345090', '1417812', '1416768', '1393955', '1417368', '1381397', '1327512', '1326104',
         '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '']
 for pid in pids:
     if pid != '':
         search_pid(pid)
         select_tour()
-        if status == "c":
-            confirm(sol_num)
-        elif status == "r":
-            reschedule(sol_num)
-        elif status == "x":
-            cancel(sol_num)
-        elif status == "u":
-            upgrade(sol_num)
-        elif status == "t":
-            travel_allowance(sol_num)
+        check_for_duplicate_premiums()
+        if type_of_sheet == 'C' or type == 'c':
+            print('Justin Locke: SOL4967')
+            sol = input("SOL #:")
+            if status == "c":
+                confirm(sol_num)
+            elif status == "r":
+                reschedule(sol_num)
+            elif status == "x":
+                cancel(sol_num)
+            elif status == "u":
+                upgrade(sol_num)
+            elif status == "t":
+                travel_allowance(sol_num)
         keep_going = input("Everything ok?")
         if keep_going != '':
-            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                                   region=(514, 245, 889, 566))
-            while image is None:
                 image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                        region=(514, 245, 889, 566))
-            x, y = image
-            pyautogui.click(x + 265, y + 475)
-            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                   region=(514, 245, 889, 566))
-            while image is None:
+                while image is None:
+                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                                           region=(514, 245, 889, 566))
+                x, y = image
+                pyautogui.click(x + 265, y + 475)
                 image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                        region=(514, 245, 889, 566))
-            x, y = image
-            pyautogui.click(x - 20, y + 425)
+                while image is None:
+                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                           region=(514, 245, 889, 566))
+                x, y = image
+                pyautogui.click(x - 20, y + 425)
