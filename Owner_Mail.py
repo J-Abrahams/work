@@ -20,6 +20,7 @@ def get_m1_coordinates():
     m1['search'] = (m1_title[0] + 50, m1_title[1])
     m1['find_now'] = (m1_title[0] + 650, m1_title[1])
     m1['change'] = (m1_title[0] + 400, m1_title[1] + 500)
+    m1['insert'] = (m1_title[0] + 320, m1_title[1] + 500)
     return m1
 
 
@@ -159,9 +160,40 @@ def switch_site(site):
     pyautogui.click(10, 45)
 
 
-def insert_new_pid():
+def search_pid(data_dict):
     m1 = get_m1_coordinates()
-    pyautogui.click(m1['insert'])
+    pyautogui.doubleClick(m1['search'])
+    keyboard.write(data_dict['pid'])
+    pyautogui.click(m1['find_now'])
+    pyautogui.click(m1['change'])
+
+
+def enter_card(data_dict):
+    get_m2_coordinates()
+    pyautogui.click(m2['demographics'])
+    pyautogui.doubleClick(m2['card_number'])
+    keyboard.write(data_dict['card_number'])
+    pyautogui.doubleClick(m2['expiration'])
+    keyboard.write(data_dict['expiration'])
+
+
+def select_tour():
+    m2 = get_m2_coordinates()
+    audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png',
+                                              region=(514, 245, 889, 566))
+    if audition is None:
+        pyautogui.doubleClick(m2['first_tour'])
+
+    else:
+        audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\audition_2.png',
+                                                  region=(514, 245, 889, 566))
+        if audition is None:
+            pyautogui.doubleClick(m2['second_tour'])
+        else:
+            pyautogui.doubleClick(m2['third_tour'])
+    # Checks if "You need to change sites" message comes up
+    time.sleep(1)
+    pyautogui.click(m2['yes_change_sites'])
 
 
 def enter_prospect_info(data_dict):
@@ -226,70 +258,27 @@ def enter_prospect_info(data_dict):
 
 
 data_dict = {
-    'agent_name': '',
-    'location': 'br',
+    'agent_name': 'Kraseski',
+    'location': '3',
     'campaign': 'OMOWNMM',
     'pid': '',
     'first_name': 'Bassam',
     'last name': 'Jaradat',
-    'spouse_first_name': 'Fatheil',
-    'spouse_last_name': 'Abdallah',
-    'marital_status': 'm',
-    'city': 'Wichita',
-    'state': '',
-    'postal_code': '67226',
-    'home_phone': '316-304-4347',
-    'other_phone': '',
-    'email': '',
-    'income': '',
     'tour_date': '7/8',
     'tour_time': '1030',
-    'type_of_deposit': '',
-    'deposit_amount': '',
-    'card_number': '',
-    'expiration': '',
-    'cvv_code': '',
-    'accommodation': '',
-    'arrival_date': '',
-    'number_of_nights': '',
-    'number_of_adults': '',
-    'number_of_kids': ''
-}
-
-data_dict = {
-    'agent_name': '',
-    'location': 'br',
-    'campaign': 'OMOWNMM',
-    'tour_type': 'm',
-    'pid': '',
-    'first_name': 'Bassam',
-    'last name': 'Jaradat',
-    'spouse_first_name': 'Fatheil',
-    'spouse_last_name': 'Abdallah',
-    'marital_status': 'm',
-    'address': '3540 n inwood st',
-    'city': 'Wichita',
-    'state': '',
-    'postal_code': '67226',
-    'home_phone': '316-304-4347',
-    'other_phone': '',
-    'email': '',
-    'income': '',
-    'tour_date': '7/8',
-    'tour_time': '1030',
-    'type_of_deposit': '',
-    'deposit_amount': '',
-    'card_number': '',
-    'expiration': '',
-    'cvv_code': '',
-    'accommodation': '',
-    'arrival_date': '',
-    'number_of_nights': '',
-    'number_of_adults': '',
+    'type_of_deposit': 'Refundable',
+    'deposit_amount': '99',
+    'card_number': '4100390453672293',
+    'expiration': '11/20',
+    'cvv_code': '010',
+    'accommodation': 'DO',
+    'arrival_date': '7/7',
+    'number_of_nights': '3',
+    'number_of_adults': '2',
     'number_of_kids': ''
 }
 
 
 switch_site(data_dict)
-insert_new_pid()
+search_pid(data_dict)
 enter_prospect_info(data_dict)

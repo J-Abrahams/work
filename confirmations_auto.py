@@ -81,12 +81,12 @@ def get_m3_coordinates():
     m3['wave'] = (m3_title[0] + 143, m3_title[1] + 251)
     m3['team'] = (m3_title[0] + 143, m3_title[1] + 278)
     m3['insert'] = (m3_title[0] + 314, m3_title[1] + 439)
-    m3['premium_1'] = (m3_title[0] + 333, m3_title[1] + 64)
-    m3['premium_2'] = (m3_title[0] + 333, m3_title[1] + 78)
-    m3['premium_3'] = (m3_title[0] + 333, m3_title[1] + 90)
-    m3['premium_4'] = (m3_title[0] + 333, m3_title[1] + 102)
-    m3['premium_5'] = (m3_title[0] + 333, m3_title[1] + 114)
-    m3['premium_6'] = (m3_title[0] + 333, m3_title[1] + 126)
+    m3['premium_1'] = (m3_title[0] + 563, m3_title[1] + 64)
+    m3['premium_2'] = (m3_title[0] + 563, m3_title[1] + 77)
+    m3['premium_3'] = (m3_title[0] + 563, m3_title[1] + 90)
+    m3['premium_4'] = (m3_title[0] + 563, m3_title[1] + 103)
+    m3['premium_5'] = (m3_title[0] + 563, m3_title[1] + 116)
+    m3['premium_6'] = (m3_title[0] + 563, m3_title[1] + 129)
     return m3
 
 
@@ -96,85 +96,21 @@ def check_for_duplicate_premiums():
     pyautogui.click(m3['premiums'])
     pyautogui.click(m3['premium_1'])
     x, y = m3['premium_1']
-    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is False:
-        print('\x1b[6;30;42m' + 'No Premiums' + '\x1b[0m')
-        return
-    with mss.mss() as sct:
-        monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
-        im = sct.grab(monitor)
-        premium_1 = mss.tools.to_png(im.rgb, im.size)
-        premiums.append(premium_1)
-    pyautogui.click(m3['premium_2'])
-    x, y = m3['premium_2']
-    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is False:
-        print('1 Premiums')
-        return
-    with mss.mss() as sct:
-        monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
-        im = sct.grab(monitor)
-        premium_2 = mss.tools.to_png(im.rgb, im.size)
-        premiums.append(premium_2)
-    pyautogui.click(m3['premium_3'])
-    x, y = m3['premium_3']
-    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is False:
-        print('2 Premiums')
-        if len(premiums) != len(set(premiums)):
-            print('\x1b[6;30;41m' + 'Duplicate Premiums' + '\x1b[0m')
-        else:
-            print('\x1b[6;30;42m' + 'No Duplicate Premiums' + '\x1b[0m')
-        return
-    with mss.mss() as sct:
-        monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
-        im = sct.grab(monitor)
-        premium_3 = mss.tools.to_png(im.rgb, im.size)
-        premiums.append(premium_3)
-    pyautogui.click(m3['premium_4'])
-    x, y = m3['premium_4']
-    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is False:
-        print('3 Premiums')
-        if len(premiums) != len(set(premiums)):
-            print('\x1b[6;30;41m' + 'Duplicate Premiums' + '\x1b[0m')
-        else:
-            print('\x1b[6;30;42m' + 'No Duplicate Premiums' + '\x1b[0m')
-        return
-    with mss.mss() as sct:
-        monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
-        im = sct.grab(monitor)
-        premium_4 = mss.tools.to_png(im.rgb, im.size)
-        premiums.append(premium_4)
-    pyautogui.click(m3['premium_5'])
-    x, y = m3['premium_5']
-    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is False:
-        print('4 Premiums')
-        if len(premiums) != len(set(premiums)):
-            print('\x1b[6;30;41m' + 'Duplicate Premiums' + '\x1b[0m')
-        else:
-            print('\x1b[6;30;42m' + 'No Duplicate Premiums' + '\x1b[0m')
-        return
-    with mss.mss() as sct:
-        monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
-        im = sct.grab(monitor)
-        premium_5 = mss.tools.to_png(im.rgb, im.size)
-        premiums.append(premium_5)
-    pyautogui.click(m3['premium_6'])
-    x, y = m3['premium_6']
-    if pyautogui.pixelMatchesColor(x, y, (8, 36, 107)) is False:
-        print('5 Premiums')
-        if len(premiums) != len(set(premiums)):
-            print('\x1b[6;30;41m' + 'Duplicate Premiums' + '\x1b[0m')
-        else:
-            print('\x1b[6;30;42m' + 'No Duplicate Premiums' + '\x1b[0m')
-        return
-    with mss.mss() as sct:
-        monitor = {'top': y - 4, 'left': x + 7, 'width': 100, 'height': 9}
-        im = sct.grab(monitor)
-        premium_6 = mss.tools.to_png(im.rgb, im.size)
-        premiums.append(premium_6)
-    print('6 Premiums')
+    number_of_premiums = 0
+    is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
+    while is_premium_blue is True:
+        number_of_premiums += 1
+        with mss.mss() as sct:
+            monitor = {'top': y - 4, 'left': x - 223, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            premiums.append(mss.tools.to_png(im.rgb, im.size))
+        y += 13
+        pyautogui.click(x, y)
+        is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
     if len(premiums) != len(set(premiums)):
-        print('\x1b[6;30;41m' + 'Duplicate Premiums' + '\x1b[0m')
+        print('\x1b[6;30;41m' + str(number_of_premiums) + ' Premiums - DUPLICATES' + '\x1b[0m')
     else:
-        print('\x1b[6;30;42m' + 'No Duplicate Premiums' + '\x1b[0m')
+        print('\x1b[6;30;42m' + str(number_of_premiums) + ' Premiums - No Duplicates' + '\x1b[0m')
 
 
 def search_pid(pid_number):
@@ -187,18 +123,13 @@ def search_pid(pid_number):
 
 def select_tour():
     m2 = get_m2_coordinates()
-    audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png',
-                                              region=(514, 245, 889, 566))
-    if audition is None:
-        pyautogui.doubleClick(m2['first_tour'])
-
-    else:
-        audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\audition_2.png',
-                                                  region=(514, 245, 889, 566))
-        if audition is None:
-            pyautogui.doubleClick(m2['second_tour'])
-        else:
-            pyautogui.doubleClick(m2['third_tour'])
+    x, y = m2['title']
+    # Checks if there is an audition
+    audition = pyautogui.pixelMatchesColor(x + 465, y + 65, (255, 255, 255))
+    while audition is True:
+        y = y + 13
+        audition = pyautogui.pixelMatchesColor(x + 465, y + 65, (0, 0, 0))
+    pyautogui.doubleClick(x + 469, y + 67)  # Selects the top tour that isn't an audition
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
     pyautogui.click(m2['yes_change_sites'])
@@ -609,8 +540,8 @@ for row in df:
 df.SP.head(2)'''
 
 type_of_sheet = input('Confirmation (C) or Activation (A):')
-pids = ['1417675', '1414798', '1417975', '1416767', '1411834', '1409110', '1416434', '', '',
-        '', '', '', '', '', '', '', '', '', '', '',
+pids = ['1408018', '1416409', '1416399', '1416321', '1417316', '1410847', '1414629', '1409051', '1416887',
+        '1417658', '1405096', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '']
 
 if type_of_sheet != 'a' or type_of_sheet != 'A':
