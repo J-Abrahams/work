@@ -592,12 +592,10 @@ pids = ['1408018', '1416409', '1416399', '1416321', '1417316', '1410847', '14146
         '1417658', '1405096', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '']
 
-
-    auto_or_manual = input('Auto (A) or Manual (M):')
-    sol = input("SOL #:")
-    if auto_or_manual == 'a' or auto_or_manual == 'A':
-        if type_of_sheet == 'a' or type_of_sheet == 'A':
-
+auto_or_manual = input('Auto (A) or Manual (M):')
+sol = input("SOL #:")
+if auto_or_manual == 'a' or auto_or_manual == 'A':
+    if type_of_sheet == 'a' or type_of_sheet == 'A':
         automatic_confirmation()
-    else:
-        manual_confirmation(pids)
+else:
+    manual_confirmation(pids)

@@ -8,7 +8,6 @@ import mss
 import mss.tools
 from tkinter import Tk
 
-
 m1 = {}
 m2 = {}
 m3 = {}
@@ -326,6 +325,7 @@ def confirm(sol):
     keyboard.write("cc")
     pyautogui.click(x_4 + 90, y_4 + 350)
 
+
 def reschedule(sol):
     get_m3_coordinates()
     confirm_tour_status_reschedule()
@@ -604,11 +604,9 @@ for row in df:
 
 df.SP.head(2)'''
 
-
 pids = ['', '', '', '', '', '', '', '1411819', '1412956',
         '1416653', '1418017', '1417455', '1416127', '1418236', '', '', '', '', '', '',
         '', '', '', '', '', '']
-
 
 auto_or_manual = input('Auto (A) or Manual (M):')
 sol = input("SOL #:")

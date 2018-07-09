@@ -15,6 +15,7 @@ def search_for_tour_title():
     x_1, y_1 = tour_menu
     return x_1, y_1
 
+
 def search_pid(pid):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
                                            region=(514, 245, 889, 566))
@@ -85,6 +86,7 @@ def change_deposit_title():
     elif new_title == 'ams/refunded deposit':
         select_ams_refund_payment(x, y, '50', '6/20/18')
 
+
 def copy_reference_number(x, y):
     pyautogui.doubleClick(x + 50, y + 190)  # Already entered payment
     time.sleep(1)
@@ -151,18 +153,19 @@ def select_ams_refund_payment(x, y, price, date):
     pyautogui.click(x + 150, y + 400)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x + 265, y + 475)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x - 20, y + 425)
+
 
 def select_ams_refund_insert(x, y, price, date):
     pyautogui.doubleClick(x + 50, y + 190)  # Already entered payment
@@ -216,18 +219,19 @@ def select_ams_refund_insert(x, y, price, date):
     pyautogui.click(x + 150, y + 400)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x + 265, y + 475)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x - 20, y + 425)
+
 
 def select_ams_cc_ref(x, y, price, date):
     pyautogui.doubleClick(x + 50, y + 190)  # Already entered payment
@@ -280,18 +284,19 @@ def select_ams_cc_ref(x, y, price, date):
     pyautogui.click(x + 150, y + 400)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x + 265, y + 475)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x - 20, y + 425)
+
 
 def enter_rest_of_info(x, y, x_1, y_1):
     pyautogui.doubleClick(x_1 + 85, y + 130)  # Amount
@@ -310,14 +315,14 @@ def enter_rest_of_info(x, y, x_1, y_1):
     pyautogui.click(x + 150, y + 400)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x + 265, y + 475)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                region=(514, 245, 889, 566))
     x, y = image
@@ -376,14 +381,14 @@ def ir_refund(x, y, price, date):
     pyautogui.click(x + 150, y + 400)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x + 265, y + 475)
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                region=(514, 245, 889, 566))
     x, y = image
