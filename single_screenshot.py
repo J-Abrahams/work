@@ -1,3 +1,6 @@
 import pyautogui
+import mss
+import mss.tools
 
-pyautogui.screenshot('screenshot09.png')
+
+pyautogui.screenshot('screenshotf9.png')

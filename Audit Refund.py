@@ -7,7 +7,7 @@ import pyperclip
 def search_pid(pid):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
                                                region=(514, 245, 889, 566))
     x, y = image
@@ -20,13 +20,13 @@ def search_pid(pid):
 def select_tour():
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                region=(514, 245, 889, 566))
     x, y = image
     audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png',
                                               region=(514, 245, 889, 566))
-    if audition == None:
+    if audition is None:
         pyautogui.doubleClick(x, y + 12)
 
     else:
@@ -39,7 +39,7 @@ def select_tour():
 def audit_refund(department):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
-    while image == None:
+    while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                region=(514, 245, 889, 566))
     x, y = image
@@ -47,36 +47,37 @@ def audit_refund(department):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_refundable50.png',
                                            region=(514, 245, 1000, 566))
     attempt = 0
-    while image == None and attempt <= 3:
+    while image is None and attempt <= 3:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_deposit.png',
                                                region=(514, 245, 1000, 566))
         attempt += 1
-    if image == None:
+    if image is None:
         print('Deposit is not $50')
     else:
         pyautogui.click(x + 375, y + 18)
         dep = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_dep50.png',
-                                               region=(514, 245, 1000, 566))
-        if dep != None:
+                                             region=(514, 245, 1000, 566))
+        if dep is not None:
             print('DEP already there.')
             return
         dep_selected = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_dep50_selected.png',
-                                             region=(514, 245, 1000, 566))
+                                                      region=(514, 245, 1000, 566))
         print(dep_selected)
-        if dep_selected != None:
+        if dep_selected is not None:
             print('DEP already there.')
             return
         pyautogui.click(x + 275, y + 185)
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingpremium.png',
                                                region=(514, 245, 889, 566))
-        while image == None:
-            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingpremium.png',
-                                                   region=(514, 245, 889, 566))
+        while image is None:
+            image = pyautogui.locateCenterOnScreen(
+                'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingpremium.png',
+                region=(514, 245, 889, 566))
         x_1, y_1 = image
         pyautogui.click(x_1 + 175, y_1 + 80)
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_premium_search.png',
                                                region=(514, 245, 889, 566))
-        while image == None:
+        while image is None:
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_premium_search.png',
                                                    region=(514, 245, 889, 566))
         x_2, y_2 = image
@@ -111,16 +112,16 @@ def audit_refund(department):
         pyautogui.click(x + 265, y + 475)
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                region=(514, 245, 889, 566))
-        while image == None:
+        while image is None:
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                                                    region=(514, 245, 889, 566))
         x, y = image
         pyautogui.click(x - 20, y + 425)
 
 
-pids = [1413552, 1413765, 1413777, 1413789, 1413795, 1413821]
+pids = [1414618, 1414679, 1414715, 1414748]
 for pid in map(str, pids):
     search_pid(pid)
     select_tour()
     #  San Diego is cm
-    audit_refund('cm')
+    audit_refund('ae')

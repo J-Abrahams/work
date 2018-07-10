@@ -30,7 +30,7 @@ setup(
     description='Hook and simulate keyboard events on Windows and Linux',
     keywords = 'keyboard hook simulate hotkey',
     long_description=long_description,
-    install_requires=["pyobjc; sys_platform=='darwin'", 'keyboard', 'pyautogui'], # OSX-specific dependency
+    install_requires=["pyobjc; sys_platform=='darwin'", 'pyautogui', 'pyperclip', 'keyboard', 'pandas', 'mss'], # OSX-specific dependency
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',

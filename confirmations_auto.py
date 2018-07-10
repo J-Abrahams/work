@@ -6,6 +6,7 @@ import csv
 import pandas as pd
 import mss
 import mss.tools
+from tkinter import Tk
 
 m1 = {}
 m2 = {}
@@ -81,6 +82,10 @@ def get_m3_coordinates():
     m3['wave'] = (m3_title[0] + 143, m3_title[1] + 251)
     m3['team'] = (m3_title[0] + 143, m3_title[1] + 278)
     m3['insert'] = (m3_title[0] + 314, m3_title[1] + 439)
+    #  Tour Packages Tab
+    m3['deposit_1'] = (m3_title[0] + 563, m3_title[1] + 71)
+    m3['deposit_2'] = (m3_title[0] + 563, m3_title[1] + 94)
+    #  Premiums Tab
     m3['premium_1'] = (m3_title[0] + 563, m3_title[1] + 64)
     m3['premium_2'] = (m3_title[0] + 563, m3_title[1] + 77)
     m3['premium_3'] = (m3_title[0] + 563, m3_title[1] + 90)
@@ -88,29 +93,6 @@ def get_m3_coordinates():
     m3['premium_5'] = (m3_title[0] + 563, m3_title[1] + 116)
     m3['premium_6'] = (m3_title[0] + 563, m3_title[1] + 129)
     return m3
-
-
-def check_for_duplicate_premiums():
-    premiums = []
-    get_m3_coordinates()
-    pyautogui.click(m3['premiums'])
-    pyautogui.click(m3['premium_1'])
-    x, y = m3['premium_1']
-    number_of_premiums = 0
-    is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
-    while is_premium_blue is True:
-        number_of_premiums += 1
-        with mss.mss() as sct:
-            monitor = {'top': y - 4, 'left': x - 223, 'width': 100, 'height': 9}
-            im = sct.grab(monitor)
-            premiums.append(mss.tools.to_png(im.rgb, im.size))
-        y += 13
-        pyautogui.click(x, y)
-        is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
-    if len(premiums) != len(set(premiums)):
-        print('\x1b[6;30;41m' + str(number_of_premiums) + ' Premiums - DUPLICATES' + '\x1b[0m')
-    else:
-        print('\x1b[6;30;42m' + str(number_of_premiums) + ' Premiums - No Duplicates' + '\x1b[0m')
 
 
 def search_pid(pid_number):
@@ -133,6 +115,101 @@ def select_tour():
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
     pyautogui.click(m2['yes_change_sites'])
+
+
+def check_for_refundable_deposit():
+    pyautogui.click(m3['tour_packages'])
+    x, y = m3['deposit_1']
+    is_deposit_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
+    while is_deposit_blue is True:
+        pyautogui.tripleClick(x, y)
+        image = pyautogui.locateCenterOnScreen(
+            'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_tour_package.png',
+            region=(514, 245, 889, 566))
+        while image is None:
+            image = pyautogui.locateCenterOnScreen(
+                'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_tour_package.png',
+                region=(514, 245, 889, 566))
+        x_2, y_2 = image
+        pyautogui.click(x_2 + 150, y_2 + 125)  # Description
+        keyboard.send('ctrl + z')  # Select all
+        keyboard.send('ctrl + c')  # Copy description
+        r = Tk()
+        result = r.selection_get(selection="CLIPBOARD")
+        if 'ref' in result.lower():
+            pyautogui.tripleClick(x_2 + 150, y_2 + 190)
+            image = pyautogui.locateCenterOnScreen(
+                'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\view_record.png', region=(514, 245, 889, 566))
+            while image is None:
+                image = pyautogui.locateCenterOnScreen(
+                    'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\view_record.png', region=(514, 245, 889, 566))
+            x_3, y_3 = image
+            pyautogui.doubleClick(x_3 + 80, y_3 + 118)
+            keyboard.send('ctrl + c')
+            r = Tk()
+            price = str(r.selection_get(selection="CLIPBOARD")[1:3])
+            pyautogui.click(x_3 + 300, y_3 + 215)
+            pyautogui.click(x_2 + 350, y_2 + 400)
+            return price
+        else:
+            y += 13
+            pyautogui.click(x, y)
+            is_deposit_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
+    """x, y = m3['title']
+    refundable = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\refundable.png',
+                                                region=(514, 245, 889, 566))
+    if refundable is None:
+        refundable = pyautogui.locateCenterOnScreen(
+            'C:\\Users\\Jared.Abrahams\\Screenshots\\refundable.png',
+            region=(514, 245, 889, 566))
+    if refundable is not None:
+        with mss.mss() as sct:
+            monitor = {'top': y + 68, 'left': x + 461, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            price = prices[str(mss.tools.to_png(im.rgb, im.size))[106:115]]
+            print(price)"""
+
+
+def check_for_dep_premium():
+    get_m3_coordinates()
+    price = check_for_refundable_deposit()
+    premiums = check_for_duplicate_premiums()
+    dep_40_cc = 'x8aIDATx'
+    dep_50_cc = 'x8bIDATx'
+    if price == '40':
+        if any(dep_40_cc in s for s in premiums):
+            print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
+        else:
+            print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
+    elif price == '50':
+        if any(dep_50_cc in s for s in premiums):
+            print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
+        else:
+            print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
+
+
+def check_for_duplicate_premiums():
+    premiums = []
+    pyautogui.click(m3['premiums'])
+    time.sleep(0.3)
+    pyautogui.click(m3['premium_1'])
+    x, y = m3['premium_1']
+    number_of_premiums = 0
+    is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
+    while is_premium_blue is True:
+        number_of_premiums += 1
+        with mss.mss() as sct:
+            monitor = {'top': y - 4, 'left': x - 223, 'width': 100, 'height': 9}
+            im = sct.grab(monitor)
+            premiums.append(str(mss.tools.to_png(im.rgb, im.size)))
+        y += 13
+        pyautogui.click(x, y)
+        is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
+    if len(premiums) != len(set(premiums)):
+        print('\x1b[6;30;41m' + str(number_of_premiums) + ' Premiums - DUPLICATES' + '\x1b[0m')
+    else:
+        print('\x1b[6;30;42m' + str(number_of_premiums) + ' Premiums - No Duplicates' + '\x1b[0m')
+    return premiums
 
 
 def confirm_tour_status_confirm():
@@ -228,6 +305,7 @@ def confirm(sol):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
+    time.sleep(0.3)
     pyautogui.click(x_1 + 75, y_1 + 25)  # By Personnel Number Tab
     keyboard.write(sol)
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
@@ -244,20 +322,15 @@ def confirm(sol):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                                region=(514, 245, 889, 566))
     x_4, y_4 = image
-    if type_of_sheet == 'c' or type_of_sheet == 'C':
-        try:
-            x_5, y_5 = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png',
-                                                      region=(514, 245, 889, 566))
-        except TypeError:
-            pyautogui.click(x_4 + 90, y_4 + 80)
-            keyboard.write("cc")
-        pyautogui.click(x_4 + 90, y_4 + 105)
-        keyboard.write("cc")
-        pyautogui.click(x_4 + 90, y_4 + 350)
-    else:
+    try:
+        x_5, y_5 = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png',
+                                                  region=(514, 245, 889, 566))
+    except TypeError:
         pyautogui.click(x_4 + 90, y_4 + 80)
-        keyboard.write("q")
-        pyautogui.click(x_4 + 90, y_4 + 350)
+        keyboard.write("cc")
+    pyautogui.click(x_4 + 90, y_4 + 105)
+    keyboard.write("cc")
+    pyautogui.click(x_4 + 90, y_4 + 350)
 
 
 def reschedule(sol):
@@ -271,6 +344,7 @@ def reschedule(sol):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
+    time.sleep(0.3)
     pyautogui.click(x_1 + 75, y_1 + 25)  # By Personnel Number Tab
     keyboard.write(sol)
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
@@ -309,6 +383,7 @@ def cancel(sol):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
+    time.sleep(0.3)
     pyautogui.click(x_1 + 75, y_1 + 25)  # By Personnel Number Tab
     keyboard.write(sol)
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
@@ -346,6 +421,7 @@ def upgrade(sol):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
+    time.sleep(0.3)
     pyautogui.click(x_1 + 75, y_1 + 25)  # By Personnel Number Tab
     keyboard.write(sol)
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
@@ -383,6 +459,7 @@ def travel_allowance(sol):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
     x_1, y_1 = image
+    time.sleep(0.3)
     pyautogui.click(x_1 + 75, y_1 + 25)  # By Personnel Number Tab
     keyboard.write(sol)
     pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
@@ -446,7 +523,7 @@ def manual_confirmation(pids):
         if pid != '':
             search_pid(pid)
             select_tour()
-            check_for_duplicate_premiums()
+            check_for_dep_premium()
             if status == "c":
                 confirm(sol)
             elif status == "r":
@@ -475,56 +552,7 @@ def manual_confirmation(pids):
                 pyautogui.click(x - 20, y + 425)
 
 
-def automatic_qa():
-    convert_excel_to_csv()
-    with open('file.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            pids = row['PID'].replace('.0', '')
-            qa = row['qa']
-            cxl = row['cxl']
-            rxl = row['rxl']
-            search_pid(pids)
-            select_tour()
-            check_for_duplicate_premiums()
-            try:
-                ug = row['ug']
-                if ug == "X" or ug == "x":
-                    upgrade(sol)
-            except KeyError:
-                pass
-            try:
-                tav = row['tav']
-                if tav == "X" or tav == "x":
-                    travel_allowance(sol)
-            except KeyError:
-                pass
-            if qa == "X" or qa == "x":
-                confirm(sol)
-            if rxl == "X" or rxl == "x":
-                reschedule(sol)
-            if cxl == "X" or cxl == "x":
-                cancel(sol)
-
-            keep_going = input("Everything ok?")
-            if keep_going != '':
-                image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                                       region=(514, 245, 889, 566))
-                while image is None:
-                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                                           region=(514, 245, 889, 566))
-                x, y = image
-                pyautogui.click(x + 265, y + 475)
-                image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                       region=(514, 245, 889, 566))
-                while image is None:
-                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                           region=(514, 245, 889, 566))
-                x, y = image
-                pyautogui.click(x - 20, y + 425)
-
-
-def automatic_activation():
+def automatic_confirmation():
     convert_excel_to_csv()
     with open('file.csv') as csvfile:
         reader = csv.DictReader(csvfile)
@@ -535,7 +563,7 @@ def automatic_activation():
             rxl = row['rxl']
             search_pid(pids)
             select_tour()
-            check_for_duplicate_premiums()
+            check_for_dep_premium()
             try:
                 ug = row['ug']
                 if ug == "X" or ug == "x":
@@ -587,15 +615,14 @@ for row in df:
 
 df.SP.head(2)'''
 
-type_of_sheet = input('QA (Q) or Activation (A):')
-pids = ['1408018', '1416409', '1416399', '1416321', '1417316', '1410847', '1414629', '1409051', '1416887',
-        '1417658', '1405096', '', '', '', '', '', '', '', '', '',
+pids = ['1412563', '1411743', '1416435', '1417447', '1405479', '1412500', '1418293', '1414271', '1417833',
+        '', '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '']
 
 auto_or_manual = input('Auto (A) or Manual (M):')
+print("Justin Locke's SOL is SOL4967")
 sol = input("SOL #:")
 if auto_or_manual == 'a' or auto_or_manual == 'A':
-    if type_of_sheet == 'a' or type_of_sheet == 'A':
-        automatic_confirmation()
+    automatic_confirmation()
 else:
     manual_confirmation(pids)
