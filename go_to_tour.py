@@ -7,7 +7,7 @@ import pandas as pd
 import mss
 import mss.tools
 from tkinter import Tk
-import screenshot_data as sc
+from screenshot_data import *
 
 m1 = {}
 m2 = {}
@@ -178,13 +178,13 @@ def check_for_dep_premium():
     price = check_for_refundable_deposit()
     premiums = check_for_duplicate_premiums()
     if price == '40':
-        if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
-                any(sc.d40_cc_dep in s for s in premiums) or any(sc.d40_dep in s for s in premiums):
+        if any(dep_40_cc in s for s in premiums) or any(dep_40_cash in s for s in premiums) or \
+                any(d40_cc_dep in s for s in premiums) or any(d40_dep in s for s in premiums):
             print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
         else:
             print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
     elif price == '50':
-        if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cc in s for s in premiums):
+        if any(dep_50_cc in s for s in premiums) or any(dep_50_cc in s for s in premiums):
             print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
         else:
             print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
@@ -216,10 +216,6 @@ def check_for_duplicate_premiums():
     else:
         print('\x1b[6;30;42m' + str(number_of_premiums) + ' Premiums - No Duplicates' + '\x1b[0m')
     return premiums
-
-
-def confirm_tour_type():
-    pass
 
 
 def confirm_tour_status(status):
@@ -377,14 +373,11 @@ def activation_sheet():
 
 
 def manual_confirmation(pids):
-    status = input('Conf (c), RXL (r), CXL (x), UG (u), or TAV (tav)')
     for pid in pids:
         if pid != '':
             search_pid(pid)
             select_tour()
             check_for_dep_premium()
-            confirm_tour_status(status)
-            enter_personnel(sol, status)
             input("Everything ok?")
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                    region=(514, 245, 889, 566))
@@ -408,34 +401,9 @@ def automatic_confirmation():
         reader = csv.DictReader(csvfile)
         for row in reader:
             pids = row['PID'].replace('.0', '')
-            conf = row['conf']
-            cxl = row['cxl']
-            rxl = row['rxl']
             search_pid(pids)
             select_tour()
             check_for_dep_premium()
-            try:
-                ug = row['ug']
-                if ug == "X" or ug == "x":
-                    enter_personnel(sol, 'u')
-            except KeyError:
-                pass
-            try:
-                tav = row['tav']
-                if tav == "X" or tav == "x":
-                    enter_personnel(sol, 'tav')
-            except KeyError:
-                pass
-            if conf == "X" or conf == "x":
-                confirm_tour_status('c')
-                enter_personnel(sol, 'c')
-            if rxl == "X" or rxl == "x":
-                confirm_tour_status('r')
-                enter_personnel(sol, 'r')
-            if cxl == "X" or cxl == "x":
-                confirm_tour_status('x')
-                enter_personnel(sol, 'x')
-
             input("Everything ok?")
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                    region=(514, 245, 889, 566))
@@ -453,23 +421,9 @@ def automatic_confirmation():
             pyautogui.click(x - 20, y + 425)
 
 
-'''df = pd.read_csv("file.csv", header=None, skiprows=3)
-for row in df:
-    pids = row['PID']
-    print(pids)
-    pids = pids[:-2]
-    conf = row['CONF']
-    cxl = row['CXL']
-    rxl = row['RXL']
-    search_pid(pids)
-    select_tour()
-    add_personnel('sol25688', conf, cxl, rxl)
-
-df.SP.head(2)'''
-
-pids = ['1404558', '1416832', '1414894', '1417695', '1418181', '1419583', '1418849', '', '',
-        '', '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '']
+pids = ['1403959', '1418337', '1412201', '1400808', '1418774', '1403986', '1415923', '1411462', '1410681', '1418665',
+        '1417744', '1416383', '1407345', '1412509', '1417790', '1415366', '1411611', '1415513', '1415127', '1417426',
+        '1406230', '1413582', '1419505', '1418336', '1401205', '1417952']
 
 auto_or_manual = input('Auto (A) or Manual (M):')
 print("Justin Locke's SOL is SOL4967")
