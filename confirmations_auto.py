@@ -198,20 +198,6 @@ def check_for_refundable_deposit():
             pyautogui.click(x, y)
             is_deposit_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
 
-    """x, y = m3['title']
-    refundable = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\refundable.png',
-                                                region=(514, 245, 889, 566))
-    if refundable is None:
-        refundable = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\refundable.png',
-            region=(514, 245, 889, 566))
-    if refundable is not None:
-        with mss.mss() as sct:
-            monitor = {'top': y + 68, 'left': x + 461, 'width': 100, 'height': 9}
-            im = sct.grab(monitor)
-            price = prices[str(mss.tools.to_png(im.rgb, im.size))[106:115]]
-            print(price)"""
-
 
 def check_for_dep_premium():
     get_m3_coordinates()
@@ -320,19 +306,17 @@ def confirm_sol_in_userfields(sol):
                                                region=(514, 245, 889, 566))
     x, y = image
     pyautogui.click(x, y + 18)  # User Fields Tab
-    try:
-        x_1, y_1 = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer_sol.png',
-                                                  region=(514, 245, 889, 566))
+    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer_sol.png',
+                                      region=(514, 245, 889, 566)) is None:
+        print('\x1b[6;30;42m' + 'Sol number is good' + '\x1b[0m')
+    else:
         pyautogui.doubleClick(x + 115, y + 222)
         keyboard.press_and_release('ctrl + c')
-        tsw_sol = str(pyperclip.paste())
+        r = Tk()
+        tsw_sol = str(r.selection_get(selection="CLIPBOARD"))
         print(tsw_sol + " changed to " + sol)
         pyperclip.copy(sol)
         keyboard.press_and_release('ctrl + v')
-
-    except TypeError:
-        print('\x1b[6;30;42m' + 'Sol number is good' + '\x1b[0m')
-
     pyautogui.click(x - 65, y + 18)
 
 
@@ -355,7 +339,7 @@ def notes(status):
             x_2, y_2 = image
             pyautogui.click(x_2 + 25, y_2 + 75)
             pyautogui.dragTo(x_2 + 250, y_2 + 150, button='left')
-            keyboard.send('ctrl + c')  # Copy description
+            keyboard.send('ctrl + c')  # Copy note
             r = Tk()
             result = r.selection_get(selection="CLIPBOARD")
             if result in copied:
@@ -419,10 +403,8 @@ def enter_personnel(sol, status):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                                region=(514, 245, 889, 566))
     x_4, y_4 = image
-    try:
-        x_5, y_5 = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png',
-                                                  region=(514, 245, 889, 566))
-    except TypeError:
+    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png',
+                                      region=(514, 245, 889, 566)) is not None:
         pyautogui.click(x_4 + 90, y_4 + 80)
         keyboard.write("cc")
     pyautogui.click(x_4 + 90, y_4 + 105)
@@ -448,8 +430,6 @@ def convert_excel_to_csv():
 def activation_sheet():
     for pid in pids:
         if pid != '':
-            global data
-            data.append(pid)
             search_pid(pid)
             select_tour()
             read_premiums()
