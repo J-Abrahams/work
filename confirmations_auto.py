@@ -8,6 +8,7 @@ import mss
 import mss.tools
 from tkinter import Tk
 import screenshot_data as sc
+import xlsxwriter
 
 m1 = {}
 m2 = {}
@@ -36,6 +37,7 @@ def get_m2_coordinates():
                                                   '\\changing_a_prospect.png',
                                                   region=(514, 245, 889, 566))
     m2['title'] = (m2_title[0], m2_title[1])
+    m2['prospect_id'] = (m2_title[0] + 103, m2_title[1] + 50)
     m2['first_tour'] = (m2_title[0] + 375, m2_title[1] + 65)
     m2['second_tour'] = (m2_title[0] + 375, m2_title[1] + 78)
     m2['third_tour'] = (m2_title[0] + 375, m2_title[1] + 91)
@@ -83,6 +85,8 @@ def get_m3_coordinates():
     m3['wave'] = (m3_title[0] + 143, m3_title[1] + 251)
     m3['team'] = (m3_title[0] + 143, m3_title[1] + 278)
     m3['insert'] = (m3_title[0] + 314, m3_title[1] + 439)
+    #  Notes Tab
+    m3['notes_change'] = (m3_title[0] + 50, m3_title[1] + 435)
     #  Tour Packages Tab
     m3['deposit_1'] = (m3_title[0] + 563, m3_title[1] + 71)
     m3['deposit_2'] = (m3_title[0] + 563, m3_title[1] + 94)
@@ -116,6 +120,37 @@ def select_tour():
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
     pyautogui.click(m2['yes_change_sites'])
+
+
+def double_check_pid(pid_number):
+    get_m2_coordinates()
+    pyautogui.doubleClick(m2['prospect_id'])
+    keyboard.send('ctrl + c')
+    r = Tk()
+    clipboard = r.selection_get(selection="CLIPBOARD")
+    if clipboard != pid_number:
+        input('Is the pid correct?')
+        return
+    pyautogui.click(m2['company'])
+    keyboard.send('ctrl + z')
+    time.sleep(1)
+    keyboard.send('ctrl + c')
+    r = Tk()
+    clipboard = r.selection_get(selection="CLIPBOARD")
+    if 'pid' in clipboard.lower():
+        input('Is the pid correct?')
+        return
+
+
+def check_tour_for_error():
+    get_m3_coordinates()
+    with mss.mss() as sct:
+        x, y = m3['title']
+        monitor = {'top': y + 171, 'left': x + 40, 'width': 52, 'height': 12}
+        im = sct.grab(monitor)
+        tour_status = str(mss.tools.to_png(im.rgb, im.size))
+        if tour_status == sc.error:
+            input('Is this the correct tour?')
 
 
 def check_for_refundable_deposit():
@@ -176,7 +211,7 @@ def check_for_refundable_deposit():
 def check_for_dep_premium():
     get_m3_coordinates()
     price = check_for_refundable_deposit()
-    premiums = check_for_duplicate_premiums()
+    premiums = read_premiums()
     if price == '40':
         if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
                 any(sc.d40_cc_dep in s for s in premiums) or any(sc.d40_dep in s for s in premiums):
@@ -184,14 +219,21 @@ def check_for_dep_premium():
         else:
             print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
     elif price == '50':
-        if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cc in s for s in premiums):
+        if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cash in s for s in premiums) or \
+                any(sc.d50_cc_dep in s for s in premiums):
             print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
         else:
             print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
+    elif price == '20':
+        if any(sc.d20_cc_dep in s for s in premiums) or any(sc.dep_20_cc in s for s in premiums):
+            print('\x1b[6;30;42m' + '$20 DEP is present' + '\x1b[0m')
+        else:
+            print('\x1b[6;30;41m' + 'Missing $20 DEP' + '\x1b[0m')
 
 
-def check_for_duplicate_premiums():
-    premiums = []
+def read_premiums():
+    """Adds all premiums to the list premiums and checks if there are any duplicates among them"""
+    list_of_premiums = []
     pyautogui.click(m3['premiums'])
     time.sleep(0.3)
     pyautogui.click(m3['premium_1'])
@@ -203,19 +245,18 @@ def check_for_duplicate_premiums():
         with mss.mss() as sct:
             monitor = {'top': y - 4, 'left': x - 223, 'width': 100, 'height': 9}
             im = sct.grab(monitor)
-            premiums.append(str(mss.tools.to_png(im.rgb, im.size)))
-            print((mss.tools.to_png(im.rgb, im.size)))
+            list_of_premiums.append(str(mss.tools.to_png(im.rgb, im.size)))
         y += 13
         pyautogui.click(x, y)
         time.sleep(0.3)
         is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
         if is_premium_blue is False:
             is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
-    if len(premiums) != len(set(premiums)):
+    if len(list_of_premiums) != len(set(list_of_premiums)):
         print('\x1b[6;30;41m' + str(number_of_premiums) + ' Premiums - DUPLICATES' + '\x1b[0m')
     else:
         print('\x1b[6;30;42m' + str(number_of_premiums) + ' Premiums - No Duplicates' + '\x1b[0m')
-    return premiums
+    return list_of_premiums
 
 
 def confirm_tour_type():
@@ -223,6 +264,9 @@ def confirm_tour_type():
 
 
 def confirm_tour_status(status):
+    """Checks that the tour status is correct"""
+    pyautogui.click(m3['tour'])
+    pyautogui.click(m3['accommodations'])
     x, y = m3['title']
     if status == 'c':
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\confirmed.png',
@@ -287,14 +331,51 @@ def confirm_sol_in_userfields(sol):
     pyautogui.click(x - 65, y + 18)
 
 
-def check_deposit():
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+def notes(status):
+    get_m3_coordinates()
+    pyautogui.click(m3['notes'])
+    x, y = m3['notes']
+    copied = []
+    while True:
+        pyautogui.click(x, y + 40)
+        pyautogui.click(m3['notes_change'])
+        attempts = 0
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_note.png',
                                                region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 300, y + 18)
+        while attempts <= 3 and image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_note.png',
+                                                   region=(514, 245, 889, 566))
+            attempts += 1
+        if image is not None:
+            x_2, y_2 = image
+            pyautogui.click(x_2 + 25, y_2 + 75)
+            pyautogui.dragTo(x_2 + 250, y_2 + 150, button='left')
+            keyboard.send('ctrl + c')  # Copy description
+            r = Tk()
+            result = r.selection_get(selection="CLIPBOARD")
+            if result in copied:
+                print('\x1b[6;30;41m' + 'COULDN\'T FIND CORRECT NOTE' + '\x1b[0m')
+                pyautogui.click(x_2 + 200, y_2 + 250)
+                return
+            if status == 'c' and 'conf' in result.lower():
+                print('\x1b[6;30;42m' + 'Confirm note is present' + '\x1b[0m')
+                pyautogui.click(x_2 + 200, y_2 + 250)
+                return
+            elif status == 'x' and ('nq' in result.lower() or 'canc' in result.lower() or 'cxl' in result.lower()):
+                print('\x1b[6;30;42m' + 'Cancel note is present' + '\x1b[0m')
+                pyautogui.click(x_2 + 200, y_2 + 250)
+                return
+            elif status == 'r' and ('rxl' in result.lower() or 'open' in result.lower()):
+                print('\x1b[6;30;42m' + 'Reschedule note is present' + '\x1b[0m')
+                pyautogui.click(x_2 + 200, y_2 + 250)
+                return
+            else:
+                copied.append(result)
+                pyautogui.click(x_2 + 200, y_2 + 250)
+                y += 13
+        else:
+            print('\x1b[6;30;41m' + 'NO NOTES' + '\x1b[0m')
+            return
 
 
 def enter_personnel(sol, status):
@@ -357,7 +438,7 @@ def activation_sheet():
         if pid != '':
             search_pid(pid)
             select_tour()
-            check_for_duplicate_premiums()
+            read_premiums()
             keep_going = input("Everything ok?")
             if keep_going != '':
                 image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
@@ -381,7 +462,10 @@ def manual_confirmation(pids):
     for pid in pids:
         if pid != '':
             search_pid(pid)
+            double_check_pid(pid)
             select_tour()
+            check_tour_for_error()
+            notes(status)
             check_for_dep_premium()
             confirm_tour_status(status)
             enter_personnel(sol, status)
@@ -412,7 +496,9 @@ def automatic_confirmation():
             cxl = row['cxl']
             rxl = row['rxl']
             search_pid(pids)
+            double_check_pid(pids)
             select_tour()
+            check_tour_for_error()
             check_for_dep_premium()
             try:
                 ug = row['ug']
@@ -428,12 +514,15 @@ def automatic_confirmation():
                 pass
             if conf == "X" or conf == "x":
                 confirm_tour_status('c')
+                notes('c')
                 enter_personnel(sol, 'c')
             if rxl == "X" or rxl == "x":
                 confirm_tour_status('r')
+                notes('r')
                 enter_personnel(sol, 'r')
             if cxl == "X" or cxl == "x":
                 confirm_tour_status('x')
+                notes('x')
                 enter_personnel(sol, 'x')
 
             input("Everything ok?")
@@ -467,12 +556,12 @@ for row in df:
 
 df.SP.head(2)'''
 
-pids = ['1404558', '1416832', '1414894', '1417695', '1418181', '1419583', '1418849', '', '',
-        '', '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '']
+pids = ['1349898', '1397033', '1252116', '1419264', '1342713', '1416143', '1419866', '1419947', '1420093', '1419358',
+        '1417099', '1417826', '1357926', '1419492', '1419843', '1419641', '1420101', '1419506', '', '',
+        '', '', '', '', '', '', '', '', '', '']
 
 auto_or_manual = input('Auto (A) or Manual (M):')
-print("Justin Locke's SOL is SOL4967")
+print("Justin Locke - 4967 \nBrian Bennett - 3055")
 sol = "SOL" + input("SOL #:")
 if auto_or_manual == 'a' or auto_or_manual == 'A':
     automatic_confirmation()
