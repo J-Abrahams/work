@@ -9,6 +9,7 @@ import mss.tools
 from tkinter import Tk
 import screenshot_data as sc
 import xlsxwriter
+from pathlib import Path
 
 m1 = {}
 m2 = {}
@@ -90,6 +91,7 @@ def get_m3_coordinates():
     #  Tour Packages Tab
     m3['deposit_1'] = (m3_title[0] + 563, m3_title[1] + 71)
     m3['deposit_2'] = (m3_title[0] + 563, m3_title[1] + 94)
+    m3['change_deposit'] = (m3_title[0] + 437, m3_title[1] + 181)
     #  Premiums Tab
     m3['premium_1'] = (m3_title[0] + 563, m3_title[1] + 64)
     m3['premium_2'] = (m3_title[0] + 563, m3_title[1] + 77)
@@ -131,6 +133,9 @@ def double_check_pid(pid_number):
     if clipboard != pid_number:
         input('Is the pid correct?')
         return
+    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
+                                      region=(514, 245, 889, 566)) is not None:
+        return
     pyautogui.click(m2['company'])
     keyboard.send('ctrl + z')
     time.sleep(1)
@@ -158,7 +163,7 @@ def check_for_refundable_deposit():
     x, y = m3['deposit_1']
     is_deposit_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
     while is_deposit_blue is True:
-        pyautogui.tripleClick(x, y)
+        pyautogui.click(m3['change_deposit'])
         image = pyautogui.locateCenterOnScreen(
             'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_tour_package.png',
             region=(514, 245, 889, 566))
@@ -173,7 +178,7 @@ def check_for_refundable_deposit():
         r = Tk()
         result = r.selection_get(selection="CLIPBOARD")
         if 'ref' in result.lower():
-            pyautogui.tripleClick(x_2 + 150, y_2 + 190)
+            pyautogui.click(x_2 + 85, y_2 + 370)
             image = pyautogui.locateCenterOnScreen(
                 'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\view_record.png', region=(514, 245, 889, 566))
             while image is None:
@@ -364,6 +369,13 @@ def notes(status):
             elif status == 'x' and ('nq' in result.lower() or 'canc' in result.lower() or 'cxl' in result.lower()):
                 print('\x1b[6;30;42m' + 'Cancel note is present' + '\x1b[0m')
                 pyautogui.click(x_2 + 200, y_2 + 250)
+                if 'nq' in result.lower():
+                    pyautogui.click(m3['tour'])
+                    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\tour_result.png',
+                                                      region=(514, 245, 889, 566)) is None:
+                        print('\x1b[6;30;42m' + 'Tour Result is correct' + '\x1b[0m')
+                    else:
+                        print('\x1b[6;30;41m' + 'NO TOUR RESULT' + '\x1b[0m')
                 return
             elif status == 'r' and ('rxl' in result.lower() or 'open' in result.lower()):
                 print('\x1b[6;30;42m' + 'Reschedule note is present' + '\x1b[0m')
@@ -436,6 +448,8 @@ def convert_excel_to_csv():
 def activation_sheet():
     for pid in pids:
         if pid != '':
+            global data
+            data.append(pid)
             search_pid(pid)
             select_tour()
             read_premiums()
@@ -556,8 +570,8 @@ for row in df:
 
 df.SP.head(2)'''
 
-pids = ['1349898', '1397033', '1252116', '1419264', '1342713', '1416143', '1419866', '1419947', '1420093', '1419358',
-        '1417099', '1417826', '1357926', '1419492', '1419843', '1419641', '1420101', '1419506', '', '',
+pids = ['1326419', '1412106', '1419962', '1412393', '1417981', '1418751', '1418279', '1417363', '', '',
+        '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '']
 
 auto_or_manual = input('Auto (A) or Manual (M):')
