@@ -20,17 +20,16 @@ def get_m1_coordinates():
     m1['search'] = (m1_title[0] + 50, m1_title[1])
     m1['find_now'] = (m1_title[0] + 650, m1_title[1])
     m1['change'] = (m1_title[0] + 400, m1_title[1] + 500)
-    m1['insert'] = (m1_title[0] + 320, m1_title[1] + 500)
     return m1
 
 
 def get_m2_coordinates():
     global m2
-    m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_a_prospect.png',
+    m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_a_prospect.png',
                                               region=(514, 245, 889, 566))
     while m2_title is None:
         m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles'
-                                                  '\\adding_a_prospect.png',
+                                                  '\\changing_a_prospect.png',
                                                   region=(514, 245, 889, 566))
     m2['title'] = (m2_title[0], m2_title[1])
     # Tabs
@@ -70,15 +69,15 @@ def get_m2_coordinates():
     return m2
 
 
+
 def get_m3_coordinates():
     global m3
-    m3_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\adding_a_tour.png',
+    m3_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\changing_a_tour.png',
                                               region=(514, 245, 889, 566))
     while m3_title is None:
-        m3_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\adding_a_tour.png',
+        m3_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\changing_a_tour.png',
                                                   region=(514, 245, 889, 566))
     m3['title'] = (m3_title[0], m3_title[1])
-    #  Tabs
     m3['tour'] = (m3_title[0] - 45, m3_title[1] + 20)
     m3['user_fields'] = (m3_title[0] + 5, m3_title[1] + 20)
     m3['notes'] = (m3_title[0] + 55, m3_title[1] + 20)
@@ -86,7 +85,6 @@ def get_m3_coordinates():
     m3['tour_packages'] = (m3_title[0] + 324, m3_title[1] + 24)
     m3['premiums'] = (m3_title[0] + 397, m3_title[1] + 24)
     m3['personnel'] = (m3_title[0] + 225, m3_title[1] + 217)
-    #  Tour tab
     m3['prospect'] = (m3_title[0] + 143, m3_title[1] + 45)
     m3['prospect_id'] = (m3_title[0] + 84, m3_title[1] + 69)
     m3['tour_id'] = (m3_title[0] + 84, m3_title[1] + 89)
@@ -97,14 +95,21 @@ def get_m3_coordinates():
     m3['tour_location'] = (m3_title[0] + 143, m3_title[1] + 227)
     m3['wave'] = (m3_title[0] + 143, m3_title[1] + 251)
     m3['team'] = (m3_title[0] + 143, m3_title[1] + 278)
-    m3['insert_1'] = (m3_title[0] + 314, m3_title[1] + 439)
-    #  Premiums tab
-    m3['premium_1'] = (m3_title[0] + 333, m3_title[1] + 64)
-    m3['premium_2'] = (m3_title[0] + 333, m3_title[1] + 78)
-    m3['premium_3'] = (m3_title[0] + 333, m3_title[1] + 90)
-    m3['premium_4'] = (m3_title[0] + 333, m3_title[1] + 102)
-    m3['premium_5'] = (m3_title[0] + 333, m3_title[1] + 114)
-    m3['premium_6'] = (m3_title[0] + 333, m3_title[1] + 126)
+    m3['insert'] = (m3_title[0] + 314, m3_title[1] + 439)
+    m3['scroll_bar_wave'] = (m3_title[0] + 141, m3_title[1] + 384)
+    #  Notes Tab
+    m3['notes_change'] = (m3_title[0] + 50, m3_title[1] + 435)
+    #  Tour Packages Tab
+    m3['deposit_1'] = (m3_title[0] + 563, m3_title[1] + 71)
+    m3['deposit_2'] = (m3_title[0] + 563, m3_title[1] + 94)
+    m3['change_deposit'] = (m3_title[0] + 437, m3_title[1] + 181)
+    #  Premiums Tab
+    m3['premium_1'] = (m3_title[0] + 563, m3_title[1] + 64)
+    m3['premium_2'] = (m3_title[0] + 563, m3_title[1] + 77)
+    m3['premium_3'] = (m3_title[0] + 563, m3_title[1] + 90)
+    m3['premium_4'] = (m3_title[0] + 563, m3_title[1] + 103)
+    m3['premium_5'] = (m3_title[0] + 563, m3_title[1] + 116)
+    m3['premium_6'] = (m3_title[0] + 563, m3_title[1] + 129)
     return m3
 
 
@@ -125,6 +130,21 @@ def get_m4_coordinates():
     print(m4_title)
 
 
+# Co-prospect Menu
+def get_m5_coordinates():
+    global m5
+    m5_title = pyautogui.locateCenterOnScreen(
+        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\record_will_be_added.png',
+        region=(514, 245, 889, 566))
+    while m5_title is None:
+        m5_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles'
+                                                  '\\record_will_be_added.png',
+                                                  region=(514, 245, 889, 566))
+    m5['get_from_prospect'] = (m5[0] + 198, m5[1] + 428)
+    m5['first'] = (m5[0] + 212, m5[1] + 101)
+    m5['ok'] = (m5[0] + 141, m5[1] + 462)
+
+
 def switch_site(site):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\windows_closed.png',
                                            region=(514, 245, 300, 300))
@@ -135,143 +155,130 @@ def switch_site(site):
     pyautogui.click(10, 25)
     pyautogui.click(10, 150)
     pyautogui.click(1000, 375)
-    if data_dict['location'] == '2':
+    if owner_dict['location'] == '2':
         keyboard.write('A1')
         keyboard.send('enter')
-    elif data_dict['location'] == '3':
+    elif owner_dict['location'] == '3':
         keyboard.write('A2')
         keyboard.send('enter')
-    elif data_dict['location'] == '4':
+    elif owner_dict['location'] == '4':
         keyboard.write('A3')
         keyboard.send('enter')
-    elif data_dict['location'] == '5':
+    elif owner_dict['location'] == '5':
         keyboard.write('T')
         keyboard.send('enter')
-    elif data_dict['location'] == '8':
+    elif owner_dict['location'] == '8':
         keyboard.write('C')
         keyboard.send('enter')
-    elif data_dict['location'] == '9':
+    elif owner_dict['location'] == '9':
         keyboard.write('Welk Resort N')
         keyboard.send('enter')
-    elif data_dict['location'] == '11':
+    elif owner_dict['location'] == '11':
         keyboard.write('Welk Resort Bre')
         keyboard.send('enter')
     pyautogui.click(10, 25)
     pyautogui.click(10, 45)
 
 
-def search_pid(data_dict):
-    m1 = get_m1_coordinates()
+def search_pid(pid_number):
+    get_m1_coordinates()
     pyautogui.doubleClick(m1['search'])
-    keyboard.write(data_dict['pid'])
+    keyboard.write(owner_dict['pid'])
     pyautogui.click(m1['find_now'])
     pyautogui.click(m1['change'])
 
 
-def enter_card(data_dict):
+def enter_card(owner_dict):
     get_m2_coordinates()
     pyautogui.click(m2['demographics'])
     pyautogui.doubleClick(m2['card_number'])
-    keyboard.write(data_dict['card_number'])
+    keyboard.write(owner_dict['card_number'])
     pyautogui.doubleClick(m2['expiration'])
-    keyboard.write(data_dict['expiration'])
+    keyboard.write(owner_dict['expiration'])
+    pyautogui.click(m2['insert_tour'])
 
 
-def select_tour():
-    m2 = get_m2_coordinates()
-    audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png',
-                                              region=(514, 245, 889, 566))
-    if audition is None:
-        pyautogui.doubleClick(m2['first_tour'])
-
-    else:
-        audition = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\audition_2.png',
-                                                  region=(514, 245, 889, 566))
-        if audition is None:
-            pyautogui.doubleClick(m2['second_tour'])
-        else:
-            pyautogui.doubleClick(m2['third_tour'])
-    # Checks if "You need to change sites" message comes up
-    time.sleep(1)
-    pyautogui.click(m2['yes_change_sites'])
-
-
-def enter_prospect_info(data_dict):
-    m2 = get_m2_coordinates()
-    pyautogui.click(m2['last_name'])
-    keyboard.write(data_dict['last name'])
-    pyautogui.click(m2['first_name'])
-    keyboard.write(data_dict['first_name'])
-    pyautogui.click(m2['address'])
-    keyboard.write(data_dict['address'])
-    pyautogui.click(m2['city'])
-    keyboard.write(data_dict['city'])
-    pyautogui.click(m2['state'])
-
-    pyautogui.click(m2['postal_code'])
-    keyboard.write(data_dict['postal_code'])
-    pyautogui.click(m2['country'])
-    for i in range(5):
-        keyboard.send('u')
-    pyautogui.click(m2['phone1'])
-    keyboard.write(data_dict['phone1'])
-    if data_dict['email'] != '':
-        pyautogui.click(m2['email'])
-        keyboard.write(data_dict['email'])
-    pyautogui.click(m2['demographics'])
-    #  Demographics Tab
-    pyautogui.click(m2['marital_status'])
-    if data_dict['marital_status'] == 'm':
-        keyboard.send('m')
-    pyautogui.click(m2['spouse'])
-    keyboard.write(data_dict['spouse_first_name'] + ' ' + data_dict['spouse_last_name'])
-    pyautogui.click(m2['occupation'])
-    keyboard.send('e')
-    pyautogui.click(m2['income'])
-    keyboard.write(data_dict['income'])
-    pyautogui.click(m2['preferred_language'])
-    keyboard.send('e')
-    pyautogui.doubleClick(m2['card_number'])
-    keyboard.write(data_dict['card_number'])
-    pyautogui.doubleClick(m2['expiration'])
-    keyboard.write(data_dict['expiration'])
-    keyboard.send('Tab')
-    pyautogui.click(m2['insert'])
-    #  Menu 3 - Adding a Tour Record
+def enter_tour_info(owner_dict):
     get_m3_coordinates()
     pyautogui.click(m3['campaign'])
     #  Menu 4 - Select a Campaign
     get_m4_coordinates()
     pyautogui.click(m4['clear'])
     pyautogui.click(m4['campaign'])
-    keyboard.write(data_dict['campaign'])
+    keyboard.write(owner_dict['campaign'])
     pyautogui.click(m4['select'])
     # Menu 3 - Adding a Tour Record
     get_m3_coordinates()
     pyautogui.click(m3['tour_type'])
-    keyboard.write(data_dict['tour_type'])
+    keyboard.write(owner_dict['tour_type'])
     pyautogui.click(m3['tour_status'])
     keyboard.write('b')
     pyautogui.click(m3['tour_date'])
-    keyboard.write(data_dict['tour_date'])
+    keyboard.write(owner_dict['tour_date'])
+    pyautogui.click(m3['tour_location'])
+    for i in range(5):
+        keyboard.send('down')
     pyautogui.click(m3['wave'])
+    if owner_dict['tour_time'] == "800":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_800.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "815":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_815.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "830":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_830.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "900":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_900.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "915":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_915.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "930":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_930.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "1030":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1030.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "1045":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1045.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "1130":
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1130.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "1145":
+        pyautogui.click(m3['scroll_bar_wave'])
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1145.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "1230":
+        pyautogui.click(m3['scroll_bar_wave'])
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1230.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "1300":
+        pyautogui.click(m3['scroll_bar_wave'])
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1300.png',
+                                                       region=(514, 245, 889, 566)))
+    elif owner_dict['tour_time'] == "1315":
+        pyautogui.click(m3['scroll_bar_wave'])
+        pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1315.png',
+                                                       region=(514, 245, 889, 566)))
 
 
-data_dict = {
-    'agent_name': 'Kraseski',
-    'location': '3',
+owner_dict = {
+    'agent_name': 'Haley',
+    'location': '2',
     'campaign': 'OMOWNMM',
-    'pid': '',
+    'pid': '241467',
     'first_name': 'Bassam',
     'last name': 'Jaradat',
-    'tour_date': '7/8',
-    'tour_time': '1030',
+    'tour_date': '8/27',
+    'tour_time': '1230',
     'type_of_deposit': 'Refundable',
     'deposit_amount': '99',
-    'card_number': '4100390453672293',
-    'expiration': '11/20',
-    'cvv_code': '010',
-    'accommodation': 'DO',
+    'card_number': '440066703897',
+    'expiration': '01/20',
+    'cvv_code': '846',
+    'accommodation': 'vvl',
     'arrival_date': '7/7',
     'number_of_nights': '3',
     'number_of_adults': '2',
@@ -279,6 +286,7 @@ data_dict = {
 }
 
 
-switch_site(data_dict)
-search_pid(data_dict)
-enter_prospect_info(data_dict)
+switch_site(owner_dict)
+search_pid(owner_dict)
+enter_card(owner_dict)
+enter_tour_info(owner_dict)

@@ -29,17 +29,23 @@ def get_m1_coordinates():
 
 def get_m2_coordinates():
     global m2
-    m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_a_prospect.png',
+    m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_a_prospect.png',
                                               region=(514, 245, 889, 566))
     while m2_title is None:
         m2_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles'
-                                                  '\\changing_a_prospect.png',
+                                                  '\\adding_a_prospect.png',
                                                   region=(514, 245, 889, 566))
     m2['title'] = (m2_title[0], m2_title[1])
+    # Tabs
+    m2['demographics'] = (m2_title[0] + 5, m2_title[1] + 22)
+    #  Tours Tab
     m2['first_tour'] = (m2_title[0] + 375, m2_title[1] + 65)
     m2['second_tour'] = (m2_title[0] + 375, m2_title[1] + 78)
     m2['third_tour'] = (m2_title[0] + 375, m2_title[1] + 91)
+    m2['insert'] = (m2_title[0] + 475, m2_title[1] + 191)
     m2['yes_change_sites'] = (m2_title[0] + 275, m2_title[1] + 266)
+    #  Prospect Tab
+    m2['type'] = (m2_title[0] + 285, m2_title[1] + 49)
     m2['last_name'] = (m2_title[0] + 129, m2_title[1] + 85)
     m2['first_name'] = (m2_title[0] + 271, m2_title[1] + 85)
     m2['salutation'] = (m2_title[0] + 273, m2_title[1] + 110)
@@ -54,6 +60,16 @@ def get_m2_coordinates():
     m2['phone2'] = (m2_title[0] + 271, m2_title[1] + 302)
     m2['fax'] = (m2_title[0] + 129, m2_title[1] + 328)
     m2['email'] = (m2_title[0] + 271, m2_title[1] + 353)
+    m2['camp_type'] = (m2_title[0] + 134, m2_title[1] + 400)
+    m2['status'] = (m2_title[0] + 134, m2_title[1] + 427)
+    #  Demographics Tab
+    m2['marital_status'] = (m2_title[0] + 137, m2_title[1] + 84)
+    m2['spouse'] = (m2_title[0] + 220, m2_title[1] + 110)
+    m2['occupation'] = (m2_title[0] + 137, m2_title[1] + 137)
+    m2['income'] = (m2_title[0] + 40, m2_title[1] + 163)
+    m2['preferred_language'] = (m2_title[0] + 137, m2_title[1] + 188)
+    m2['card_number'] = (m2_title[0] + 192, m2_title[1] + 379)
+    m2['expiration'] = (m2_title[0] + 91, m2_title[1] + 432)
     return m2
 
 
@@ -83,9 +99,13 @@ def get_m3_coordinates():
     m3['wave'] = (m3_title[0] + 143, m3_title[1] + 251)
     m3['team'] = (m3_title[0] + 143, m3_title[1] + 278)
     m3['insert'] = (m3_title[0] + 314, m3_title[1] + 439)
+    m3['scroll_bar_wave'] = (m3_title[0] + 141, m3_title[1] + 384)
+    #  Notes Tab
+    m3['notes_change'] = (m3_title[0] + 50, m3_title[1] + 435)
     #  Tour Packages Tab
     m3['deposit_1'] = (m3_title[0] + 563, m3_title[1] + 71)
     m3['deposit_2'] = (m3_title[0] + 563, m3_title[1] + 94)
+    m3['change_deposit'] = (m3_title[0] + 437, m3_title[1] + 181)
     #  Premiums Tab
     m3['premium_1'] = (m3_title[0] + 563, m3_title[1] + 64)
     m3['premium_2'] = (m3_title[0] + 563, m3_title[1] + 77)
@@ -94,6 +114,38 @@ def get_m3_coordinates():
     m3['premium_5'] = (m3_title[0] + 563, m3_title[1] + 116)
     m3['premium_6'] = (m3_title[0] + 563, m3_title[1] + 129)
     return m3
+
+
+#  Select a Campaign
+def get_m4_coordinates():
+    global m4
+    m4_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\select_a_campaign.png',
+                                              region=(514, 245, 889, 566))
+    while m4_title is None:
+        m4_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\'
+                                                  'select_a_campaign.png', region=(514, 245, 889, 566))
+
+    m4['campaign'] = (m4_title[0] + 213, m4_title[1] + 118)
+    m4['search'] = (m4_title[0] + 272, m4_title[1] + 118)
+    m4['clear'] = (m4_title[0] + 356, m4_title[1] + 118)
+    m4['first_campaign'] = (m4_title[0] + 214, m4_title[1] + 170)
+    m4['select'] = (m4_title[0] + 251, m4_title[1] + 441)
+    print(m4_title)
+
+
+# Co-prospect Menu
+def get_m5_coordinates():
+    global m5
+    m5_title = pyautogui.locateCenterOnScreen(
+        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\record_will_be_added.png',
+        region=(514, 245, 889, 566))
+    while m5_title is None:
+        m5_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles'
+                                                  '\\record_will_be_added.png',
+                                                  region=(514, 245, 889, 566))
+    m5['get_from_prospect'] = (m5[0] + 198, m5[1] + 428)
+    m5['first'] = (m5[0] + 212, m5[1] + 101)
+    m5['ok'] = (m5[0] + 141, m5[1] + 462)
 
 
 def search_pid(pid_number):

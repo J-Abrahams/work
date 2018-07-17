@@ -86,6 +86,7 @@ def get_m3_coordinates():
     m3['wave'] = (m3_title[0] + 143, m3_title[1] + 251)
     m3['team'] = (m3_title[0] + 143, m3_title[1] + 278)
     m3['insert'] = (m3_title[0] + 314, m3_title[1] + 439)
+    m3['scroll_bar_wave'] = (m3_title[0] + 141, m3_title[1] + 384)
     #  Notes Tab
     m3['notes_change'] = (m3_title[0] + 50, m3_title[1] + 435)
     #  Tour Packages Tab
@@ -100,6 +101,38 @@ def get_m3_coordinates():
     m3['premium_5'] = (m3_title[0] + 563, m3_title[1] + 116)
     m3['premium_6'] = (m3_title[0] + 563, m3_title[1] + 129)
     return m3
+
+
+#  Select a Campaign
+def get_m4_coordinates():
+    global m4
+    m4_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\select_a_campaign.png',
+                                              region=(514, 245, 889, 566))
+    while m4_title is None:
+        m4_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\'
+                                                  'select_a_campaign.png', region=(514, 245, 889, 566))
+
+    m4['campaign'] = (m4_title[0] + 213, m4_title[1] + 118)
+    m4['search'] = (m4_title[0] + 272, m4_title[1] + 118)
+    m4['clear'] = (m4_title[0] + 356, m4_title[1] + 118)
+    m4['first_campaign'] = (m4_title[0] + 214, m4_title[1] + 170)
+    m4['select'] = (m4_title[0] + 251, m4_title[1] + 441)
+    print(m4_title)
+
+
+# Co-prospect Menu
+def get_m5_coordinates():
+    global m5
+    m5_title = pyautogui.locateCenterOnScreen(
+        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\record_will_be_added.png',
+        region=(514, 245, 889, 566))
+    while m5_title is None:
+        m5_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles'
+                                                  '\\record_will_be_added.png',
+                                                  region=(514, 245, 889, 566))
+    m5['get_from_prospect'] = (m5[0] + 198, m5[1] + 428)
+    m5['first'] = (m5[0] + 212, m5[1] + 101)
+    m5['ok'] = (m5[0] + 141, m5[1] + 462)
 
 
 def search_pid(pid_number):
@@ -404,7 +437,7 @@ def enter_personnel(sol, status):
                                                region=(514, 245, 889, 566))
     x_4, y_4 = image
     if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png',
-                                      region=(514, 245, 889, 566)) is not None:
+                                      region=(514, 245, 889, 566)) is None:
         pyautogui.click(x_4 + 90, y_4 + 80)
         keyboard.write("cc")
     pyautogui.click(x_4 + 90, y_4 + 105)
