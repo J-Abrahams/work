@@ -190,7 +190,7 @@ def check_tour_for_error():
         if tour_status == sc.error:
             input('Is this the correct tour?')
 
-
+print(sc.a)
 def check_for_refundable_deposit():
     pyautogui.click(m3['tour_packages'])
     x, y = m3['deposit_1']
