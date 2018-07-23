@@ -6,6 +6,12 @@ import datetime
 m1 = {}
 m2 = {}
 m3 = {}
+m4 = {}
+m5 = {}
+m6 = {}
+m7 = {}
+m8 = {}
+m9 = {}
 
 
 def get_m1_coordinates():
@@ -77,7 +83,8 @@ def get_m3_coordinates():
     m3['tour_location'] = (m3_title[0] + 143, m3_title[1] + 227)
     m3['wave'] = (m3_title[0] + 143, m3_title[1] + 251)
     m3['team'] = (m3_title[0] + 143, m3_title[1] + 278)
-    m3['insert'] = (m3_title[0] + 314, m3_title[1] + 439)
+    m3['insert_accommodation'] = (m3_title[0] + 318, m3_title[1] + 183)
+    m3['insert_personnel'] = (m3_title[0] + 314, m3_title[1] + 439)
     m3['scroll_bar_wave'] = (m3_title[0] + 141, m3_title[1] + 384)
     #  Notes Tab
     m3['notes_change'] = (m3_title[0] + 50, m3_title[1] + 435)
@@ -124,6 +131,90 @@ def get_m5_coordinates():
     m5['get_from_prospect'] = (m5[0] + 198, m5[1] + 428)
     m5['first'] = (m5[0] + 212, m5[1] + 101)
     m5['ok'] = (m5[0] + 141, m5[1] + 462)
+
+
+# Deposits menu
+def get_m6_coordinates():
+    global m6
+    m6_title = pyautogui.locateCenterOnScreen(
+        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_tour_package.png', region=(514, 245, 889, 566))
+    while m6_title is None:
+        m6_title = pyautogui.locateCenterOnScreen(
+            'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_tour_package.png',
+            region=(514, 245, 889, 566))
+    m6['title'] = (m6_title[0], m6_title[1])
+    m6['description'] = (m6_title[0] + 172, m6_title[1] + 120)
+    m6['deposit_1'] = (m6_title[0] + 294, m6_title[1] + 190)
+    m6['insert'] = (m6_title[0], m6_title[1] + 369)
+    m6['view'] = (m6_title[0] + 71, m6_title[1] + 370)
+    m6['payment'] = (m6_title[0] + 300, m6_title[1] + 370)
+    m6['ok'] = (m6_title[0] + 150, m6_title[1] + 406)
+    m6['cancel'] = (m6_title[0] + 345, m6_title[1] + 406)
+
+
+#  View Deposit
+def get_m7_coordinates():
+    global m7
+    m7_title = pyautogui.locateCenterOnScreen(
+        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\view_record.png', region=(136, 652, 392, 247))
+    while m7_title is None:
+        m7_title = pyautogui.locateCenterOnScreen(
+            'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\view_record.png', region=(136, 652, 392, 247))
+    m7['title'] = (m7_title[0], m7_title[1])
+    m7['transaction_code'] = (m7_title[0] + 223, m7_title[1] + 64)
+    m7['description'] = (m7_title[0] + 273, m7_title[1] + 92)
+    m7['amount'] = (m7_title[0] + 83, m7_title[1] + 117)
+    m7['posted'] = (m7_title[0] + 253, m7_title[1] + 118)
+    m7['reference'] = (m7_title[0] + 133, m7_title[1] + 144)
+    m7['date'] = (m7_title[0] + 132, m7_title[1] + 170)
+    m7['cancel'] = (m7_title[0] + 296, m7_title[1] + 215)
+
+
+# Adding Deposit Menu
+def get_m8_coordinates():
+    global m8
+    m8_title = pyautogui.locateCenterOnScreen(
+        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png', region=(136, 652, 392, 247))
+    while m8_title is None:
+        m8_title = pyautogui.locateCenterOnScreen(
+            'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png', region=(136, 652, 392, 247))
+    m8['title'] = (m8_title[0], m8_title[1])
+    m8['transaction_code'] = (m8_title[0] + 179, m8_title[1] + 64)
+    m8['transaction_code_scroll_bar'] = (m8_title[0] + 179, m8_title[1] + 175)
+    m8['description'] = (m8_title[0] + 229, m8_title[1] + 91)
+    m8['amount'] = (m8_title[0] + 32, m8_title[1] + 117)
+    m8['reference'] = (m8_title[0] + 87, m8_title[1] + 144)
+    m8['date'] = (m8_title[0] + 87, m8_title[1] + 169)
+    m8['ok'] = (m8_title[0] + 100, m8_title[1] + 214)
+    m8['cancel'] = (m8_title[0] + 250, m8_title[1] + 215)
+    pyautogui.moveTo(m8['transaction_code_scroll_bar'])
+
+
+def get_m9_coordinates():
+    global m9
+    m9_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles'
+                                              '\\adding_a_accommodations_record.png', region=(942, 417, 672, 499))
+    while m9_title is None:
+        m9_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles'
+                                                  '\\adding_a_accommodations_record.png', region=(942, 417, 672, 499))
+    m9['title'] = (m9_title[0], m9_title[1])
+    m9['name'] = (m9_title[0] + 115, m9_title[1] + 65)
+    m9['room_type'] = (m9_title[0] + 115, m9_title[1] + 92)
+    m9['arrival_date'] = (m9_title[0] + 60, m9_title[1] + 119)
+    m9['total_nights'] = (m9_title[0] + 146, m9_title[1] + 119)
+    m9['departure_date'] = (m9_title[0] + 60, m9_title[1] + 146)
+    m9['check'] = (m9_title[0] + 32, m9_title[1] + 99)
+    m9['guest_type'] = (m9_title[0] + 117, m9_title[1] + 251)
+    m9['room_number'] = (m9_title[0] + 87, m9_title[1] + 277)
+    m9['number_of_adults'] = (m9_title[0] + 21, m9_title[1] + 302)
+    m9['children'] = (m9_title[0] + 115, m9_title[1] + 302)
+    m9['confirmation_number'] = (m9_title[0] + 87, m9_title[1] + 328)
+    m9['promo_nights'] = (m9_title[0] + 4, m9_title[1] + 357)
+    m9['promo_rate'] = (m9_title[0] + 126, m9_title[1] + 357)
+    m9['added_nights'] = (m9_title[0] + 4, m9_title[1] + 381)
+    m9['added_rate'] = (m9_title[0] + 126, m9_title[1] + 381)
+    m9['room_rate'] = (m9_title[0] + 4, m9_title[1] + 407)
+
 
 audition = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00b\x00\x00\x00\x10\x08\x02\x00\x00\x00b-=\x93\x00\x00'
                b'\x00\x83IDATx\x9c\xed\x94A\n\xc00\x08\x04\xfd\xff\xa7\xed\xa1\x17\xe3j1-4,'
@@ -202,7 +293,7 @@ dep_40_cc = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00\t
                 b'\x1a\xc2*\x8e,\x88G;V\xc3\t\xdaH\xd7\xc0"\xc8\xc6%\x88\xa9\x06O\xb8\x13\xb4\x02+\x97\xa0\x8d\x03'
                 b'\x16X\xc8\\2\x02\x0b\xd9{\x98I\x83\xd4\xc0\xa2i\xe8\x0c\xae\xc0\xc2%8l\x03\x0b3O\xa1\x99\x82\xd5o#4'
                 b'\xb0\xc8s:rx\xe1a\x8c\x06\x16B\r\x9cDK\x89\xc3\'\xb0\xf0\xf8\x84\x18\xa7\xa3\x05\x13\xc18\xc0\x1fX'
-                b'\xf8\xcd\xa1g`\x01\x00\xd6\x90\x15\xb6\x00/\xaf\x16\x00\x00\x00\x00IEND\xaeB`\x82 ')
+                b'\xf8\xcd\xa1g`\x01\x00\xd6\x90\x15\xb6\x00/\xaf\x16\x00\x00\x00\x00IEND\xaeB`\x82')
 dep_50_cash = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00\t\x08\x02\x00\x00\x00K\xea\x1e\x87'
                   b'\x00\x00\x00\xa4IDATx\x9c\xed\x92K\x0e\x800\x08D]z\x10o\xe7-L\xef\xad\x0b\x13B\x80\x0eH\x9b\xfa'
                   b'\x89\x86\x98v\x02C\xfb\xca4/\xeb\x1f\x14e+{\xfd\x9b('
@@ -230,7 +321,13 @@ dep_50_cc_checked = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x
 
 # $50 cc dep
 d50_cc_dep = '563'
-dep_99_cc = '541'
+dep_99_cc = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00\t\x08\x02\x00\x00\x00K\xea\x1e\x87\x00'
+                b'\x00\x00\x8aIDATx\x9c\xed\x93K\n\xc0 \x0cD]\xf6 \xbd]oQ\xbcw\xddIH:\x93 '
+                b'X\xb5\xadd\x91\x0c\xf9>0m\xfb\xf1['
+                b'\xb5|\xe6\x0b\xbfT\xf3\xa4*\xebU\x01\x11\x95\xa1>D\xe1\xcb\xb8\x13\x1f\x85\xe5\xfa\x04\x04\xba'
+                b'\x165$#nCw\xe20X2l\x80%\xcfCh\xe2\xb0\xba\xd2\x99\x0b\x96Mx9,'
+                b'\xf5\xa7\x94\x88n\xb3\rU>\xea\xb06\xac\xb6\xd5\tG\xae|\x14V\x04\xcd\xf2\xb0\x90\x1f\\]b\xb2\xc8\x90'
+                b'\xc2\xc3\x08\xd0\xde\xb0\n\x89l\x15\xb6\x83vj\x10\x00\x00\x00\x00IEND\xaeB`\x82')
 
 amount_50 = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x003\x00\x00\x00\x0b\x08\x02\x00\x00\x00]\xea"\xbd\x00'
                 b'\x00\x00NIDATx\x9cc\xe0P\xc9\x1e\x9c\x88a\xc0]@s\x97\xfdG\x05h\x82x\xd4\xe3\x12\xa1\xa6\xcb\xf0\x88'
@@ -243,23 +340,69 @@ prev_tour = str(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00?\x00\x00\x00\x
                 b"\xd7\xe3\x97\x1aD\xae\xc7\x9a\xfeHu=\x9aQ\x04\xc5q\xd9\x05\x00\x84R\x16K-\xb4\x9f?\x00\x00\x00"
                 b"\x00IEND\xaeB`\x82")
 
+tour_type = {
+    str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00R\x00\x00\x00\x0e\x08\x02\x00\x00\x003\x02\xdc@\x00\x00'
+        b'\x00sIDATx\x9c\xed\x94A\x0e\xc0 \x08\x04\xf7\xff\x8f\xf3\xd2\xa4\xdf\xa1W\xcaR\xab\x97n#N<\x10\x02\x86IP'
+        b'\x98\x03\x80\r\xe3\x8b\xa7\x1a\xff@\x1c}\\`Y\xed4\x86\xc3w\x85v_\xc3ernc\x85\x98\x93O\x19\xd6\xe3\xb2\xf4Z'
+        b'\x15\xdfi\xf3\xfdB\x92\xd5\xad\xa2\xcds\xa4\x0f\xd5\x8ah['
+        b'\xf7\xaf\xea\x0b\xbf.\x8e\x16\xfd\x04\x12\xb6v%\xb6v%p\x1e\xad\xe0\xb9\x00\x8d\x96\x14~\xec\xc3\xd8\\\x00'
+        b'\x00\x00\x00IEND\xaeB`\x82'): 'audition',
+    str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00R\x00\x00\x00\x0e\x08\x02\x00\x00\x003\x02\xdc@\x00'
+        b'\x00\x00\x85IDATx\x9c\xed\x93m\n\x800\x08@\xbd\xff\xe1\xfa\x13t\x1d\x83\x15Sq\xb95F\xc9\xdcc\x84'
+        b'\x99\r\xdf>\x00\x13\x00\x80\x12\x9d\x99\x89\xdb\r\x12\x94\x95\xaf\xf3Q\xd7\xbe\x82\xfc,'
+        b'\xe6y&\x97\xe9\t\xfd,e\xd9\r\xa5\x03\x9a\x0bAs=\xdc\x14\xbb\xe6\x17^h\xd3?\r\x05|{'
+        b'\x9d\xa8rD\xebF\xd0\xaemT\xfaa\x80v5\xf6~\xc8\xc5\x87^mT\x87\x9cg\x06\xb7\xdf\x8b\x97>>fiGbiG\x02'
+        b'\x8e}\x0b8N\xed\x12/c\x90\x0f\xd9\xd7\x00\x00\x00\x00IEND\xaeB`\x82'): 'minivac',
+    str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00R\x00\x00\x00\x0e\x08\x02\x00\x00\x003\x02\xdc@\x00\x00\x00'
+        b'\x96IDATx\x9c\xed\x94;\x0e\xc00\x08C\xb9\xff\xe1\xbaT\xeau\xe8J\x036$K?\xd4\xca\x90\xc18<D+j$"Z\x965O\x15'
+        b'\x92\x9c\x85\xa8\xb5\xa7\xc7\xd6\xeb)\x9f\xc5\x0e\xefbd\xab\x86r\xeb\xf16\xd2w\x9a0\xe4\xa0{'
+        b'\t\x1b\x11\xa6C\xf1\xb4\xc8\x16\xc6\xeau\x8e\xe9\xd3h\x10\xa8\xed\xfb\xb1}>\xe92}\xa8\x92L\x14\xac\xee{'
+        b'\xb1QZ\x90\x1fZ=\xcc\xf3\xb1\xa7\x97\x1ca+\xfdWq\xe0tq86J\xe0\x1f\xa3\xf5\xe7\xd8\r\xf5cw\xd2\x8f\xddIr'
+        b'\xec[\xc3s\x02\x02+I;Hc\x99\x7f\x00\x00\x00\x00IEND\xaeB`\x82'): 'audition_points',
+    str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00R\x00\x00\x00\x0e\x08\x02\x00\x00\x003\x02\xdc@\x00\x00\x00'
+        b'\x9aIDATx\x9c\xed\x95Q\n\x80 \x0c@w\xff\xc3\xf5\x13t\x1d\x83L\x18k\xce\xcd\xe9\xa0\xec\x11!9\xd7\x9eK\x82t'
+        b'\x01\x00\xa9\x80\xc7z\xfc\x19"\xb9\xeb#\x85v\xd4\xed\xcf\x10I['
+        b'\x1b\ndJ\xf6\xc4ay\x8c\xeflL\xe4N\x19\xbaM\xea\xd6k\xb3\xcb\x85\'\x01\x18\xba=D;q\xdbG^\x11@\xc3Ah\xce@m'
+        b'\xa7C\x07U=a\xcc\xb6E\xb3J\x1f<\x1b\xe6K\xa3\x11\x8f\xa9\xda\xc9g34\xb5\xf1Z\x9f\x8b\x01\xef/\xfa\xa5\xd8'
+        b'\x04\x82{2\x8f/8t\xf0k\xaf\x04\x1c\xfb\xb6\xe0u\x02\x11\xec\x02\x90\x1f\xa44\xd5\x00\x00\x00\x00IEND\xaeB'
+        b'`\x82'): 'day_drive',
+    str(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00R\x00\x00\x00\x0e\x08\x02\x00\x00\x003\x02\xdc@\x00\x00\x00"
+        b"\xa9IDATx\x9c\xedTA\x0e\x800\x08\xe3\xff\x8f\xf3b\xe2w0\xd1\xc40(\xb0av0\xb3\xf1 \xac\xb6\xd4-#\xbe@D,"
+        b"\xa0\xca2&\xc9\x8e\xfa\x02\x02\xe4\xad\x1e\x9b\x04\xe4\xaa\xec\xdc/\x8a\x13\xcbZ\x11\xab`]\x1e\xa3`N\x8f"
+        b"\xac\til\xd5\x84\x1d\xc8\xe7\xf6\xaf\xc1q\xadl\xe0\xe2}k'\xcf\xd5\n\xb1U\x92`\x8e\x9eC\xe4y\xa5.\x1e"
+        b"\x7fVlnQ\x8b\xcd\x08\x01ah\xff\xe7\xc6~\xb3\xdb\xc3\x83\x86\xd7D16g\xb7\x17l\xc6\x13\xa4\xb3B\xd9\x1e\x17XB"
+        b"\xbe,\x9bU\x0e\xe1\x9d\xc6\xaf\xe3\x8f\xbd\x12\xfe\xd8+\x81\x8e}["
+        b"\xf09\x01\x1e\xec\x07}\x89\xea'o\x00\x00\x00\x00IEND\xaeB`\x82 "): 'open_reservation'}
+
 screenshot_dict = {
     str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x003\x00\x00\x00\x0b\x08\x02\x00\x00\x00]\xea"\xbd\x00\x00'
         b'\x00NIDATx\x9cc\xe0P\xc9\x1e\x9c\x88a\xc0]@s\x97\xfdG\x05h\x82x\xd4\xe3\x12\xa1\xa6\xcb\xf0\x88\xa0\xc9bJa'
         b'\x8a\x8c\x0c\x97aF\xe5`q\x19A\xcb\xe8\xea2\xac\t|P\xb8\x0cO\xf8\r\x16\x97\r\xba\xd8D\xb3\x0f\x7f\x11\x85G'
-        b'\nS\x04\x00Z\xc1\x12\x18o\xae\xf9\x18\x00\x00\x00\x00IEND\xaeB`\x82'): '50'}
+        b'\nS\x04\x00Z\xc1\x12\x18o\xae\xf9\x18\x00\x00\x00\x00IEND\xaeB`\x82'): '50',
+    str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x003\x00\x00\x00\x0b\x08\x02\x00\x00\x00]\xea"\xbd\x00\x00'
+        b'\x00OIDATx\x9cc\xe0P\xc9\x1e\x9c\x88a\xc0]@?\x97\xfd\xff\xff\x1f\x99\r\x01X\x95\xa1I\xa1\x89P\xd9e\xc8F\xa3'
+        b'\xd9\x8a\xc7\xf5XEF\x86\xcb\xd0\xec\x18u\x19\xa1\xe8\xc3t\xd0`\t\xb3\xff\xa8`\x10\xb9\x0c\xd3\xd6\xc1\xeb2'
+        b'\xe4\x80$(\x85)\x02\x00`P\rLK\xb3\x05\xe1\x00\x00\x00\x00IEND\xaeB`\x82'): '40',
+    str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x003\x00\x00\x00\x0b\x08\x02\x00\x00\x00]\xea"\xbd\x00\x00'
+        b'\x00JIDATx\x9cc\xe0P\xc9\x1e\x9c\x88a\xc0]@\x0f\x97\xfd\x87\x01<"\xc4+\xa6\x9a\xcb\xd0\xec\xc0*B\x92\xe2Q'
+        b'\x97\r\xa0\xcb8\x90\x12\n\xdc\x1aL\x11\xfa\xb9\x0ck\x02\'('
+        b'B\xef0\x1b\xa4.\x1b\x1a\xe9\x0c\x97\x08\xfe\xa2\x0eM\x04\x00\x13 '
+        b'\x12\x18]\x99U\xca\x00\x00\x00\x00IEND\xaeB`\x82'): '99',
+    str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x003\x00\x00\x00\x0b\x08\x02\x00\x00\x00]\xea"\xbd\x00\x00'
+        b'\x00LIDATx\x9cc\xe0P\xc9\x1e\x9c\x88a\xc0]@\x0f\x97\xfd\x87\x01<"\xc4+\xa6\x9a\xcb\xd0\xec\xc0*B\x92b\x9a'
+        b'\xc4\xe6\xa8\xcb\xc8\x8d\xd6\x01v\x19f*&\xc8\x1e\x800#h\xfd\xc0\xb8\x0c\xb3h\x18D.C\x06h\x82X\x1d\x84\xbf'
+        b'<\x03\x00\x9cn\x08\x80y\xdf\x0e@\x00\x00\x00\x00IEND\xaeB`\x82'): '20'}
 
-
-""""get_m3_coordinates()
+"""get_m3_coordinates()
 with mss.mss() as sct:
     x, y = m3['title']
-    monitor = {'top': y + 141, 'left': x + 36, 'width': 98, 'height': 16}
+    monitor = {'top': y + 146, 'left': x + 36, 'width': 82, 'height': 14}
     im = sct.grab(monitor)
     print((mss.tools.to_png(im.rgb, im.size)))
 
 with mss.mss() as sct:
     # The screen part to capture
-    monitor = {'top': y + 141, 'left': x + 36, 'width': 98, 'height': 16}
+    monitor = {'top': y + 146, 'left': x + 36, 'width': 82, 'height': 14}
     now = datetime.datetime.now()
     output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
 

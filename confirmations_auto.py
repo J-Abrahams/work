@@ -1,19 +1,14 @@
 import csv
 import time
 from tkinter import Tk
-
 import keyboard
 import mss
 import mss.tools
 import pandas as pd
 import pyautogui
 import pyperclip
-
 import screenshot_data as sc
-
-m1 = {}
-m2 = {}
-m3 = {}
+from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 
 
 def search_pid(pid_number):
@@ -73,67 +68,80 @@ def check_tour_for_error():
 
 
 def check_for_refundable_deposit():
+    sc.get_m3_coordinates()
+    list_of_deposits = []
+    list_of_refundable_deposits = []
+    number_of_deposits = 0
+    non_refundable_total = 0
     pyautogui.click(m3['tour_packages'])
+    x, y = m3['title']
+    x_2, y_2 = m3['deposit_1']
+    while len(list_of_deposits) == len(set(list_of_deposits)):
+        with mss.mss() as sct:
+            pyautogui.click(x_2, y_2)
+            monitor = {'top': y + 59, 'left': x + 323, 'width': 374, 'height': 116}
+            im = sct.grab(monitor)
+            list_of_deposits.append(str(mss.tools.to_png(im.rgb, im.size)))
+            number_of_deposits = len(set(list_of_deposits))
+            y_2 += 13
     x, y = m3['deposit_1']
-    is_deposit_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
-    while is_deposit_blue is True:
+    for i in range(number_of_deposits):
+        pyautogui.click(x, y)
+        y += 13
         pyautogui.click(m3['change_deposit'])
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_tour_package.png',
-            region=(514, 245, 889, 566))
-        while image is None:
-            image = pyautogui.locateCenterOnScreen(
-                'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_tour_package.png',
-                region=(514, 245, 889, 566))
-        x_2, y_2 = image
-        pyautogui.click(x_2 + 150, y_2 + 125)  # Description
-        keyboard.send('ctrl + z')  # Select all
-        keyboard.send('ctrl + c')  # Copy description
+        sc.get_m6_coordinates()
+        pyautogui.click(m6['description'])
+        keyboard.send('ctrl + z')
+        keyboard.send('ctrl + c')
         r = Tk()
         result = r.selection_get(selection="CLIPBOARD")
+        pyautogui.click(m6['view'])
+        sc.get_m7_coordinates()
+        pyautogui.doubleClick(m7['amount'])
+        time.sleep(0.5)
+        keyboard.send('ctrl + c')
+        r = Tk()
+        price = str(r.selection_get(selection="CLIPBOARD").replace('-', ''))
+        price = price.replace('.00', '')
         if 'ref' in result.lower():
-            pyautogui.click(x_2 + 85, y_2 + 370)
-            image = pyautogui.locateCenterOnScreen(
-                'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\view_record.png', region=(514, 245, 889, 566))
-            while image is None:
-                image = pyautogui.locateCenterOnScreen(
-                    'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\view_record.png', region=(514, 245, 889, 566))
-            x_3, y_3 = image
-            pyautogui.doubleClick(x_3 + 80, y_3 + 118)
-            keyboard.send('ctrl + c')
-            r = Tk()
-            price = str(r.selection_get(selection="CLIPBOARD")[1:3])
-            pyautogui.click(x_3 + 300, y_3 + 215)
-            pyautogui.click(x_2 + 350, y_2 + 400)
-            return price
+            list_of_refundable_deposits.append(price)
         else:
-            pyautogui.click(x_2 + 350, y_2 + 400)
-            y += 13
-            pyautogui.click(x, y)
-            is_deposit_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
+            non_refundable_total += int(price)
+        pyautogui.click(m7['cancel'])
+        pyautogui.click(m6['ok'])
+    if len(list_of_refundable_deposits) > 0:
+        return non_refundable_total, list_of_refundable_deposits
+    else:
+        list_of_refundable_deposits = [0]
+        return non_refundable_total, list_of_refundable_deposits
 
 
-def check_for_dep_premium():
+def check_for_dep_premium(list_of_refundable_deposits):
     sc.get_m3_coordinates()
-    price = check_for_refundable_deposit()
     premiums = read_premiums()
-    if price == '40':
-        if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
-                any(sc.d40_cc_dep in s for s in premiums) or any(sc.d40_dep in s for s in premiums):
-            print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
-        else:
-            print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
-    elif price == '50':
-        if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cash in s for s in premiums) or \
-                any(sc.d50_cc_dep in s for s in premiums):
-            print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
-        else:
-            print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
-    elif price == '20':
-        if any(sc.d20_cc_dep in s for s in premiums) or any(sc.dep_20_cc in s for s in premiums):
-            print('\x1b[6;30;42m' + '$20 DEP is present' + '\x1b[0m')
-        else:
-            print('\x1b[6;30;41m' + 'Missing $20 DEP' + '\x1b[0m')
+    for deposit in list_of_refundable_deposits:
+        if deposit == '40':
+            if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
+                    any(sc.d40_cc_dep in s for s in premiums) or any(sc.d40_dep in s for s in premiums):
+                print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
+            else:
+                print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
+        elif deposit == '50':
+            if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cash in s for s in premiums) or \
+                    any(sc.d50_cc_dep in s for s in premiums):
+                print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
+            else:
+                print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
+        elif deposit == '20':
+            if any(sc.d20_cc_dep in s for s in premiums) or any(sc.dep_20_cc in s for s in premiums):
+                print('\x1b[6;30;42m' + '$20 DEP is present' + '\x1b[0m')
+            else:
+                print('\x1b[6;30;41m' + 'Missing $20 DEP' + '\x1b[0m')
+        elif deposit == '99':
+            if any(sc.dep_99_cc in s for s in premiums):
+                print('\x1b[6;30;42m' + '$99 DEP is present' + '\x1b[0m')
+            else:
+                print('\x1b[6;30;41m' + 'Missing $99 DEP' + '\x1b[0m')
 
 
 def read_premiums():
@@ -293,7 +301,7 @@ def enter_personnel(sol, status):
     if status == 'c':
         confirm_sol_in_userfields(sol)
     pyautogui.click(m3['personnel'])
-    pyautogui.click(m3['insert'])
+    pyautogui.click(m3['insert_personnel'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                            region=(514, 245, 889, 566))
     while image is None:
@@ -374,7 +382,8 @@ def manual_confirmation(pids):
             select_tour()
             check_tour_for_error()
             notes(status)
-            check_for_dep_premium()
+            non_refundable_total, list_of_refundable_deposits = check_for_refundable_deposit()
+            check_for_dep_premium(list_of_refundable_deposits)
             confirm_tour_status(status)
             enter_personnel(sol, status)
             input("Everything ok?")
@@ -407,7 +416,8 @@ def automatic_confirmation():
             double_check_pid(pids)
             select_tour()
             check_tour_for_error()
-            check_for_dep_premium()
+            non_refundable_total, list_of_refundable_deposits = check_for_refundable_deposit()
+            check_for_dep_premium(list_of_refundable_deposits)
             try:
                 ug = row['ug']
                 if ug == "X" or ug == "x":
@@ -464,7 +474,7 @@ for row in df:
 
 df.SP.head(2)'''
 
-pids = ['1326419', '1412106', '1419962', '1412393', '1417981', '1418751', '1418279', '1417363', '', '',
+pids = ['1419408', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '']
 
