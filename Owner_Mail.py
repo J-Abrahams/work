@@ -156,3 +156,12 @@ switch_site(owner_dict)
 search_pid(owner_dict)
 enter_card(owner_dict)
 enter_tour_info(owner_dict)
+
+mydict = {'fruits': ['banana', 'apple', 'orange'],
+         'vegetables': ['pepper', 'carrot'],
+         'cheese': ['swiss', 'cheddar', 'brie']}
+
+for i in mydict.values():
+    print(i)
+print(mydict['fruits'])
+deposit_1 = mydict[1]

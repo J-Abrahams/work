@@ -116,39 +116,46 @@ def check_for_refundable_deposit():
         z += 1
         pyautogui.click(m7['cancel'])
         pyautogui.click(m6['ok'])
-    if len(list_of_refundable_deposits) > 0:
-        return non_refundable_total, list_of_refundable_deposits
-    else:
-        list_of_refundable_deposits = [0]
-        return non_refundable_total, list_of_refundable_deposits
+    return deposits
 
 
-def check_for_dep_premium(list_of_refundable_deposits):
+def apply_to_mv(deposits):
+    try:
+        deposit_1 = deposits[1]
+        deposit_2 = deposits[2]
+    except:
+        return
+    if 'refundable' in deposit_1 and ('9' in deposit_2 or '19' in deposit_2 or '29' in deposit_2):
+        print('\x1b[6;30;41m' + 'Deposit needs to be changed' + '\x1b[0m')
+
+
+def check_for_dep_premium(deposits):
     sc.get_m3_coordinates()
     premiums = read_premiums()
-    for deposit in list_of_refundable_deposits:
-        if deposit == '40':
-            if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
-                    any(sc.d40_cc_dep in s for s in premiums) or any(sc.d40_dep in s for s in premiums):
-                print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
-            else:
-                print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
-        elif deposit == '50':
-            if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cash in s for s in premiums) or \
-                    any(sc.d50_cc_dep in s for s in premiums):
-                print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
-            else:
-                print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
-        elif deposit == '20':
-            if any(sc.d20_cc_dep in s for s in premiums) or any(sc.dep_20_cc in s for s in premiums):
-                print('\x1b[6;30;42m' + '$20 DEP is present' + '\x1b[0m')
-            else:
-                print('\x1b[6;30;41m' + 'Missing $20 DEP' + '\x1b[0m')
-        elif deposit == '99':
-            if any(sc.dep_99_cc in s for s in premiums):
-                print('\x1b[6;30;42m' + '$99 DEP is present' + '\x1b[0m')
-            else:
-                print('\x1b[6;30;41m' + 'Missing $99 DEP' + '\x1b[0m')
+    if len(deposits) > 0:
+        for value in deposits.values():
+            if value[0] == 'refundable' and value[1] == '40':
+                if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
+                        any(sc.d40_cc_dep in s for s in premiums) or any(sc.d40_dep in s for s in premiums):
+                    print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
+                else:
+                    print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
+            elif value[0] == 'refundable' and value[1] == '50':
+                if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cash in s for s in premiums) or \
+                        any(sc.d50_cc_dep in s for s in premiums):
+                    print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
+                else:
+                    print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
+            elif value[0] == 'refundable' and value[1] == '20':
+                if any(sc.d20_cc_dep in s for s in premiums) or any(sc.dep_20_cc in s for s in premiums):
+                    print('\x1b[6;30;42m' + '$20 DEP is present' + '\x1b[0m')
+                else:
+                    print('\x1b[6;30;41m' + 'Missing $20 DEP' + '\x1b[0m')
+            elif value[0] == 'refundable' and value[1] == '99':
+                if any(sc.dep_99_cc in s for s in premiums):
+                    print('\x1b[6;30;42m' + '$99 DEP is present' + '\x1b[0m')
+                else:
+                    print('\x1b[6;30;41m' + 'Missing $99 DEP' + '\x1b[0m')
 
 
 def read_premiums():
@@ -396,8 +403,9 @@ def manual_confirmation(pids):
             select_tour()
             check_tour_for_error()
             notes(status[0])
-            non_refundable_total, list_of_refundable_deposits = check_for_refundable_deposit()
-            check_for_dep_premium(list_of_refundable_deposits)
+            deposits = check_for_refundable_deposit()
+            apply_to_mv(deposits)
+            check_for_dep_premium(deposits)
             confirm_tour_status(status[0])
             enter_personnel(sol, status)
             input("Everything ok?")
@@ -496,9 +504,11 @@ for row in df:
 
 df.SP.head(2)'''
 
-pids = ['', '844219c', '631292c', '1349205x', '1396841c', '537270c', '649234c', '128851c', '1118568x',
-        '1390108r', '1235377c', '1146319x', '1418154x', '1420884x', '1340216c', '1393981c', '1405233r', '', '',
-        '', '', '', '', '', '', '', '', '', '', '']
+pids = ['', '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '', '',
+        '', '1419294x', '1421971x', '1385512r', '1394072c', '', '', '', '',
+        '', '', '', '', '', '']
 
 auto_or_manual = input('Auto (A) or Manual (M):')
 print("Justin Locke - 4967 \nBrian Bennett - 3055")
