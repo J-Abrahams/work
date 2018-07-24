@@ -1,3 +1,4 @@
+import re
 import csv
 import time
 from tkinter import Tk
@@ -69,8 +70,10 @@ def check_tour_for_error():
 
 def check_for_refundable_deposit():
     sc.get_m3_coordinates()
+    deposits = {}
     list_of_deposits = []
     list_of_refundable_deposits = []
+    z = 1
     number_of_deposits = 0
     non_refundable_total = 0
     pyautogui.click(m3['tour_packages'])
@@ -82,6 +85,8 @@ def check_for_refundable_deposit():
             monitor = {'top': y + 59, 'left': x + 323, 'width': 374, 'height': 116}
             im = sct.grab(monitor)
             list_of_deposits.append(str(mss.tools.to_png(im.rgb, im.size)))
+            if sc.no_deposits in list_of_deposits:
+                return non_refundable_total, list_of_refundable_deposits
             number_of_deposits = len(set(list_of_deposits))
             y_2 += 13
     x, y = m3['deposit_1']
@@ -104,9 +109,11 @@ def check_for_refundable_deposit():
         price = str(r.selection_get(selection="CLIPBOARD").replace('-', ''))
         price = price.replace('.00', '')
         if 'ref' in result.lower():
-            list_of_refundable_deposits.append(price)
+            deposits[0 + z] = ['refundable', price]
         else:
-            non_refundable_total += int(price)
+            deposits[0 + z] = ['non-refundable', price]
+            # non_refundable_total += int(price)
+        z += 1
         pyautogui.click(m7['cancel'])
         pyautogui.click(m6['ok'])
     if len(list_of_refundable_deposits) > 0:
@@ -278,7 +285,7 @@ def notes(status):
                 if 'nq' in result.lower():
                     pyautogui.click(m3['tour'])
                     if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\tour_result.png',
-                                                      region=(514, 245, 889, 566)) is None:
+                                                      region=(514, 400, 889, 500)) is None:
                         print('\x1b[6;30;42m' + 'Tour Result is correct' + '\x1b[0m')
                     else:
                         print('\x1b[6;30;41m' + 'NO TOUR RESULT' + '\x1b[0m')
@@ -298,49 +305,50 @@ def notes(status):
 
 def enter_personnel(sol, status):
     sc.get_m3_coordinates()
-    if status == 'c':
-        confirm_sol_in_userfields(sol)
-    pyautogui.click(m3['personnel'])
-    pyautogui.click(m3['insert_personnel'])
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
+    for i in status:
+        if i == 'c':
+            confirm_sol_in_userfields(sol)
+        pyautogui.click(m3['personnel'])
+        pyautogui.click(m3['insert_personnel'])
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
                                                region=(514, 245, 889, 566))
-    x_1, y_1 = image
-    time.sleep(0.3)
-    pyautogui.click(x_1 + 75, y_1 + 25)  # By Personnel Number Tab
-    keyboard.write(sol)
-    pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_personnel.png',
+                                                   region=(514, 245, 889, 566))
+        x_1, y_1 = image
+        time.sleep(0.3)
+        pyautogui.click(x_1 + 75, y_1 + 25)  # By Personnel Number Tab
+        keyboard.write(sol)
+        pyautogui.doubleClick(x_1, y_1 + 100)  # Person in list
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
                                                region=(514, 245, 889, 566))
-    x_3, y_3 = image
-    pyautogui.click(x_3 + 75, y_3 + 150)  # Close
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu'
+                                                   '.png', region=(514, 245, 889, 566))
+        x_3, y_3 = image
+        pyautogui.click(x_3 + 75, y_3 + 150)  # Close
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
                                                region=(514, 245, 889, 566))
-    x_4, y_4 = image
-    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png',
-                                      region=(514, 245, 889, 566)) is None:
-        pyautogui.click(x_4 + 90, y_4 + 80)
-        keyboard.write("cc")
-    pyautogui.click(x_4 + 90, y_4 + 105)
-    if status == 'c':
-        keyboard.write("cc")
-    elif status == 'r':
-        keyboard.write("r")
-    elif status == 'x':
-        keyboard.write("c")
-    elif status == 'u':
-        keyboard.write("u")
-    elif status == 'tav':
-        keyboard.write("t")
-    pyautogui.click(x_4 + 90, y_4 + 350)
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\t_addingrecord.png',
+                                                   region=(514, 245, 889, 566))
+        x_4, y_4 = image
+        if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer.png',
+                                          region=(514, 245, 889, 566)) is None:
+            pyautogui.click(x_4 + 90, y_4 + 80)
+            keyboard.write("cc")
+        pyautogui.click(x_4 + 90, y_4 + 105)
+        if i == 'c':
+            keyboard.write("cc")
+        elif i == 'r':
+            keyboard.write("r")
+        elif i == 'x':
+            keyboard.write("c")
+        elif i == 'u':
+            keyboard.write("u")
+        elif i == 'tav':
+            keyboard.write("t")
+        pyautogui.click(x_4 + 90, y_4 + 350)
 
 
 def convert_excel_to_csv():
@@ -374,17 +382,23 @@ def activation_sheet():
 
 
 def manual_confirmation(pids):
-    status = input('Conf (c), RXL (r), CXL (x), UG (u), or TAV (tav)')
+    # status = input('Conf (c), RXL (r), CXL (x), UG (u), or TAV (tav)')
     for pid in pids:
         if pid != '':
+            pid_and_status = re.findall('\d+|\D+', pid)
+            pid = pid_and_status[0]
+            try:
+                status = pid_and_status[1]
+            except IndexError:
+                status = None
             search_pid(pid)
             double_check_pid(pid)
             select_tour()
             check_tour_for_error()
-            notes(status)
+            notes(status[0])
             non_refundable_total, list_of_refundable_deposits = check_for_refundable_deposit()
             check_for_dep_premium(list_of_refundable_deposits)
-            confirm_tour_status(status)
+            confirm_tour_status(status[0])
             enter_personnel(sol, status)
             input("Everything ok?")
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
@@ -430,15 +444,23 @@ def automatic_confirmation():
                     enter_personnel(sol, 'tav')
             except KeyError:
                 pass
-            if conf == "X" or conf == "x":
+            if (conf == "X" or conf == "x") and (rxl == "X" or rxl == "x"):
                 confirm_tour_status('c')
                 notes('c')
                 enter_personnel(sol, 'c')
-            if rxl == "X" or rxl == "x":
+            elif (rxl == "X" or rxl == "x") and (cxl == "X" or cxl == "x"):
+                confirm_tour_status('x')
+                notes('x')
+                enter_personnel(sol, 'x')
+            elif conf == "X" or conf == "x":
+                confirm_tour_status('c')
+                notes('c')
+                enter_personnel(sol, 'c')
+            elif rxl == "X" or rxl == "x":
                 confirm_tour_status('r')
                 notes('r')
                 enter_personnel(sol, 'r')
-            if cxl == "X" or cxl == "x":
+            elif cxl == "X" or cxl == "x":
                 confirm_tour_status('x')
                 notes('x')
                 enter_personnel(sol, 'x')
@@ -474,9 +496,9 @@ for row in df:
 
 df.SP.head(2)'''
 
-pids = ['1419408', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '']
+pids = ['', '844219c', '631292c', '1349205x', '1396841c', '537270c', '649234c', '128851c', '1118568x',
+        '1390108r', '1235377c', '1146319x', '1418154x', '1420884x', '1340216c', '1393981c', '1405233r', '', '',
+        '', '', '', '', '', '', '', '', '', '', '']
 
 auto_or_manual = input('Auto (A) or Manual (M):')
 print("Justin Locke - 4967 \nBrian Bennett - 3055")
