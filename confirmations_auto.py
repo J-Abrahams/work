@@ -66,6 +66,8 @@ def check_tour_for_error():
         tour_status = str(mss.tools.to_png(im.rgb, im.size))
         if tour_status == sc.error:
             input('Is this the correct tour?')
+    x, y = m3['insert_accommodation']
+    pyautogui.click(x, y - 20)
 
 
 def check_for_refundable_deposit():
@@ -116,6 +118,7 @@ def check_for_refundable_deposit():
         z += 1
         pyautogui.click(m7['cancel'])
         pyautogui.click(m6['ok'])
+    print(deposits)
     return deposits
 
 
@@ -132,7 +135,7 @@ def apply_to_mv(deposits):
 def check_for_dep_premium(deposits):
     sc.get_m3_coordinates()
     premiums = read_premiums()
-    if len(deposits) > 0:
+    try:
         for value in deposits.values():
             if value[0] == 'refundable' and value[1] == '40':
                 if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
@@ -156,6 +159,8 @@ def check_for_dep_premium(deposits):
                     print('\x1b[6;30;42m' + '$99 DEP is present' + '\x1b[0m')
                 else:
                     print('\x1b[6;30;41m' + 'Missing $99 DEP' + '\x1b[0m')
+    except AttributeError:
+        print('\x1b[6;30;42m' + 'No deposits' + '\x1b[0m')
 
 
 def read_premiums():
@@ -353,7 +358,7 @@ def enter_personnel(sol, status):
             keyboard.write("c")
         elif i == 'u':
             keyboard.write("u")
-        elif i == 'tav':
+        elif i == 't':
             keyboard.write("t")
         pyautogui.click(x_4 + 90, y_4 + 350)
 
@@ -402,7 +407,8 @@ def manual_confirmation(pids):
             double_check_pid(pid)
             select_tour()
             check_tour_for_error()
-            notes(status[0])
+            if status[0] != 'u' and status[0] != 't':
+                notes(status[0])
             deposits = check_for_refundable_deposit()
             apply_to_mv(deposits)
             check_for_dep_premium(deposits)
@@ -438,8 +444,9 @@ def automatic_confirmation():
             double_check_pid(pids)
             select_tour()
             check_tour_for_error()
-            non_refundable_total, list_of_refundable_deposits = check_for_refundable_deposit()
-            check_for_dep_premium(list_of_refundable_deposits)
+            deposits = check_for_refundable_deposit()
+            apply_to_mv(deposits)
+            check_for_dep_premium(deposits)
             try:
                 ug = row['ug']
                 if ug == "X" or ug == "x":
@@ -449,7 +456,7 @@ def automatic_confirmation():
             try:
                 tav = row['tav']
                 if tav == "X" or tav == "x":
-                    enter_personnel(sol, 'tav')
+                    enter_personnel(sol, 't')
             except KeyError:
                 pass
             if (conf == "X" or conf == "x") and (rxl == "X" or rxl == "x"):
@@ -490,24 +497,10 @@ def automatic_confirmation():
             pyautogui.click(x - 20, y + 425)
 
 
-'''df = pd.read_csv("file.csv", header=None, skiprows=3)
-for row in df:
-    pids = row['PID']
-    print(pids)
-    pids = pids[:-2]
-    conf = row['CONF']
-    cxl = row['CXL']
-    rxl = row['RXL']
-    search_pid(pids)
-    select_tour()
-    add_personnel('sol25688', conf, cxl, rxl)
-
-df.SP.head(2)'''
-
-pids = ['', '', '', '', '', '', '', '', '',
+pids = ['1420632c', '1404653cu', '1422265x', '1316702r', '1420043c', '1421697c', '1360177u', '1420891c', '1419401r',
+        '1422032x', '1421933c', '1414783c', '1413833c', '1417632r', '1421650x', '1414969r', '1420019c', '1419062c',
+        '1415522c', '1422107c', '1421726cr', '1410891r', '1399451r', '1410891ru', '', '', '',
         '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '',
-        '', '1419294x', '1421971x', '1385512r', '1394072c', '', '', '', '',
         '', '', '', '', '', '']
 
 auto_or_manual = input('Auto (A) or Manual (M):')
