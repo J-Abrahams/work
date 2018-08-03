@@ -9,6 +9,7 @@ import pyautogui
 import pyperclip
 import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
+import importlib
 
 
 def search_pid(pid_number):
@@ -19,24 +20,37 @@ def search_pid(pid_number):
     pyautogui.click(m1['change'])
 
 
-def enter_ph_number(number):
+def enter_phone_number(number):
     sc.get_m2_coordinates()
+    screen_shot = None
     pyautogui.doubleClick(m2['phone2'])
     keyboard.write(number)
     keyboard.send('tab')
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x - 20, y + 425)
+    pyautogui.click(m2['ok'])
+    while screen_shot != sc.phone_error and screen_shot != sc.phone_no_error:
+        with mss.mss() as sct:
+            monitor = {'top': 306, 'left': 722, 'width': 38, 'height': 16}
+            im = sct.grab(monitor)
+            screen_shot = str(mss.tools.to_png(im.rgb, im.size))
+    if screen_shot == sc.phone_error:
+        pyautogui.click(740, 313)
+        pyautogui.click(m2['ok'])
+        return "Error"
+    elif screen_shot == sc.phone_no_error:
+        return "Good"
 
 
+with open('Phone_Errors.txt', 'w') as erase:
+    erase.write('')
 with open('phone.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         pids = row['PID'].replace('.0', '')
-        phone_number = row['phone']
-        search_pid(pids)
-        enter_ph_number(phone_number)
+        phone_1 = row['phone_1']
+        phone_2 = row['phone_2']
+        if phone_1 != phone_2:
+            search_pid(pids)
+            status = enter_phone_number(phone_2)
+            if status == "Error":
+                with open('Phone_Errors.txt', 'a') as out:
+                    out.write('{} {} {}\n'.format(pids, phone_1, phone_2))

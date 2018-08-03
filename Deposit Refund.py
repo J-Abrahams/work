@@ -13,6 +13,8 @@ from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 import pandas as pd
 import csv
 
+transaction_code = 0
+
 
 def search_pid(pid_number):
     sc.get_m1_coordinates()
@@ -34,17 +36,6 @@ def select_tour():
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
     pyautogui.click(m2['yes_change_sites'])
-
-
-def check_tour_for_error():
-    sc.get_m3_coordinates()
-    with mss.mss() as sct:
-        x, y = m3['title']
-        monitor = {'top': y + 171, 'left': x + 40, 'width': 52, 'height': 12}
-        im = sct.grab(monitor)
-        tour_status = str(mss.tools.to_png(im.rgb, im.size))
-        if tour_status == sc.error:
-            input('Is this the correct tour?')
 
 
 def double_check_pid(pid_number):
@@ -70,6 +61,17 @@ def double_check_pid(pid_number):
         return
 
 
+def check_tour_for_error():
+    sc.get_m3_coordinates()
+    with mss.mss() as sct:
+        x, y = m3['title']
+        monitor = {'top': y + 171, 'left': x + 40, 'width': 52, 'height': 12}
+        im = sct.grab(monitor)
+        tour_status = str(mss.tools.to_png(im.rgb, im.size))
+        if tour_status == sc.error:
+            input('Is this the correct tour?')
+
+
 def change_deposit_title(price):
     """
     Checks to make sure that the deposit price is correct. Ex: If the sheet says $50, then this makes sure that the
@@ -78,10 +80,10 @@ def change_deposit_title(price):
     """
     sc.get_m3_coordinates()
     amount = 0
-    x, y = m3['deposit_1']
+    x_2, y_2 = m3['deposit_1']
     while amount != price:
         pyautogui.click(m3['tour_packages'])
-        pyautogui.click(x, y)
+        pyautogui.click(x_2, y_2)
         pyautogui.click(m3['change_deposit'])
         sc.get_m6_coordinates()
         with mss.mss() as sct:
@@ -91,12 +93,13 @@ def change_deposit_title(price):
             amount = sc.screenshot_dict[str(mss.tools.to_png(im.rgb, im.size))]
         if amount != price:
             pyautogui.click(m6['ok'])
-            y += 13
+            y_2 += 13
     pyautogui.click(m6['description'])
     keyboard.send('ctrl + z')
     keyboard.send('ctrl + c')
     r = Tk()
     old_title = r.selection_get(selection="CLIPBOARD")
+    print(old_title)
     new_title = old_title.replace("able", "ed")
     new_title = new_title.replace("ABLE", "ED")
     new_title = new_title.replace(" /", "/")
@@ -170,6 +173,8 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
     attempts = 0
     global transaction_code
     if description == 'ams':
+        if transaction_code > 4:
+            transaction_code = 0
         if transaction_code == 0 or transaction_code == 1:
             pyautogui.click(m6['payment'])
             sc.get_m8_coordinates()
@@ -233,6 +238,8 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
                 transaction_code = 0
                 sys.exit("Couldn't find correct choice")
     elif description == 'ir':
+        if (0 < transaction_code < 5) or transaction_code > 6:
+            transaction_code = 0
         if transaction_code == 0 or transaction_code == 5:
             attempts = 0
             pyautogui.click(m6['insert'])
@@ -267,6 +274,8 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
                 transaction_code = 0
                 sys.exit("Couldn't find correct choice")
     elif description == 'sol':
+        if 0 < transaction_code < 7:
+            transaction_code = 0
         if transaction_code == 0 or transaction_code == 7:
             attempts = 0
             pyautogui.click(m6['insert'])
@@ -674,6 +683,7 @@ def select_ir_refund_payment(date, price, reference_number=None):
     time.sleep(0.3)
     pyautogui.click(880, 565)"""
 
+
 def convert_excel_to_csv():
     xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\deposit_pids.xlsx")
     df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
@@ -686,7 +696,13 @@ def use_excel_sheet():
         reader = csv.DictReader(csvfile)
         for row in reader:
             pids = row['PID'].replace('.0', '')
+            print(pids)
+            price = row['price']
+            date = row['date']
+            date = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d')
+            cash = row['cash']
             search_pid(pids)
+            double_check_pid(pids)
             select_tour()
             check_tour_for_error()
             deposit_type = change_deposit_title(price)
@@ -709,7 +725,8 @@ def use_excel_sheet():
                 select_ams_refund_payment(date, price, 'sol')
 
 
-pids = ['283614', '659413', '1064845', '1286522', '1303227', '', '', '', '', '',
+use_excel_sheet()
+"""pids = ['283614', '659413', '1064845', '1286522', '1303227', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '',
@@ -718,8 +735,8 @@ pids = ['283614', '659413', '1064845', '1286522', '1303227', '', '', '', '', '',
         '', '', '', '', '', '', '', '', '', '',
         '', '', '', '', '']
 transaction_code = 0
-date = input("Date")
-price = input("Price")
+#  date = input("Date")
+#  price = input("Price")
 print("Get PIDs from excel sheet?")
 excel_sheet = input("(y) or (n)")
 if excel_sheet != 'y':
@@ -728,7 +745,7 @@ if excel_sheet != 'y':
             search_pid(pid)
             select_tour()
             check_tour_for_error()
-            error(price)
+            #  error(price)
             deposit_type = change_deposit_title(price)
             if deposit_type != 'prev':
                 copy_reference_number()
@@ -751,4 +768,4 @@ else:
     use_excel_sheet()
 '''search_pid('727085')
 select_tour()
-change_deposit_title()'''
+change_deposit_title()'''"""

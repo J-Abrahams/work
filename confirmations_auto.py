@@ -98,51 +98,56 @@ def count_accommodations():
 
 
 def check_for_refundable_deposit():
-    """sc.get_m3_coordinates()
+    sc.get_m3_coordinates()
     deposits = {}
     list_of_deposits = []
     list_of_refundable_deposits = []
-    screenshot = None
     z = 1
     number_of_deposits = 0
     non_refundable_total = 0
     pyautogui.click(m3['tour_packages'])
     x, y = m3['title']
     x_2, y_2 = m3['deposit_1']
-    while str(screenshot) != sc.no_deposits:
+    while len(list_of_deposits) == len(set(list_of_deposits)):
         with mss.mss() as sct:
-            monitor = {'top': y + 70, 'left': x + 267, 'width': 144, 'height': 6}
+            pyautogui.click(x_2, y_2)
+            monitor = {'top': y + 59, 'left': x + 323, 'width': 374, 'height': 116}
             im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
-            if screenshot == sc.no_deposits and len(list_of_deposits) == 0:
-                monitor = {'top': y + 70, 'left': x + 267, 'width': 144, 'height': 6}
-                now = datetime.datetime.now()
-                output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
-
-                # Grab the data
-                sct_img = sct.grab(monitor)
-
-                # Save to the picture file
-                mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
-                print(output)
+            list_of_deposits.append(str(mss.tools.to_png(im.rgb, im.size)))
+            if sc.no_deposits in list_of_deposits:
                 return non_refundable_total, list_of_refundable_deposits
-            elif screenshot == sc.no_deposits:
-                pass
-            else:
-                list_of_deposits.append(str(screenshot))
-                number_of_deposits += 1
-                monitor = {'top': y + 70, 'left': x + 267, 'width': 144, 'height': 6}
-                now = datetime.datetime.now()
-                output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
-
-                # Grab the data
-                sct_img = sct.grab(monitor)
-
-                # Save to the picture file
-                mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
-                print(output)
-                y += 13"""
-    sc.get_m3_coordinates()
+            number_of_deposits = len(set(list_of_deposits))
+            y_2 += 13
+    x, y = m3['deposit_1']
+    for i in range(number_of_deposits):
+        pyautogui.click(x, y)
+        y += 13
+        pyautogui.click(m3['change_deposit'])
+        sc.get_m6_coordinates()
+        pyautogui.click(m6['description'])
+        keyboard.send('ctrl + z')
+        keyboard.send('ctrl + c')
+        r = Tk()
+        result = r.selection_get(selection="CLIPBOARD")
+        pyautogui.click(m6['view'])
+        sc.get_m7_coordinates()
+        pyautogui.doubleClick(m7['amount'])
+        time.sleep(0.5)
+        keyboard.send('ctrl + c')
+        r = Tk()
+        price = str(r.selection_get(selection="CLIPBOARD").replace('-', ''))
+        price = price.replace('.00', '')
+        if 'ref' in result.lower():
+            deposits[0 + z] = ['refundable', price]
+        else:
+            deposits[0 + z] = ['non-refundable', price]
+            # non_refundable_total += int(price)
+        z += 1
+        pyautogui.click(m7['cancel'])
+        pyautogui.click(m6['ok'])
+    print(deposits)
+    return deposits
+    """sc.get_m3_coordinates()
     deposits = {}
     list_of_deposits = []
     list_of_refundable_deposits = []
@@ -175,29 +180,64 @@ def check_for_refundable_deposit():
         y += 13
         pyautogui.click(m3['change_deposit'])
         sc.get_m6_coordinates()
+        x_2, y_2 = m6['title']
+        number_of_payments_in_deposit = -2
+        with mss.mss() as sct:
+            monitor = {'top': y_2 + 188, 'left': x_2 + 169, 'width': 49, 'height': 8}
+            im = sct.grab(monitor)
+            screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        while screenshot != sc.no_payments_in_deposit:
+            with mss.mss() as sct:
+                number_of_payments_in_deposit += 1
+                y_2 += 13
+                monitor = {'top': y_2 + 188, 'left': x_2 + 169, 'width': 49, 'height': 8}
+                im = sct.grab(monitor)
+                screenshot = str(mss.tools.to_png(im.rgb, im.size))
+                print(screenshot)
+        y_2 = y_2 + number_of_payments_in_deposit * 13
+        # TODO Use screenshots to see if refundable or not
         pyautogui.click(m6['description'])
         keyboard.send('ctrl + z')
         keyboard.send('ctrl + c')
         r = Tk()
         result = r.selection_get(selection="CLIPBOARD")
-        pyautogui.click(m6['view'])
-        sc.get_m7_coordinates()
-        pyautogui.doubleClick(m7['amount'])
-        time.sleep(0.5)
-        keyboard.send('ctrl + c')
-        r = Tk()
-        price = str(r.selection_get(selection="CLIPBOARD").replace('-', ''))
-        price = price.replace('.00', '')
+        with mss.mss() as sct:
+            monitor = {'top': y_2 + 188, 'left': x_2 + 186, 'width': 5, 'height': 10}
+            im = sct.grab(monitor)
+            screenshot = str(mss.tools.to_png(im.rgb, im.size))
+            try:
+                digit_1 = sc.deposit_amounts[screenshot]
+            except KeyError:
+                digit_1 = 0
+                print(screenshot)
+            monitor = {'top': y_2 + 188, 'left': x_2 + 192, 'width': 5, 'height': 10}
+            im = sct.grab(monitor)
+            screenshot = str(mss.tools.to_png(im.rgb, im.size))
+            try:
+                digit_2 = sc.deposit_amounts[screenshot]
+            except KeyError:
+                print(screenshot)
+                digit_2 = 0
+            monitor = {'top': y_2 + 188, 'left': x_2 + 198, 'width': 5, 'height': 10}
+            im = sct.grab(monitor)
+            screenshot = str(mss.tools.to_png(im.rgb, im.size))
+            try:
+                digit_3 = sc.deposit_amounts[screenshot]
+            except KeyError:
+                print(screenshot)
+                digit_3 = 0
+        deposit_price = int(str(digit_1) + str(digit_2) + str(digit_3))
         if 'ref' in result.lower():
-            deposits[0 + z] = ['refundable', price]
+            deposits[0 + z] = ['refundable', deposit_price]
         else:
-            deposits[0 + z] = ['non-refundable', price]
+            deposits[0 + z] = ['non-refundable', deposit_price]
             # non_refundable_total += int(price)
         z += 1
+        sc.get_m7_coordinates()
         pyautogui.click(m7['cancel'])
         pyautogui.click(m6['ok'])
     print(deposits)
-    return deposits
+    return deposits"""
 
 
 def apply_to_mv(deposits):
@@ -285,8 +325,12 @@ def check_tour_type(number_of_tours):
         monitor = {'top': y + 143, 'left': x + 36, 'width': 89, 'height': 12}
         im = sct.grab(monitor)
         tour_type = sc.tour_type[str(mss.tools.to_png(im.rgb, im.size))]
-    if tour_type == 'day_drive':
-        pass
+    if (tour_type == 'day_drive' or tour_type == 'canceled' or tour_type == 'open_reservation') and number_of_tours > 0:
+        print('\x1b[6;30;41m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
+    elif tour_type == 'minivac' and number_of_tours < 1:
+        print('\x1b[6;30;41m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
+    else:
+        print('\x1b[6;30;42m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
 
 
 def confirm_tour_status(status):
@@ -465,7 +509,7 @@ def enter_personnel(sol, status):
 
 
 def convert_excel_to_csv():
-    xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\1.xlsx")
+    xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\3.xlsx")
     df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
     df.to_csv('file.csv')
 
@@ -546,8 +590,8 @@ def automatic_confirmation():
             double_check_pid(pids)
             select_tour()
             check_tour_for_error()
-            #number_of_tours, number_of_canceled_tours = count_accommodations()
-            #check_tour_type(number_of_tours)
+            number_of_tours, number_of_canceled_tours = count_accommodations()
+            check_tour_type(number_of_tours)
             deposits = check_for_refundable_deposit()
             apply_to_mv(deposits)
             check_for_dep_premium(deposits)
