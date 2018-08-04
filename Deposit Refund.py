@@ -15,6 +15,9 @@ import csv
 
 transaction_code = 0
 
+# TODO If there are multiple items inside a deposit. Make it so the program chooses the lowest item in the list to
+# TODO get the reference number. 1312792
+
 
 def search_pid(pid_number):
     sc.get_m1_coordinates()
@@ -26,13 +29,41 @@ def search_pid(pid_number):
 
 def select_tour():
     sc.get_m2_coordinates()
+    d = []
+    sc.get_m2_coordinates()
     x, y = m2['title']
-    # Checks if there is an audition
-    audition = pyautogui.pixelMatchesColor(x + 465, y + 65, (255, 255, 255))
-    while audition is True:
-        y = y + 13
-        audition = pyautogui.pixelMatchesColor(x + 465, y + 65, (0, 0, 0))
-    pyautogui.doubleClick(x + 469, y + 67)  # Selects the top tour that isn't an audition
+    for i in range(8):
+        with mss.mss() as sct:
+            monitor = {'top': y + 63, 'left': x + 402, 'width': 14, 'height': 10}
+            im = sct.grab(monitor)
+            try:
+                screenshot = sc.m2_tour_types[str(mss.tools.to_png(im.rgb, im.size))]
+            except KeyError:
+                print(i)
+                print(str(mss.tools.to_png(im.rgb, im.size)))
+                screenshot = None
+            monitor = {'top': y + 63, 'left': x + 484, 'width': 14, 'height': 10}
+            im = sct.grab(monitor)
+            try:
+                screenshot_2 = sc.m2_tour_status[str(mss.tools.to_png(im.rgb, im.size))]
+            except KeyError:
+                print(i)
+                print(str(mss.tools.to_png(im.rgb, im.size)))
+                screenshot_2 = None
+            y += 13
+            try:
+                d.append({'Tour_Type': screenshot, 'Tour_Status': screenshot_2})
+            except NameError:
+                pass
+
+    x, y = m2['title']
+    df = pd.DataFrame(d)
+    cols = df.columns.tolist()
+    cols = cols[-1:] + cols[:-1]
+    df = df[cols]
+    print(df)
+    tour_number = df[(df.Tour_Status == 'Showed') & (df.Tour_Type != 'Audition')].index[0]
+    pyautogui.doubleClick(x + 469, y + 67 + 13 * tour_number)
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
     pyautogui.click(m2['yes_change_sites'])
@@ -714,9 +745,9 @@ def use_excel_sheet():
                 if ams_ir_or_sol == 'ams':
                     select_ams_refund_payment(date, price, 'ams', reference_number)
                 elif ams_ir_or_sol == 'ir':
-                    select_ams_refund_payment(date, price, 'ams', reference_number)
+                    select_ams_refund_payment(date, price, 'ir', reference_number)
                 elif ams_ir_or_sol == 'sol':
-                    select_ams_refund_payment(date, price, 'ams', reference_number)
+                    select_ams_refund_payment(date, price, 'sol', reference_number)
             if deposit_type == 'ams':
                 select_ams_refund_payment(date, price, 'ams')
             elif deposit_type == 'ir':

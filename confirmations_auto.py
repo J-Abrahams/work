@@ -15,6 +15,15 @@ import datetime
 
 errors = 0
 
+#  TODO Make it so the confirmer number only gets changed when the tour status is confirmed.
+#  TODO If there is no item in a deposit, make it so the program doesn't hang on that deposit. 1398246
+#  TODO If the description of a deposit is AMS/Refundable Deposit/Apply to Minivac, make it treat that as non-refundable
+#  TODO If there is a canceled minivac, make the minivac - 0 message green instead of red.
+#  TODO Check for accommodation cancel notes 1423766
+#  TODO Partial refunds 1423766
+#  TODO Check title of note when it's a cancel
+#  TODO Fix duplicate deposits.
+
 
 def search_pid(pid_number):
     sc.get_m1_coordinates()
@@ -107,17 +116,23 @@ def check_for_refundable_deposit():
     non_refundable_total = 0
     pyautogui.click(m3['tour_packages'])
     x, y = m3['title']
-    x_2, y_2 = m3['deposit_1']
-    while len(list_of_deposits) == len(set(list_of_deposits)):
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
+                                           region=(700, 245, 850, 566))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
+                                               region=(700, 245, 850, 566))
+    while True:
         with mss.mss() as sct:
-            pyautogui.click(x_2, y_2)
-            monitor = {'top': y + 59, 'left': x + 323, 'width': 374, 'height': 116}
+            monitor = {'top': y + 69, 'left': x + 255, 'width': 6, 'height': 9}
             im = sct.grab(monitor)
-            list_of_deposits.append(str(mss.tools.to_png(im.rgb, im.size)))
-            if sc.no_deposits in list_of_deposits:
-                return non_refundable_total, list_of_refundable_deposits
-            number_of_deposits = len(set(list_of_deposits))
-            y_2 += 13
+            screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        if screenshot == sc.no_deposits and number_of_deposits == 0:
+            return non_refundable_total, list_of_refundable_deposits
+        elif screenshot == sc.no_deposits:
+            break
+        else:
+            number_of_deposits += 1
+            y += 13
     x, y = m3['deposit_1']
     for i in range(number_of_deposits):
         pyautogui.click(x, y)
@@ -147,7 +162,8 @@ def check_for_refundable_deposit():
         pyautogui.click(m6['ok'])
     print(deposits)
     return deposits
-    """sc.get_m3_coordinates()
+    """
+    sc.get_m3_coordinates()
     deposits = {}
     list_of_deposits = []
     list_of_refundable_deposits = []
@@ -319,6 +335,7 @@ def read_premiums():
 
 
 def check_tour_type(number_of_tours):
+    global errors
     sc.get_m3_coordinates()
     with mss.mss() as sct:
         x, y = m3['title']
@@ -327,11 +344,13 @@ def check_tour_type(number_of_tours):
         tour_type = sc.tour_type[str(mss.tools.to_png(im.rgb, im.size))]
     if (tour_type == 'day_drive' or tour_type == 'canceled' or tour_type == 'open_reservation') and number_of_tours > 0:
         print('\x1b[6;30;41m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
+        errors += 1
     elif tour_type == 'minivac' and number_of_tours < 1:
         print('\x1b[6;30;41m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
+        errors += 1
     else:
         print('\x1b[6;30;42m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
-
+    return tour_type
 
 def confirm_tour_status(status):
     """Checks that the tour status is correct"""
@@ -366,6 +385,7 @@ def confirm_tour_status(status):
             print('\x1b[6;30;42m' + 'Tour status is good' + '\x1b[0m')
         else:
             print('\x1b[6;30;41m' + 'TOUR STATUS MIGHT BE INCORRECT' + '\x1b[0m')
+            errors += 1
     elif status == 'x':
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\canceled.png',
                                                region=(x + 27, y + 132, 131, 103))
@@ -376,6 +396,7 @@ def confirm_tour_status(status):
             attempts += 1
         if image is None:
             print('\x1b[6;30;41m' + 'TOUR STATUS MIGHT BE INCORRECT' + '\x1b[0m')
+            errors += 1
         else:
             print('\x1b[6;30;42m' + 'Tour status is good' + '\x1b[0m')
 
@@ -586,12 +607,13 @@ def automatic_confirmation():
             conf = row['conf']
             cxl = row['cxl']
             rxl = row['rxl']
+            errors = 0
             search_pid(pids)
             double_check_pid(pids)
             select_tour()
             check_tour_for_error()
             number_of_tours, number_of_canceled_tours = count_accommodations()
-            check_tour_type(number_of_tours)
+            tour_type = check_tour_type(number_of_tours)
             deposits = check_for_refundable_deposit()
             apply_to_mv(deposits)
             check_for_dep_premium(deposits)
@@ -629,7 +651,8 @@ def automatic_confirmation():
                 confirm_tour_status('x')
                 notes('x')
                 enter_personnel(sol, 'x')
-            input("Everything ok?")
+            if errors > 0 or tour_type == 'minivac':
+                input("Everything ok?")
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                    region=(514, 245, 889, 566))
             while image is None:
