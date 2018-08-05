@@ -51,10 +51,11 @@ def select_tour():
                 print(str(mss.tools.to_png(im.rgb, im.size)))
                 screenshot_2 = None
             y += 13
-            try:
-                d.append({'Tour_Type': screenshot, 'Tour_Status': screenshot_2})
-            except NameError:
-                pass
+            if screenshot != 'Nothing':
+                try:
+                    d.append({'Tour_Type': screenshot, 'Tour_Status': screenshot_2})
+                except NameError:
+                    pass
 
     x, y = m2['title']
     df = pd.DataFrame(d)
@@ -103,7 +104,7 @@ def check_tour_for_error():
             input('Is this the correct tour?')
 
 
-def change_deposit_title(price):
+def change_deposit_title(price, cash=None):
     """
     Checks to make sure that the deposit price is correct. Ex: If the sheet says $50, then this makes sure that the
     deposit is also $50.
@@ -111,6 +112,7 @@ def change_deposit_title(price):
     """
     sc.get_m3_coordinates()
     amount = 0
+    old_title = 'old'
     x_2, y_2 = m3['deposit_1']
     while amount != price:
         pyautogui.click(m3['tour_packages'])
@@ -121,28 +123,31 @@ def change_deposit_title(price):
             x, y = m6['title']
             monitor = {'top': y + 187, 'left': x + 168, 'width': 51, 'height': 11}
             im = sct.grab(monitor)
-            amount = sc.screenshot_dict[str(mss.tools.to_png(im.rgb, im.size))]
+            try:
+                amount = sc.screenshot_dict[str(mss.tools.to_png(im.rgb, im.size))]
+            except KeyError:
+                amount = 0
         if amount != price:
             pyautogui.click(m6['ok'])
             y_2 += 13
-    pyautogui.click(m6['description'])
-    keyboard.send('ctrl + z')
-    keyboard.send('ctrl + c')
-    r = Tk()
-    old_title = r.selection_get(selection="CLIPBOARD")
-    print(old_title)
+    while 'ref' not in old_title.lower():
+        pyautogui.click(m6['description'])
+        keyboard.send('ctrl + z')
+        keyboard.send('ctrl + c')
+        r = Tk()
+        old_title = r.selection_get(selection="CLIPBOARD")
     new_title = old_title.replace("able", "ed")
     new_title = new_title.replace("ABLE", "ED")
     new_title = new_title.replace(" /", "/")
     new_title = new_title.replace("/ ", "/")
     keyboard.write(new_title)
-    if 'prev' in new_title.lower():
+    if 'prev' in new_title.lower() and cash is None:
         return 'prev'
-    if new_title.lower() == 'ir/refunded deposit':
+    elif 'ir' in new_title.lower() and 'refunded' in new_title.lower():
         return "ir"
-    elif new_title.lower() == 'ams/refunded deposit':
+    elif 'ams' in new_title.lower() and 'refunded' in new_title.lower():
         return "ams"
-    elif new_title.lower() == 'sol/refunded deposit':
+    elif 'sol' in new_title.lower() and 'refunded' in new_title.lower():
         return "sol"
 
 
@@ -340,9 +345,26 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
                 transaction_code = 8
             else:
                 transaction_code = 0
+                pyautogui.click(m8['cancel'])
+        if transaction_code == 0 or transaction_code == 9:
+            attempts = 0
+            pyautogui.click(m6['payment'])
+            sc.get_m8_coordinates()
+            pyautogui.click(m8['transaction_code'])
+            pyautogui.click(m8['transaction_code_scroll_bar'])
+            image = pyautogui.locateCenterOnScreen(
+                'C:\\Users\\Jared.Abrahams\\Screenshots\\sol_credit_refund.png', region=(136, 652, 392, 247))
+            while image is None and attempts <= 2:
+                image = pyautogui.locateCenterOnScreen(
+                    'C:\\Users\\Jared.Abrahams\\Screenshots\\sol_credit_refund.png', region=(136, 652, 392, 247))
+                attempts += 1
+            if image is not None:
+                transaction_code = 9
+            else:
+                transaction_code = 0
                 sys.exit("Couldn't find correct choice")
     pyautogui.click(image)
-    if (2 < transaction_code < 6) or transaction_code >= 7:
+    if (2 < transaction_code < 6) or (6 < transaction_code > 9):
         pyautogui.doubleClick(m8['amount'])
         keyboard.write(price)
     pyautogui.doubleClick(m8['reference'])
@@ -736,9 +758,14 @@ def use_excel_sheet():
             double_check_pid(pids)
             select_tour()
             check_tour_for_error()
-            deposit_type = change_deposit_title(price)
-            if deposit_type != 'prev':
+            if cash != 'x' and cash != 'X':
+                deposit_type = change_deposit_title(price)
+            else:
+                deposit_type = change_deposit_title(price, cash)
+            if deposit_type != 'prev' and (cash != 'x' and cash != 'X'):
                 copy_reference_number()
+            elif cash == 'x' or cash == 'X':
+                clipboard.copy('R-CASH')
             else:
                 ams_ir_or_sol = input('ams, ir, or sol:')
                 reference_number = input('Reference Number starting with R:')

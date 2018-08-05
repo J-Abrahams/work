@@ -1,15 +1,11 @@
 import csv
-import time
-from tkinter import Tk
 import keyboard
 import mss
 import mss.tools
-import pandas as pd
 import pyautogui
-import pyperclip
 import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
-import importlib
+import datetime
 
 
 def search_pid(pid_number):
@@ -40,10 +36,18 @@ def enter_phone_number(number):
         return "Good"
 
 
-with open('Phone_Errors.txt', 'w') as erase:
-    erase.write('')
+now = datetime.datetime.now()
+now_str = now.strftime("%m/%d/%Y")
+with open('Phone_Errors.txt', 'a') as erase:
+    erase.write('\n{}\n'.format(now_str))
 with open('phone.csv') as csvfile:
     reader = csv.DictReader(csvfile)
+    number_of_phone_numbers = 0
+    for row in reader:
+        number_of_phone_numbers += 1
+with open('phone.csv') as csvfile:
+    reader = csv.DictReader(csvfile)
+    duplicate_phone_numbers, progress, errors = 0, 0, 0
     for row in reader:
         pids = row['PID'].replace('.0', '')
         phone_1 = row['phone_1']
@@ -52,5 +56,12 @@ with open('phone.csv') as csvfile:
             search_pid(pids)
             status = enter_phone_number(phone_2)
             if status == "Error":
+                errors += 1
                 with open('Phone_Errors.txt', 'a') as out:
                     out.write('{} {} {}\n'.format(pids, phone_1, phone_2))
+        else:
+            duplicate_phone_numbers += 1
+        progress += 1
+        print(str(progress) + '/' + str(number_of_phone_numbers))
+        print(str(duplicate_phone_numbers) + ' duplicate numbers')
+        print(str(errors) + ' errors')
