@@ -39,9 +39,8 @@ def double_check_pid(pid_number):
     sc.get_m2_coordinates()
     pyautogui.doubleClick(m2['prospect_id'])
     keyboard.send('ctrl + c')
-    r = Tk()
-    clipboard = r.selection_get(selection="CLIPBOARD")
-    if clipboard != pid_number:
+    copied_text = clipboard.paste()
+    if copied_text != pid_number:
         input('Is the pid correct?')
         return
     if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
@@ -51,9 +50,8 @@ def double_check_pid(pid_number):
     keyboard.send('ctrl + z')
     time.sleep(1)
     keyboard.send('ctrl + c')
-    r = Tk()
-    clipboard = r.selection_get(selection="CLIPBOARD")
-    if 'pid' in clipboard.lower():
+    copied_text = clipboard.paste()
+    if 'pid' in copied_text.lower():
         input('Is the pid correct?')
         return
 
@@ -163,8 +161,7 @@ def check_for_refundable_deposit():
         pyautogui.click(m6['description'])
         keyboard.send('ctrl + z')
         keyboard.send('ctrl + c')
-        r = Tk()
-        result = r.selection_get(selection="CLIPBOARD")
+        result = clipboard.paste()
         pyautogui.click(m6['view'])
         item_in_deposit = sc.get_m7_coordinates()
         if item_in_deposit is None:
@@ -173,8 +170,7 @@ def check_for_refundable_deposit():
             pyautogui.doubleClick(m7['amount'])
             time.sleep(0.5)
             keyboard.send('ctrl + c')
-            r = Tk()
-            price = str(r.selection_get(selection="CLIPBOARD").replace('-', ''))
+            price = str(clipboard.paste().replace('-', ''))
             price = price.replace('.00', '')
         if 'ref' in result.lower():
             deposits[0 + z] = ['refundable', price]
@@ -442,8 +438,7 @@ def notes(status):
             pyautogui.click(x_2 + 25, y_2 + 75)
             pyautogui.dragTo(x_2 + 250, y_2 + 150, button='left')
             keyboard.send('ctrl + c')  # Copy note
-            r = Tk()
-            result = r.selection_get(selection="CLIPBOARD")
+            result = clipboard.paste()
             if result in copied:
                 print('\x1b[6;30;41m' + 'COULDN\'T FIND CORRECT NOTE' + '\x1b[0m')
                 errors += 1
@@ -575,44 +570,6 @@ def activation_sheet():
                 pyautogui.click(x - 20, y + 425)
 
 
-def manual_confirmation(pids):
-    # status = input('Conf (c), RXL (r), CXL (x), UG (u), or TAV (tav)')
-    for pid in pids:
-        if pid != '':
-            pid_and_status = re.findall('\d+|\D+', pid)
-            pid = pid_and_status[0]
-            try:
-                status = pid_and_status[1]
-            except IndexError:
-                status = None
-            search_pid(pid)
-            double_check_pid(pid)
-            select_tour()
-            check_tour_for_error()
-            if status[0] != 'u' and status[0] != 't':
-                notes(status[0])
-            deposits = check_for_refundable_deposit()
-            apply_to_mv(deposits)
-            check_for_dep_premium(deposits)
-            confirm_tour_status(status[0])
-            enter_personnel(sol, status)
-            input("Everything ok?")
-            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                                   region=(514, 245, 889, 566))
-            while image is None:
-                image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                                       region=(514, 245, 889, 566))
-            x, y = image
-            pyautogui.click(x + 265, y + 475)
-            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                   region=(514, 245, 889, 566))
-            while image is None:
-                image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                       region=(514, 245, 889, 566))
-            x, y = image
-            pyautogui.click(x - 20, y + 425)
-
-
 def automatic_confirmation():
     global errors
     convert_excel_to_csv()
@@ -677,7 +634,7 @@ def automatic_confirmation():
                 tour_status = confirm_tour_status('x')
                 notes('x')
                 enter_personnel(sol, 'x')
-            if errors > 0 or tour_type == 'minivac':
+            if errors > 0 or tour_type == 'Minivac':
                 input("Everything ok?")
             progress += 1
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
@@ -697,16 +654,6 @@ def automatic_confirmation():
             errors = 0
 
 
-pids = ['1420632c', '1404653cu', '1422265x', '1316702r', '1420043c', '1421697c', '1360177u', '1420891c', '1419401r',
-        '1422032x', '1421933c', '1414783c', '1413833c', '1417632r', '1421650x', '1414969r', '1420019c', '1419062c',
-        '1415522c', '1422107c', '1421726cr', '1410891r', '1399451r', '1410891ru', '', '', '',
-        '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '']
-
-auto_or_manual = input('Auto (A) or Manual (M):')
 print("Justin Locke - 4967 \nBrian Bennett - 3055")
 sol = "SOL" + input("SOL #:")
-if auto_or_manual == 'a' or auto_or_manual == 'A':
-    automatic_confirmation()
-else:
-    manual_confirmation(pids)
+automatic_confirmation()

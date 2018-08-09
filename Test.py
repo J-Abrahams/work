@@ -14,7 +14,6 @@ import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 import datetime
 
-
 d = []
 sc.get_m2_coordinates()
 x, y = m2['title']

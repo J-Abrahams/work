@@ -1,10 +1,8 @@
 import keyboard
 import pyautogui
 import time
-import pyperclip
 import sys
 import datetime
-from tkinter import Tk
 import clipboard
 import mss
 import mss.tools
@@ -27,43 +25,63 @@ def search_pid(pid_number):
     pyautogui.click(m1['change'])
 
 
-def select_tour():
+def create_data_frame():
+    """
+    Takes screenshots of the tours. Turns the screenshots into a list of dictionaries 'd'. Turns 'd' into a dataframe.
+    d is a list of dictionaries such as [{''Date': '7/06/18', 'Tour_Type': 'Audition', 'Tour_Status': 'Showed'},
+    {'Date': '7/06/18', 'Tour_Type': 'minivac', 'Tour_Status': 'Showed'}]
+    :return:
+    """
     sc.get_m2_coordinates()
     d = []
-    sc.get_m2_coordinates()
     x, y = m2['title']
     for i in range(8):
         with mss.mss() as sct:
+            monitor = {'top': y + 63, 'left': x + 330, 'width': 52, 'height': 10}
+            im = sct.grab(monitor)
+            try:
+                screenshot = sc.dates[str(mss.tools.to_png(im.rgb, im.size))]
+                date = datetime.datetime.strptime(screenshot, "%m/%d/%y")
+            except KeyError:
+                date = None
             monitor = {'top': y + 63, 'left': x + 402, 'width': 14, 'height': 10}
             im = sct.grab(monitor)
             try:
-                screenshot = sc.m2_tour_types[str(mss.tools.to_png(im.rgb, im.size))]
-            except KeyError:
-                print(i)
-                print(str(mss.tools.to_png(im.rgb, im.size)))
-                screenshot = None
-            monitor = {'top': y + 63, 'left': x + 484, 'width': 14, 'height': 10}
-            im = sct.grab(monitor)
-            try:
-                screenshot_2 = sc.m2_tour_status[str(mss.tools.to_png(im.rgb, im.size))]
+                screenshot_2 = sc.m2_tour_types[str(mss.tools.to_png(im.rgb, im.size))]
             except KeyError:
                 print(i)
                 print(str(mss.tools.to_png(im.rgb, im.size)))
                 screenshot_2 = None
+            monitor = {'top': y + 63, 'left': x + 484, 'width': 14, 'height': 10}
+            im = sct.grab(monitor)
+            try:
+                screenshot_3 = sc.m2_tour_status[str(mss.tools.to_png(im.rgb, im.size))]
+            except KeyError:
+                print(i)
+                print(str(mss.tools.to_png(im.rgb, im.size)))
+                screenshot_3 = None
             y += 13
-            if screenshot != 'Nothing':
+            if screenshot_2 != 'Nothing':
                 try:
-                    d.append({'Tour_Type': screenshot, 'Tour_Status': screenshot_2})
+                    # Where the screenshots get turned into dictionaries.
+                    d.append({'Date': date, 'Tour_Type': screenshot_2, 'Tour_Status': screenshot_3})
                 except NameError:
                     pass
-
-    x, y = m2['title']
-    df = pd.DataFrame(d)
-    cols = df.columns.tolist()
-    cols = cols[-1:] + cols[:-1]
-    df = df[cols]
+    df = pd.DataFrame(d)  # Turn d into a dataframe
+    df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
     print(df)
-    tour_number = df[(df.Tour_Status == 'Showed') & (df.Tour_Type != 'Audition')].index[0]
+    return df
+
+
+def select_tour(df, attempt_number, date):
+    x, y = m2['title']
+    date = date + '/18'
+    date = datetime.datetime.strptime(date, "%m/%d/%y")
+    try:
+        tour_number = df[(df.Tour_Status == 'Showed') & (df.Tour_Type != 'Audition') &
+                         ((date - df.Date) <= datetime.timedelta(days=7))].index[attempt_number - 1]
+    except IndexError:
+        tour_number = df[(df.Tour_Status == 'No_Show') & (df.Tour_Type != 'Audition')].index[0]
     pyautogui.doubleClick(x + 469, y + 67 + 13 * tour_number)
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
@@ -74,9 +92,15 @@ def double_check_pid(pid_number):
     sc.get_m2_coordinates()
     pyautogui.doubleClick(m2['prospect_id'])
     keyboard.send('ctrl + c')
-    r = Tk()
-    clipboard = r.selection_get(selection="CLIPBOARD")
-    if clipboard != pid_number:
+    copied_text = clipboard.paste()
+    for i in range(3):
+        if copied_text != pid_number:
+            print(copied_text)
+            time.sleep(0.3)
+            pyautogui.doubleClick(m2['prospect_id'])
+            keyboard.send('ctrl + c')
+            copied_text = clipboard.paste()
+    if copied_text != pid_number:
         input('Is the pid correct?')
         return
     if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
@@ -86,9 +110,8 @@ def double_check_pid(pid_number):
     keyboard.send('ctrl + z')
     time.sleep(1)
     keyboard.send('ctrl + c')
-    r = Tk()
-    clipboard = r.selection_get(selection="CLIPBOARD")
-    if 'pid' in clipboard.lower():
+    copied_text = clipboard.paste()
+    if 'pid' in copied_text.lower():
         input('Is the pid correct?')
         return
 
@@ -113,9 +136,26 @@ def change_deposit_title(price, cash=None):
     sc.get_m3_coordinates()
     amount = 0
     old_title = 'old'
+    x, y = m3['title']
     x_2, y_2 = m3['deposit_1']
-    while amount != price:
+    attempts = 0
+    while amount != price and attempts <= 2:
         pyautogui.click(m3['tour_packages'])
+        for i in range(2):
+            with mss.mss() as sct:
+                # The screen part to capture
+                monitor = {'top': y + 68, 'left': x + 464, 'width': 37, 'height': 11}
+                y += 13
+                now = datetime.datetime.now()
+                output = now.strftime("%d-%H-%M-%S-%f.png".format(**monitor))
+                # Grab the data
+                sct_img = sct.grab(monitor)
+                # Save to the picture file
+                image = str(mss.tools.to_png(sct_img.rgb, sct_img.size))
+                if image not in open('screenshot_data.txt').read():
+                    mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
+                    with open('screenshot_data.txt', 'a') as out:
+                        out.write('{} - {}\n'.format(output, image))
         pyautogui.click(x_2, y_2)
         pyautogui.click(m3['change_deposit'])
         sc.get_m6_coordinates()
@@ -127,15 +167,21 @@ def change_deposit_title(price, cash=None):
                 amount = sc.screenshot_dict[str(mss.tools.to_png(im.rgb, im.size))]
             except KeyError:
                 amount = 0
+        attempts += 1
         if amount != price:
             pyautogui.click(m6['ok'])
             y_2 += 13
-    while 'ref' not in old_title.lower():
+    if amount != price:
+        pyautogui.click(m3['ok'])
+        return 'fail'
+    attempts = 0
+    while 'ref' not in old_title.lower() and attempts <= 2:
         pyautogui.click(m6['description'])
         keyboard.send('ctrl + z')
         keyboard.send('ctrl + c')
-        r = Tk()
-        old_title = r.selection_get(selection="CLIPBOARD")
+        old_title = clipboard.paste()
+    if 'ref' not in old_title.lower():
+        sys.exit("Wrong Title")
     new_title = old_title.replace("able", "ed")
     new_title = new_title.replace("ABLE", "ED")
     new_title = new_title.replace(" /", "/")
@@ -153,7 +199,10 @@ def change_deposit_title(price, cash=None):
 
 def copy_reference_number():
     sc.get_m6_coordinates()
-    pyautogui.click(m6['view'])
+    pyautogui.click(m6['deposit_1'])
+    for i in range(5):
+        keyboard.send('down')
+    keyboard.send('alt + v')
     sc.get_m7_coordinates()
     pyautogui.doubleClick(m7['reference'])
     keyboard.press_and_release('ctrl + c')
@@ -185,28 +234,11 @@ def ams_credit_refund(date):
         return ams_credit_refund
 
 
-"""def ams_cc_refund(date):
-    pyautogui.click(m6['payment'])
-    pyautogui.click(m8['transaction_code'])
-    attempts = 0
-    image = pyautogui.locateCenterOnScreen(
-        'C:\\Users\\Jared.Abrahams\\Screenshots\\ams_credit_refund.png', region=(136, 652, 392, 247))
-    while image is None and attempts <= 2:
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\ams_credit_refund.png', region=(136, 652, 392, 247))
-        attempts += 1
-    if image is None:
-        ams_credit_refund = 0
-        return ams_credit_refund
-    else:
-        pyautogui.click(image)
-        ams_credit_refund = 1
-        return ams_credit_refund"""
-
-
 def select_ams_refund_payment(date, price, description, reference_number=None):
     sc.get_m6_coordinates()
     attempts = 0
+    change_description_name = 0
+    image = None
     global transaction_code
     if description == 'ams':
         if transaction_code > 4:
@@ -307,8 +339,24 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
             if image is not None:
                 transaction_code = 6
             else:
+                # Selecting IH Credit Refund and changing it to IR Credit Refund
                 transaction_code = 0
-                sys.exit("Couldn't find correct choice")
+                pyautogui.click(m8['cancel'])
+                attempts = 0
+                pyautogui.click(m6['insert'])
+                sc.get_m8_coordinates()
+                pyautogui.click(m8['transaction_code'])
+                image = pyautogui.locateCenterOnScreen(
+                    'C:\\Users\\Jared.Abrahams\\Screenshots\\ih_credit_refund.png', region=(136, 652, 392, 247))
+                while image is None and attempts <= 2:
+                    image = pyautogui.locateCenterOnScreen(
+                        'C:\\Users\\Jared.Abrahams\\Screenshots\\ih_credit_refund.png', region=(136, 652, 392, 247))
+                    attempts += 1
+                if image is not None:
+                    change_description_name = 1
+                else:
+                    transaction_code = 0
+                    sys.exit("Couldn't find correct choice")
     elif description == 'sol':
         if 0 < transaction_code < 7:
             transaction_code = 0
@@ -364,7 +412,13 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
                 transaction_code = 0
                 sys.exit("Couldn't find correct choice")
     pyautogui.click(image)
-    if (2 < transaction_code < 6) or (6 < transaction_code > 9):
+    if change_description_name == 1:
+        pyautogui.click(m8['description'])
+        keyboard.send('ctrl + z')
+        keyboard.write('IR CREDIT CARD REFUND')
+        pyautogui.doubleClick(m8['amount'])
+        keyboard.write(price)
+    if (2 < transaction_code < 6) or (6 < transaction_code < 9):
         pyautogui.doubleClick(m8['amount'])
         keyboard.write(price)
     pyautogui.doubleClick(m8['reference'])
@@ -378,10 +432,6 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
     pyautogui.click(m8['ok'])
     time.sleep(0.3)
     pyautogui.click(880, 565)  # Clicking yes to the warning that appears
-    now = datetime.datetime.now()
-    now_str = now.strftime("%Y-%m-%d-%H-%M-%S")
-    outfile = pyautogui.screenshot(
-        'C:\\Users\\Jared.Abrahams\\work\\deposit_screenshots\\ImageFile{}.png'.format(now_str))
     pyautogui.click(m6['ok'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                            region=(514, 245, 889, 566))
@@ -401,6 +451,7 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
 
 def select_ir_refund_payment(date, price, reference_number=None):
     sc.get_m6_coordinates()
+    image = None
     pyautogui.click(m6['insert'])
     sc.get_m8_coordinates()
     pyautogui.click(m8['transaction_code'])
@@ -470,272 +521,6 @@ def select_ir_refund_payment(date, price, reference_number=None):
     x, y = image
     pyautogui.click(x - 20, y + 425)
 
-"""def select_ams_refund_insert(x, y, price, date):
-    pyautogui.doubleClick(x + 50, y + 190)  # Already entered payment
-    time.sleep(1)
-    pyautogui.doubleClick(x - 315, y + 160)  # Reference number
-    keyboard.press_and_release('ctrl + c')
-    time.sleep(1)
-    old_reference = str(pyperclip.paste())
-
-    if old_reference[0] != 'D':
-        sys.exit("Wrong Reference")
-
-    new_reference = old_reference.replace("D-", "R-")
-    pyperclip.copy(new_reference)
-    pyautogui.click(x - 150, y + 225)  # Exit out of the already entered payment
-    pyautogui.click(x, y + 365)  # Insert button
-
-    image = pyautogui.locateCenterOnScreen(
-        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png', region=(136, 652, 392, 247))
-
-    while image is None:
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png',
-            region=(136, 652, 392, 247))
-
-    x_1, y_1 = image
-    pyautogui.click(x_1 + 100, y_1 + 65)  # Transaction code dropdown menu
-
-    image = pyautogui.locateCenterOnScreen(
-        'C:\\Users\\Jared.Abrahams\\Screenshots\\ams_credit_refund.png', region=(147, 566, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\ams_credit_refund.png', region=(147, 566, 889, 566))
-    x_2, y_2 = image
-
-    pyautogui.click(x_2, y_2)  # AMS refund
-    pyautogui.doubleClick(x_1 + 85, y + 130)  # Amount
-    keyboard.write(price)
-    pyautogui.doubleClick(x_1 + 85, y_1 + 140)  # Reference
-    keyboard.send('ctrl + v')
-    pyautogui.doubleClick(x_1 + 85, y_1 + 165)  # Date
-    keyboard.write(date)
-    time.sleep(0.3)
-    pyautogui.click(x_1 + 85, y_1 + 210)
-    pyautogui.click(x_1 + 650, y_1 - 20)
-    now = datetime.datetime.now()
-    now_str = now.strftime("%Y-%m-%d-%H-%M-%S")
-    outfile = pyautogui.screenshot(
-        'C:\\Users\\Jared.Abrahams\\work\\deposit_screenshots\\ImageFile{}.png'.format(now_str))
-    pyautogui.click(x + 150, y + 400)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 265, y + 475)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x - 20, y + 425)"""
-
-
-"""def select_ams_cc_ref(x, y, price, date):
-    pyautogui.doubleClick(x + 50, y + 190)  # Already entered payment
-    time.sleep(1)
-    pyautogui.doubleClick(x - 315, y + 160)  # Reference number
-    keyboard.press_and_release('ctrl + c')
-    time.sleep(1)
-    old_reference = str(pyperclip.paste())
-
-    if old_reference[0] != 'D':
-        sys.exit("Wrong Reference")
-
-    new_reference = old_reference.replace("D-", "R-")
-    pyperclip.copy(new_reference)
-    pyautogui.click(x - 150, y + 225)  # Exit out of the already entered payment
-    pyautogui.click(x, y + 365)  # Insert button
-
-    image = pyautogui.locateCenterOnScreen(
-        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png',
-        region=(147, 566, 889, 566))
-
-    while image is None:
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png',
-            region=(147, 566, 889, 566))
-
-    x_1, y_1 = image
-    pyautogui.click(x_1 + 100, y_1 + 65)  # Transaction code dropdown menu
-
-    image = pyautogui.locateCenterOnScreen(
-        'C:\\Users\\Jared.Abrahams\\Screenshots\\ams_cc_ref.png', region=(147, 566, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\ams_cc_ref.png', region=(147, 566, 889, 566))
-    x_2, y_2 = image
-    pyautogui.click(x_2, y_2)  # AMS refund
-    pyautogui.doubleClick(x_1 + 85, y + 130)  # Amount
-    keyboard.write(price)
-    pyautogui.doubleClick(x_1 + 85, y_1 + 140)  # Reference
-    keyboard.send('ctrl + v')
-    pyautogui.doubleClick(x_1 + 85, y_1 + 165)  # Date
-    keyboard.write(date)
-    time.sleep(0.3)
-    pyautogui.click(x_1 + 85, y_1 + 210)
-    pyautogui.click(x_1 + 650, y_1 - 20)
-    now = datetime.datetime.now()
-    now_str = now.strftime("%Y-%m-%d-%H-%M-%S")
-    outfile = pyautogui.screenshot(
-        'C:\\Users\\Jared.Abrahams\\work\\deposit_screenshots\\ImageFile{}.png'.format(now_str))
-    pyautogui.click(x + 150, y + 400)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 265, y + 475)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x - 20, y + 425)"""
-
-
-"""def enter_rest_of_info(x, y, x_1, y_1):
-    pyautogui.doubleClick(x_1 + 85, y + 130)  # Amount
-    keyboard.write("50")
-    pyautogui.doubleClick(x_1 + 85, y_1 + 140)  # Reference
-    keyboard.send('ctrl + v')
-    pyautogui.doubleClick(x_1 + 85, y_1 + 165)  # Date
-    keyboard.write('7/10/18')
-    time.sleep(0.3)
-    pyautogui.click(x_1 + 85, y_1 + 210)
-    pyautogui.click(x_1 + 650, y_1 - 20)
-    now = datetime.datetime.now()
-    now_str = now.strftime("%Y-%m-%d-%H-%M-%S")
-    outfile = pyautogui.screenshot(
-        'C:\\Users\\Jared.Abrahams\\work\\deposit_screenshots\\ImageFile{}.png'.format(now_str))
-    pyautogui.click(x + 150, y + 400)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 265, y + 475)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x - 20, y + 425)"""
-
-
-"""def ir_refund(x, y, price, date):
-    pyautogui.doubleClick(x + 50, y + 190)  # Already entered payment
-    time.sleep(1)
-    pyautogui.doubleClick(x - 315, y + 160)  # Reference number
-    keyboard.press_and_release('ctrl + c')
-    time.sleep(1)
-    old_reference = str(pyperclip.paste())
-
-    if old_reference[0] != 'D':
-        sys.exit("Wrong Reference")
-
-    new_reference = old_reference.replace("D-", "R-")
-    pyperclip.copy(new_reference)
-    pyautogui.click(x - 150, y + 225)  # Exit out of the already entered payment
-    pyautogui.click(x, y + 365)  # Insert button
-
-    image = pyautogui.locateCenterOnScreen(
-        'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png',
-        region=(147, 566, 889, 566))
-
-    while image is None:
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png',
-            region=(147, 566, 889, 566))
-
-    x_1, y_1 = image
-    pyautogui.click(x_1 + 100, y_1 + 65)  # Transaction code dropdown menu
-
-    image = pyautogui.locateCenterOnScreen(
-        'C:\\Users\\Jared.Abrahams\\Screenshots\\ir_refund.png', region=(147, 566, 889, 566))
-
-    while image is None:
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\ir_refund.png', region=(147, 566, 889, 566))
-
-    x_2, y_2 = image
-    pyautogui.click(x_2, y_2)  # IR refund
-    pyautogui.doubleClick(x_1 + 85, y + 130)  # Amount
-    keyboard.write(price)
-    pyautogui.doubleClick(x_1 + 85, y_1 + 140)  # Reference
-    keyboard.send('ctrl + v')
-    pyautogui.doubleClick(x_1 + 85, y_1 + 165)  # Date
-    keyboard.write(date)
-    pyautogui.click(x_1 + 85, y_1 + 210)
-    now = datetime.datetime.now()
-    now_str = now.strftime("%Y-%m-%d-%H-%M-%S")
-    time.sleep(0.3)
-    outfile = pyautogui.screenshot(
-        'C:\\Users\\Jared.Abrahams\\work\\deposit_screenshots\\ImageFile{}.png'.format(now_str))
-    pyautogui.click(x + 150, y + 400)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x + 265, y + 475)
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                               region=(514, 245, 889, 566))
-    x, y = image
-    pyautogui.click(x - 20, y + 425)"""
-
-
-"""def error(price):
-    sc.get_m3_coordinates()
-    amount = 0
-    x, y = m3['deposit_1']
-    while amount != price:
-        pyautogui.click(m3['tour_packages'])
-        pyautogui.click(x, y)
-        pyautogui.click(m3['change_deposit'])
-        sc.get_m6_coordinates()
-        with mss.mss() as sct:
-            x, y = m6['title']
-            monitor = {'top': y + 187, 'left': x + 168, 'width': 51, 'height': 11}
-            im = sct.grab(monitor)
-            amount = sc.screenshot_dict[str(mss.tools.to_png(im.rgb, im.size))]
-        if amount != price:
-            pyautogui.click(m6['ok'])
-            y += 13
-    sc.get_m6_coordinates()
-    pyautogui.click(m6['insert'])
-    sc.get_m8_coordinates()
-    pyautogui.click(m8['transaction_code'])
-    pyautogui.click(m8['transaction_code_scroll_bar'])
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\void.png',
-                                           region=(136, 652, 392, 247))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen(
-            'C:\\Users\\Jared.Abrahams\\Screenshots\\void.png',
-            region=(136, 652, 392, 247))
-    pyautogui.click(image)  # Error
-    pyautogui.doubleClick(m8['amount'])
-    keyboard.write("-50")
-    #keyboard.write(price)
-    pyautogui.doubleClick(m8['reference'])
-    keyboard.write('ERROR')
-    time.sleep(0.3)
-    pyautogui.click(m8['ok'])
-    time.sleep(0.3)
-    pyautogui.click(880, 565)"""
-
 
 def convert_excel_to_csv():
     xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\deposit_pids.xlsx")
@@ -756,19 +541,27 @@ def use_excel_sheet():
             cash = row['cash']
             search_pid(pids)
             double_check_pid(pids)
-            select_tour()
+            df = create_data_frame()
+            select_tour(df, 1, date)
             check_tour_for_error()
             if cash != 'x' and cash != 'X':
                 deposit_type = change_deposit_title(price)
             else:
                 deposit_type = change_deposit_title(price, cash)
+            if deposit_type == 'fail':
+                select_tour(df, 2, date)
+                if cash != 'x' and cash != 'X':
+                    deposit_type = change_deposit_title(price)
+                else:
+                    deposit_type = change_deposit_title(price, cash)
             if deposit_type != 'prev' and (cash != 'x' and cash != 'X'):
                 copy_reference_number()
             elif cash == 'x' or cash == 'X':
                 clipboard.copy('R-CASH')
             else:
                 ams_ir_or_sol = input('ams, ir, or sol:')
-                reference_number = input('Reference Number starting with R:')
+                old_reference = input('Reference Number starting with D:')
+                reference_number = old_reference.replace("D-", "R-")
                 if ams_ir_or_sol == 'ams':
                     select_ams_refund_payment(date, price, 'ams', reference_number)
                 elif ams_ir_or_sol == 'ir':
@@ -784,46 +577,3 @@ def use_excel_sheet():
 
 
 use_excel_sheet()
-"""pids = ['283614', '659413', '1064845', '1286522', '1303227', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '', '', '', '', '', '',
-        '', '', '', '', '']
-transaction_code = 0
-#  date = input("Date")
-#  price = input("Price")
-print("Get PIDs from excel sheet?")
-excel_sheet = input("(y) or (n)")
-if excel_sheet != 'y':
-    for pid in pids:
-        if pid != '':
-            search_pid(pid)
-            select_tour()
-            check_tour_for_error()
-            #  error(price)
-            deposit_type = change_deposit_title(price)
-            if deposit_type != 'prev':
-                copy_reference_number()
-            else:
-                ams_ir_or_sol = input('ams, ir, or sol:')
-                reference_number = input('Reference Number starting with R:')
-                if ams_ir_or_sol == 'ams':
-                    select_ams_refund_payment(date, price, 'ams', reference_number)
-                elif ams_ir_or_sol == 'ir':
-                    select_ams_refund_payment(date, price, 'ams', reference_number)
-                elif ams_ir_or_sol == 'sol':
-                    select_ams_refund_payment(date, price, 'ams', reference_number)
-            if deposit_type == 'ams':
-                select_ams_refund_payment(date, price, 'ams')
-            elif deposit_type == 'ir':
-                select_ams_refund_payment(date, price, 'ir')
-            elif deposit_type == 'sol':
-                select_ams_refund_payment(date, price, 'sol')
-else:
-    use_excel_sheet()
-'''search_pid('727085')
-select_tour()
-change_deposit_title()'''"""
