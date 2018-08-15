@@ -1,5 +1,3 @@
-import importlib
-import re
 import csv
 import time
 from tkinter import Tk
@@ -8,23 +6,32 @@ import mss
 import mss.tools
 import pandas as pd
 import pyautogui
-import pyperclip
+import clipboard
 import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 import datetime
 
+# import importlib
+# importlib.reload(sc)
 errors = 0
 
 
 #  TODO Make it so the confirmer number only gets changed when the tour status is confirmed.
 #  TODO If there is no item in a deposit, make it so the program doesn't hang on that deposit. 1398246
 #  TODO If the description of a deposit is AMS/Refundable Deposit/Apply to Minivac, make it treat that as non-refundable
-#  TODO If there is a canceled minivac, make the minivac - 0 message green instead of red.
 #  TODO Check for accommodation cancel notes 1423766
 #  TODO Partial refunds 1423766
 #  TODO Check title of note when it's a cancel
 #  TODO Fix duplicate deposits.
 #  TODO If a deposit is refunded, don't create a missing dep message 1384377
+
+
+def take_screenshot(x, y, width, height):
+    with mss.mss() as sct:
+        monitor = {'top': y, 'left': x, 'width': width, 'height': height}
+        im = sct.grab(monitor)
+        screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        return screenshot
 
 
 def search_pid(pid_number):
@@ -40,6 +47,12 @@ def double_check_pid(pid_number):
     pyautogui.doubleClick(m2['prospect_id'])
     keyboard.send('ctrl + c')
     copied_text = clipboard.paste()
+    for i in range(3):
+        if copied_text != pid_number:
+            time.sleep(0.3)
+            pyautogui.doubleClick(m2['prospect_id'])
+            keyboard.send('ctrl + c')
+            copied_text = clipboard.paste()
     if copied_text != pid_number:
         input('Is the pid correct?')
         return
@@ -56,15 +69,252 @@ def double_check_pid(pid_number):
         return
 
 
-def select_tour():
+def create_data_frame():
+    """
+    Takes screenshots of the tours. Turns the screenshots into a list of dictionaries 'd'. Turns 'd' into a dataframe.
+    d is a list of dictionaries such as [{''Date': '7/06/18', 'Tour_Type': 'Audition', 'Tour_Status': 'Showed'},
+    {'Date': '7/06/18', 'Tour_Type': 'minivac', 'Tour_Status': 'Showed'}]
+    :return:
+    """
     sc.get_m2_coordinates()
+    d = []
     x, y = m2['title']
-    # Checks if there is an audition
-    audition = pyautogui.pixelMatchesColor(x + 465, y + 65, (255, 255, 255))
-    while audition is True:
-        y = y + 13
-        audition = pyautogui.pixelMatchesColor(x + 465, y + 65, (0, 0, 0))
-    pyautogui.doubleClick(x + 469, y + 67)  # Selects the top tour that isn't an audition
+    for i in range(8):
+        with mss.mss() as sct:
+            monitor = {'top': y + 63, 'left': x + 330, 'width': 52, 'height': 10}
+            im = sct.grab(monitor)
+            try:
+                screenshot = sc.dates[str(mss.tools.to_png(im.rgb, im.size))]
+                date = datetime.datetime.strptime(screenshot, "%m/%d/%y")
+            except KeyError:
+                date = None
+            monitor = {'top': y + 63, 'left': x + 484, 'width': 14, 'height': 10}
+            im = sct.grab(monitor)
+            try:
+                tour_status = sc.m2_tour_status[str(mss.tools.to_png(im.rgb, im.size))]
+            except KeyError:
+                print(mss.tools.to_png(im.rgb, im.size))
+                tour_status = None
+            monitor = {'top': y + 63, 'left': x + 402, 'width': 14, 'height': 10}
+            im = sct.grab(monitor)
+            try:
+                tour_type = sc.m2_tour_types[str(mss.tools.to_png(im.rgb, im.size))]
+            except KeyError:
+                print(str(mss.tools.to_png(im.rgb, im.size)))
+                tour_type = None
+            y += 13
+            if tour_type == 'Nothing' and tour_status == 'Nothing':
+                break
+            else:
+                try:
+                    # Where the screenshots get turned into dictionaries.
+                    d.append({'Date': date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
+                except NameError:
+                    pass
+    df = pd.DataFrame(d)  # Turn d into a dataframe
+    df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
+    print(df)
+    return df
+
+
+def check_for_refundable_deposit():
+    sc.get_m3_coordinates()
+    d = []
+    deposits = {}
+    list_of_refundable_deposits = []
+    z = 1
+    number_of_deposits = 0
+    non_refundable_total = 0
+    pyautogui.click(m3['tour_packages'])
+    x, y = m3['title']
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
+                                           region=(700, 245, 850, 566))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
+                                               region=(700, 245, 850, 566))
+    while True:
+        # Counts number of deposits.
+        # Breaks while loop once a returned screenshot is blank
+        deposit_screenshot = take_screenshot(x + 255, y + 69, 6, 9)
+        if deposit_screenshot == sc.no_deposits and number_of_deposits == 0:
+            return non_refundable_total, list_of_refundable_deposits
+        elif deposit_screenshot == sc.no_deposits:
+            break
+        else:
+            number_of_deposits += 1
+            y += 13
+    x, y = m3['deposit_1']
+    for i in range(number_of_deposits):
+        pyautogui.click(x, y)
+        y += 13
+        pyautogui.click(m3['change_deposit'])
+        sc.get_m6_coordinates()
+        pyautogui.click(m6['description'])
+        keyboard.send('ctrl + z')
+        keyboard.send('ctrl + c')
+        r = Tk()
+        result = r.selection_get(selection="CLIPBOARD")
+        pyautogui.click(m6['view'])
+        item_in_deposit = sc.get_m7_coordinates()
+        if item_in_deposit is None:
+            price = 0
+        else:
+            pyautogui.doubleClick(m7['amount'])
+            time.sleep(0.5)
+            keyboard.send('ctrl + c')
+            r = Tk()
+            price = str(r.selection_get(selection="CLIPBOARD").replace('-', ''))
+            price = price.replace('.00', '')
+        if 'refunded' in result.lower():
+            deposit_type = 'Refunded'
+            price = '0'
+        elif 'ref' in result.lower():
+            deposit_type = 'Refundable'
+        else:
+            deposit_type = 'Non_Refundable'
+            # non_refundable_total += int(price)
+        d.append({'Deposit_Type': deposit_type, 'Price': price})
+        pyautogui.click(m7['cancel'])
+        pyautogui.click(m6['ok'])
+    df = pd.DataFrame(d)  # Turn d into a dataframe
+    deposit_df = df[['Deposit_Type', 'Price']]  # Reorders the columns in the dataframe.
+    print(deposit_df)
+    return deposit_df
+
+
+def apply_to_mv(deposit_df):
+    if deposit_df.Deposit_Type[0] == 'Refundable' and (deposit_df.Price[1] == '9' or
+                                                       deposit_df.Price[1] == '19' or
+                                                       deposit_df.Price[1] == '29'):
+        print('\x1b[6;30;41m' + 'Deposit needs to be changed' + '\x1b[0m')
+        global errors
+        errors += 1
+    else:
+        print('good')
+
+
+def check_for_dep_premium(deposit_df, premiums):
+    sc.get_m3_coordinates()
+    global errors
+    for index, row in deposit_df.iterrows():
+        if row['Deposit_Type'] == 'Refundable' and row['Price'] == '40':
+            if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
+                    any(sc.d40_cc_dep in s for s in premiums) or any(sc.d40_dep in s for s in premiums):
+                print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
+            else:
+                print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
+                errors += 1
+        elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '50':
+            if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cash in s for s in premiums) or \
+                    any(sc.d50_cc_dep in s for s in premiums):
+                print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
+            else:
+                print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
+                errors += 1
+        elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '20':
+            if any(sc.d20_cc_dep in s for s in premiums) or any(sc.dep_20_cc in s for s in premiums):
+                print('\x1b[6;30;42m' + '$20 DEP is present' + '\x1b[0m')
+            else:
+                print('\x1b[6;30;41m' + 'Missing $20 DEP' + '\x1b[0m')
+                errors += 1
+        elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '99':
+            if any(sc.dep_99_cc in s for s in premiums):
+                print('\x1b[6;30;42m' + '$99 DEP is present' + '\x1b[0m')
+            else:
+                print('\x1b[6;30;41m' + 'Missing $99 DEP' + '\x1b[0m')
+                errors += 1
+    """try:
+        for value in deposits.values():
+            if value[0] == 'refundable' and value[1] == '40':
+                if any(sc.dep_40_cc in s for s in premiums) or any(sc.dep_40_cash in s for s in premiums) or \
+                        any(sc.d40_cc_dep in s for s in premiums) or any(sc.d40_dep in s for s in premiums):
+                    print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
+                else:
+                    print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
+                    errors += 1
+            elif value[0] == 'refundable' and value[1] == '50':
+                if any(sc.dep_50_cc in s for s in premiums) or any(sc.dep_50_cash in s for s in premiums) or \
+                        any(sc.d50_cc_dep in s for s in premiums):
+                    print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
+                else:
+                    print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
+                    errors += 1
+            elif value[0] == 'refundable' and value[1] == '20':
+                if any(sc.d20_cc_dep in s for s in premiums) or any(sc.dep_20_cc in s for s in premiums):
+                    print('\x1b[6;30;42m' + '$20 DEP is present' + '\x1b[0m')
+                else:
+                    print('\x1b[6;30;41m' + 'Missing $20 DEP' + '\x1b[0m')
+                    errors += 1
+            elif value[0] == 'refundable' and value[1] == '99':
+                if any(sc.dep_99_cc in s for s in premiums):
+                    print('\x1b[6;30;42m' + '$99 DEP is present' + '\x1b[0m')
+                else:
+                    print('\x1b[6;30;41m' + 'Missing $99 DEP' + '\x1b[0m')
+                    errors += 1
+    except AttributeError:
+        print('\x1b[6;30;42m' + 'No deposits' + '\x1b[0m')"""
+
+
+deposit_df = check_for_refundable_deposit()
+rows, columns = deposit_df.shape
+if rows > 1:
+    apply_to_mv(deposit_df)
+premiums = read_premiums()
+if rows > 1:
+    check_for_dep_premium(deposit_df, premiums)
+else:
+    print('\x1b[6;30;42m' + 'No deposits' + '\x1b[0m')
+
+def select_tour(df, status, attempt_number=1):
+    x, y = m2['title']
+    now = datetime.datetime.now()
+    now = now.strftime("%m/%d/%y")
+    current_date = datetime.datetime.strptime(now, "%m/%d/%y")
+    # Returns the top tour that is Showed, not an Audition, and at most a week before the date we entered.
+    # tour_number is the index of the correct tour. Ex: 1 if the second tour is the correct one.
+    if 'c' in status:
+        try:
+            tour_number = df[((df.Tour_Status == 'Showed') | (df.Tour_Status == 'Confirmed') |
+                             (df.Tour_Status == 'No_Show') | (df.Tour_Status == 'On_Tour')) &
+                             (df.Tour_Type != 'Audition') &
+                             ((df.Date - current_date) >= datetime.timedelta(days=-1))].index[attempt_number - 1]
+        except IndexError:
+            print('Couldn\'t find correct tour')
+            tour_number = df[(df.Tour_Type != 'Audition')].index[attempt_number - 1]
+    elif 'r' in status:
+        try:
+            tour_number = df[((df.Tour_Status == 'Rescheduled') &
+                             ((df.Date - current_date) >= datetime.timedelta(days=0))) |
+                             ((df.Tour_Type == 'Open_Reservation') &
+                             (df.Date == datetime.datetime.strptime('1/01/00', "%m/%d/%y"))) &
+                             (df.Tour_Type != 'Audition')].index[attempt_number - 1]
+        except IndexError:
+            print('Couldn\'t find correct tour')
+            tour_number = df[(df.Tour_Type != 'Audition')].index[attempt_number - 1]
+    elif 'x' in status:
+        try:
+            tour_number = df[(df.Tour_Status == 'Canceled') & (df.Tour_Type != 'Audition')].index[attempt_number - 1]
+        except IndexError:
+            print('Couldn\'t find correct tour')
+            tour_number = df[(df.Tour_Type != 'Audition')].index[attempt_number - 1]
+    elif 'u' in status:
+        try:
+            tour_number = df[(df.Tour_Type == 'Minivac') &
+                             ((df.Date - current_date) >= datetime.timedelta(days=-1))].index[attempt_number - 1]
+        except IndexError:
+            print('Couldn\'t find correct tour')
+            tour_number = df[(df.Tour_Type != 'Audition')].index[attempt_number - 1]
+    elif 't' in status:
+        try:
+            tour_number = df[(df.Tour_Type == 'Day_Drive') &
+                             ((df.Date - current_date) >= datetime.timedelta(days=-1))].index[attempt_number - 1]
+        except IndexError:
+            print('Couldn\'t find correct tour')
+            tour_number = df[(df.Tour_Type != 'Audition')].index[attempt_number - 1]
+    else:
+        print('Couldn\'t find correct tour')
+        tour_number = df[(df.Tour_Type != 'Audition')].index[attempt_number - 1]
+    pyautogui.doubleClick(x + 469, y + 67 + 13 * tour_number)
     # Checks if "You need to change sites" message comes up
     time.sleep(1)
     pyautogui.click(m2['yes_change_sites'])
@@ -128,7 +378,6 @@ def check_tour_type(number_of_tours):
 def check_for_refundable_deposit():
     sc.get_m3_coordinates()
     deposits = {}
-    list_of_deposits = []
     list_of_refundable_deposits = []
     z = 1
     number_of_deposits = 0
@@ -141,13 +390,12 @@ def check_for_refundable_deposit():
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
                                                region=(700, 245, 850, 566))
     while True:
-        with mss.mss() as sct:
-            monitor = {'top': y + 69, 'left': x + 255, 'width': 6, 'height': 9}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
-        if screenshot == sc.no_deposits and number_of_deposits == 0:
+        # Counts number of deposits.
+        # Breaks while loop once a returned screenshot is blank
+        deposit_screenshot = take_screenshot(x + 255, y + 69, 6, 9)
+        if deposit_screenshot == sc.no_deposits and number_of_deposits == 0:
             return non_refundable_total, list_of_refundable_deposits
-        elif screenshot == sc.no_deposits:
+        elif deposit_screenshot == sc.no_deposits:
             break
         else:
             number_of_deposits += 1
@@ -161,7 +409,8 @@ def check_for_refundable_deposit():
         pyautogui.click(m6['description'])
         keyboard.send('ctrl + z')
         keyboard.send('ctrl + c')
-        result = clipboard.paste()
+        r = Tk()
+        result = r.selection_get(selection="CLIPBOARD")
         pyautogui.click(m6['view'])
         item_in_deposit = sc.get_m7_coordinates()
         if item_in_deposit is None:
@@ -170,9 +419,12 @@ def check_for_refundable_deposit():
             pyautogui.doubleClick(m7['amount'])
             time.sleep(0.5)
             keyboard.send('ctrl + c')
-            price = str(clipboard.paste().replace('-', ''))
+            r = Tk()
+            price = str(r.selection_get(selection="CLIPBOARD").replace('-', ''))
             price = price.replace('.00', '')
-        if 'ref' in result.lower():
+        if 'refunded' in result.lower():
+            deposits[0 + z] = ['refunded', '0']
+        elif 'ref' in result.lower():
             deposits[0 + z] = ['refundable', price]
         else:
             deposits[0 + z] = ['non-refundable', price]
@@ -182,98 +434,6 @@ def check_for_refundable_deposit():
         pyautogui.click(m6['ok'])
     print(deposits)
     return deposits
-    """
-    sc.get_m3_coordinates()
-    deposits = {}
-    list_of_deposits = []
-    list_of_refundable_deposits = []
-    screenshot = None
-    z = 1
-    number_of_deposits = 0
-    non_refundable_total = 0
-    keep_going = 1
-    pyautogui.click(m3['tour_packages'])
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
-                                           region=(700, 245, 850, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
-                                               region=(700, 245, 850, 566))
-    x, y = m3['title']
-    while keep_going == 1:
-        with mss.mss() as sct:
-            monitor = {'top': y + 69, 'left': x + 268, 'width': 129, 'height': 7}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
-        if screenshot == sc.no_deposits:
-            keep_going = 0
-        else:
-            list_of_deposits.append(str(screenshot))
-            number_of_deposits += 1
-            y += 13
-    x, y = m3['deposit_1']
-    for i in range(number_of_deposits):
-        pyautogui.click(x, y)
-        y += 13
-        pyautogui.click(m3['change_deposit'])
-        sc.get_m6_coordinates()
-        x_2, y_2 = m6['title']
-        number_of_payments_in_deposit = -2
-        with mss.mss() as sct:
-            monitor = {'top': y_2 + 188, 'left': x_2 + 169, 'width': 49, 'height': 8}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
-        while screenshot != sc.no_payments_in_deposit:
-            with mss.mss() as sct:
-                number_of_payments_in_deposit += 1
-                y_2 += 13
-                monitor = {'top': y_2 + 188, 'left': x_2 + 169, 'width': 49, 'height': 8}
-                im = sct.grab(monitor)
-                screenshot = str(mss.tools.to_png(im.rgb, im.size))
-                print(screenshot)
-        y_2 = y_2 + number_of_payments_in_deposit * 13
-        # TODO Use screenshots to see if refundable or not
-        pyautogui.click(m6['description'])
-        keyboard.send('ctrl + z')
-        keyboard.send('ctrl + c')
-        r = Tk()
-        result = r.selection_get(selection="CLIPBOARD")
-        with mss.mss() as sct:
-            monitor = {'top': y_2 + 188, 'left': x_2 + 186, 'width': 5, 'height': 10}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
-            try:
-                digit_1 = sc.deposit_amounts[screenshot]
-            except KeyError:
-                digit_1 = 0
-                print(screenshot)
-            monitor = {'top': y_2 + 188, 'left': x_2 + 192, 'width': 5, 'height': 10}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
-            try:
-                digit_2 = sc.deposit_amounts[screenshot]
-            except KeyError:
-                print(screenshot)
-                digit_2 = 0
-            monitor = {'top': y_2 + 188, 'left': x_2 + 198, 'width': 5, 'height': 10}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
-            try:
-                digit_3 = sc.deposit_amounts[screenshot]
-            except KeyError:
-                print(screenshot)
-                digit_3 = 0
-        deposit_price = int(str(digit_1) + str(digit_2) + str(digit_3))
-        if 'ref' in result.lower():
-            deposits[0 + z] = ['refundable', deposit_price]
-        else:
-            deposits[0 + z] = ['non-refundable', deposit_price]
-            # non_refundable_total += int(price)
-        z += 1
-        sc.get_m7_coordinates()
-        pyautogui.click(m7['cancel'])
-        pyautogui.click(m6['ok'])
-    print(deposits)
-    return deposits"""
 
 
 def apply_to_mv(deposits):
@@ -298,6 +458,20 @@ def read_premiums():
     pyautogui.click(m3['premium_1'])
     x, y = m3['premium_1']
     number_of_premiums = 0
+    for i in range(6):
+        with mss.mss() as sct:
+            # The screen part to capture
+            monitor = {'top': y - 4, 'left': x - 223, 'width': 90, 'height': 9}
+            y += 13
+            now = datetime.datetime.now()
+            output = now.strftime("%m-%d-%H-%M-%S-%f.png".format(**monitor))
+            sct_img = sct.grab(monitor)
+            image = str(mss.tools.to_png(sct_img.rgb, sct_img.size))
+            if image not in open('premiums.txt').read():
+                mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
+                with open('premiums.txt', 'a') as out:
+                    out.write('{},{}\n'.format(output, image))
+    x, y = m3['premium_1']
     is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
     while is_premium_blue is True:
         number_of_premiums += 1
@@ -438,7 +612,8 @@ def notes(status):
             pyautogui.click(x_2 + 25, y_2 + 75)
             pyautogui.dragTo(x_2 + 250, y_2 + 150, button='left')
             keyboard.send('ctrl + c')  # Copy note
-            result = clipboard.paste()
+            r = Tk()
+            result = r.selection_get(selection="CLIPBOARD")
             if result in copied:
                 print('\x1b[6;30;41m' + 'COULDN\'T FIND CORRECT NOTE' + '\x1b[0m')
                 errors += 1
@@ -488,8 +663,7 @@ def confirm_sol_in_userfields(sol, tour_status):
             print('\x1b[6;30;42m' + 'Sol number is good' + '\x1b[0m')
         else:
             pyautogui.doubleClick(x + 115, y + 222)
-            pyperclip.copy(sol)
-            keyboard.press_and_release('ctrl + v')
+            keyboard.write(sol)
             print('Sol number was changed')
         pyautogui.click(x - 65, y + 18)
 
@@ -582,22 +756,47 @@ def automatic_confirmation():
     with open('file.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
+            status = []
             pids = row['PID'].replace('.0', '')
             conf = row['conf']
             cxl = row['cxl']
             rxl = row['rxl']
+            if conf == "X" or conf == "x":
+                status.append('c')
+            if rxl == "X" or rxl == "x":
+                status.append('r')
+            if cxl == "X" or cxl == "x":
+                status.append('x')
+            try:
+                ug = row['ug']
+                if ug == "X" or ug == "x":
+                    status.append('u')
+            except KeyError:
+                pass
+            try:
+                tav = row['tav']
+                if tav == "X" or tav == "x":
+                    status.append('t')
+            except KeyError:
+                pass
             errors = 0
             print(str(progress) + '/' + str(number_of_pids))
             search_pid(pids)
             double_check_pid(pids)
-            select_tour()
+            df = create_data_frame()
+            select_tour(df, status)
             check_tour_for_error()
             number_of_tours, number_of_canceled_tours = count_accommodations()
             tour_type = check_tour_type(number_of_tours)
-            deposits = check_for_refundable_deposit()
-            apply_to_mv(deposits)
+            deposit_df = check_for_refundable_deposit()
+            rows, columns = deposit_df.shape
+            if rows > 1:
+                apply_to_mv(deposit_df)
             premiums = read_premiums()
-            check_for_dep_premium(deposits, premiums)
+            if rows > 0:
+                check_for_dep_premium(deposit_df, premiums)
+            else:
+                print('\x1b[6;30;42m' + 'No deposits' + '\x1b[0m')
             try:
                 ug = row['ug']
                 if ug == "X" or ug == "x":

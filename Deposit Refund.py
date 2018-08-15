@@ -13,7 +13,7 @@ import csv
 
 transaction_code = 0
 
-# TODO If there are multiple items inside a deposit. Make it so the program chooses the lowest item in the list to
+# TODO Make the program handle prev tours automatically.
 # TODO get the reference number. 1312792
 
 
@@ -49,7 +49,6 @@ def create_data_frame():
             try:
                 screenshot_2 = sc.m2_tour_types[str(mss.tools.to_png(im.rgb, im.size))]
             except KeyError:
-                print(i)
                 print(str(mss.tools.to_png(im.rgb, im.size)))
                 screenshot_2 = None
             monitor = {'top': y + 63, 'left': x + 484, 'width': 14, 'height': 10}
@@ -57,8 +56,7 @@ def create_data_frame():
             try:
                 screenshot_3 = sc.m2_tour_status[str(mss.tools.to_png(im.rgb, im.size))]
             except KeyError:
-                print(i)
-                print(str(mss.tools.to_png(im.rgb, im.size)))
+                print(mss.tools.to_png(im.rgb, im.size))
                 screenshot_3 = None
             y += 13
             if screenshot_2 != 'Nothing':
@@ -77,6 +75,8 @@ def select_tour(df, attempt_number, date):
     x, y = m2['title']
     date = date + '/18'
     date = datetime.datetime.strptime(date, "%m/%d/%y")
+    # Returns the top tour that is Showed, not an Audition, and at most a week before the date we entered.
+    # tour_number is the index of the correct tour. Ex: 1 if the second tour is the correct one.
     try:
         tour_number = df[(df.Tour_Status == 'Showed') & (df.Tour_Type != 'Audition') &
                          ((date - df.Date) <= datetime.timedelta(days=7))].index[attempt_number - 1]
@@ -95,7 +95,6 @@ def double_check_pid(pid_number):
     copied_text = clipboard.paste()
     for i in range(3):
         if copied_text != pid_number:
-            print(copied_text)
             time.sleep(0.3)
             pyautogui.doubleClick(m2['prospect_id'])
             keyboard.send('ctrl + c')
@@ -116,15 +115,20 @@ def double_check_pid(pid_number):
         return
 
 
-def check_tour_for_error():
-    sc.get_m3_coordinates()
-    with mss.mss() as sct:
-        x, y = m3['title']
-        monitor = {'top': y + 171, 'left': x + 40, 'width': 52, 'height': 12}
-        im = sct.grab(monitor)
-        tour_status = str(mss.tools.to_png(im.rgb, im.size))
-        if tour_status == sc.error:
-            input('Is this the correct tour?')
+def count_deposit_items():
+    sc.get_m6_coordinates()
+    number_of_deposit_items = 0
+    x, y = m6['title']
+    while True:
+        with mss.mss() as sct:
+            monitor = {'top': y + 189, 'left': x + 339, 'width': 10, 'height': 8}
+            im = sct.grab(monitor)
+            screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        if screenshot == sc.no_deposit_items:
+            return number_of_deposit_items
+        else:
+            number_of_deposit_items += 1
+            y += 13
 
 
 def change_deposit_title(price, cash=None):
@@ -141,32 +145,50 @@ def change_deposit_title(price, cash=None):
     attempts = 0
     while amount != price and attempts <= 2:
         pyautogui.click(m3['tour_packages'])
-        for i in range(2):
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
+                                               region=(700, 245, 850, 566))
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
+                                                   region=(700, 245, 850, 566))
+        for i in range(3):
             with mss.mss() as sct:
                 # The screen part to capture
                 monitor = {'top': y + 68, 'left': x + 464, 'width': 37, 'height': 11}
+                monitor2 = {'top': y + 69, 'left': x + 267, 'width': 153, 'height': 7}
                 y += 13
                 now = datetime.datetime.now()
-                output = now.strftime("%d-%H-%M-%S-%f.png".format(**monitor))
-                # Grab the data
+                output = now.strftime("%m-%d-%H-%M-%S-%f.png".format(**monitor))
+                output2 = now.strftime("%m-%d-%H-%M-%f.png".format(**monitor2))
                 sct_img = sct.grab(monitor)
-                # Save to the picture file
+                sct_img2 = sct.grab(monitor2)
                 image = str(mss.tools.to_png(sct_img.rgb, sct_img.size))
+                image2 = str(mss.tools.to_png(sct_img2.rgb, sct_img2.size))
                 if image not in open('screenshot_data.txt').read():
                     mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
                     with open('screenshot_data.txt', 'a') as out:
                         out.write('{} - {}\n'.format(output, image))
+                if image2 not in open('screenshot_data.txt').read():
+                    mss.tools.to_png(sct_img2.rgb, sct_img2.size, output=output2)
+                    with open('screenshot_data.txt', 'a') as out:
+                        out.write('{} - {}\n'.format(output2, image))
         pyautogui.click(x_2, y_2)
         pyautogui.click(m3['change_deposit'])
+        deposit_item_amount = count_deposit_items()
         sc.get_m6_coordinates()
+        x, y = m6['deposit_1']
+        y = y + 13 * (deposit_item_amount - 1)
+        pyautogui.click(x, y)
+        time.sleep(0.3)
         with mss.mss() as sct:
             x, y = m6['title']
-            monitor = {'top': y + 187, 'left': x + 168, 'width': 51, 'height': 11}
+            y = y + 13 * (deposit_item_amount - 1)
+            monitor = {'top': y + 189, 'left': x + 185, 'width': 33, 'height': 8}
             im = sct.grab(monitor)
             try:
-                amount = sc.screenshot_dict[str(mss.tools.to_png(im.rgb, im.size))]
+                amount = sc.deposit_item_amount[str(mss.tools.to_png(im.rgb, im.size))]
             except KeyError:
                 amount = 0
+                print(mss.tools.to_png(im.rgb, im.size))
         attempts += 1
         if amount != price:
             pyautogui.click(m6['ok'])
@@ -198,16 +220,18 @@ def change_deposit_title(price, cash=None):
 
 
 def copy_reference_number():
+    deposit_item_amount = count_deposit_items()
     sc.get_m6_coordinates()
-    pyautogui.click(m6['deposit_1'])
-    for i in range(5):
-        keyboard.send('down')
+    x, y = m6['deposit_1']
+    y = y + 13 * (deposit_item_amount - 1)
+    pyautogui.click(x, y)
     keyboard.send('alt + v')
     sc.get_m7_coordinates()
     pyautogui.doubleClick(m7['reference'])
     keyboard.press_and_release('ctrl + c')
     time.sleep(0.5)
     old_reference = clipboard.paste()
+    old_reference = old_reference.upper()
     if old_reference[0] != 'D':
         sys.exit("Wrong Reference")
     new_reference = old_reference.replace("D-", "R-")
@@ -530,20 +554,25 @@ def convert_excel_to_csv():
 
 def use_excel_sheet():
     convert_excel_to_csv()
+    number_of_pids = 0
+    progress = 1
+    with open('file.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            number_of_pids += 1
     with open('file.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             pids = row['PID'].replace('.0', '')
-            print(pids)
             price = row['price']
             date = row['date']
             date = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d')
             cash = row['cash']
+            print(str(progress) + '/' + str(number_of_pids))
             search_pid(pids)
             double_check_pid(pids)
             df = create_data_frame()
             select_tour(df, 1, date)
-            check_tour_for_error()
             if cash != 'x' and cash != 'X':
                 deposit_type = change_deposit_title(price)
             else:
@@ -574,6 +603,7 @@ def use_excel_sheet():
                 select_ams_refund_payment(date, price, 'ir')
             elif deposit_type == 'sol':
                 select_ams_refund_payment(date, price, 'sol')
+            progress += 1
 
 
 use_excel_sheet()

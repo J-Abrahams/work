@@ -1,31 +1,31 @@
-def search_pid(pid):
-    x, y = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png', region=(514, 245, 889, 566))
-    pyautogui.doubleClick(x + 50, y)
-    keyboard.write(id)
-    pyautogui.click(x + 650, y)
-    pyautogui.click(x + 400, y + 500)
-    #time.sleep(4)
-    
+import screenshot_data as sc
+from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
+import pyautogui
+import keyboard
+
+
+def search_pid(pid_number):
+    get_m1_coordinates()
+    pyautogui.doubleClick(m1['search'])
+    keyboard.write(pid_number)
+    pyautogui.click(m1['find_now'])
+    pyautogui.click(m1['change'])
+
+
 def select_tour():
-    try:
-        x, y = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png', region=(514, 245, 889, 566))
-    
-    except Exception:
-        return select_tour()
-    
-    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png') is not None:
-        x, y = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_audition.png', region=(945, 304, 190, 86))
-        pyautogui.doubleClick(x, y + 20)
-    else:
-        x, y = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png', region=(514, 245, 889, 566))
-        pyautogui.doubleClick(x, y + 12)  #Checks if "You need to change sites" message comes up
-    time.sleep(2)
-    img = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date2.png', region=(514, 245, 889, 566))
-    if img is None:
-        x, y = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_yes.png', region=(514, 245, 889, 566))
-        pyautogui.doubleClick(x, y)
-        time.sleep(1)
+    get_m2_coordinates()
+    x, y = m2['title']
+    # Checks if there is an audition
+    audition = pyautogui.pixelMatchesColor(x + 465, y + 65, (255, 255, 255))
+    while audition is True:
+        y = y + 13
+        audition = pyautogui.pixelMatchesColor(x + 465, y + 65, (0, 0, 0))
+    pyautogui.doubleClick(x + 469, y + 67)  # Selects the top tour that isn't an audition
+    # Checks if "You need to change sites" message comes up
+    time.sleep(1)
+    pyautogui.click(m2['yes_change_sites'])
         
+
 def create_dep():
     x, y = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png', region=(514, 245, 889, 566))
     pyautogui.click(x + 300, y + 20)
