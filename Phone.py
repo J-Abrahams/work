@@ -40,13 +40,6 @@ def enter_phone_number(number):
 
 now = datetime.datetime.now()
 now_str = now.strftime("%m/%d/%Y")
-"""with open('phones\\unformated_phone.txt', 'r') as file:
-    filedata = file.read()
-    account = re.findall('Account.*', filedata)
-    for i in account:
-        filedata = filedata.replace(i, '')
-with open('phones\\unformated_phone.txt', 'w') as file:
-    file.write(filedata)"""
 with open('Phone_Errors.txt', 'a') as erase:
     erase.write('\n{}\n'.format(now_str))
 with open('phones\\phone.csv', 'r') as csvfile:

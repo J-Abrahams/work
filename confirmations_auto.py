@@ -11,6 +11,8 @@ import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 import datetime
 from tabulate import tabulate
+import sys
+
 
 # import importlib
 # importlib.reload(sc)
@@ -28,7 +30,10 @@ errors = 0
 #  TODO Make program recognize CS $50 CC Deposit 1005465
 #  TODO If an accommodation is canceled, check if the cancel box is ticked 1218776
 #  TODO Make program recognize an Additional Nights deposit 984256
-#  TODO If there are 2 refundable deposits and 2 dep premiums, don't count the 2 dep premiums as dulicates 1408810
+#  TODO If there are 2 refundable deposits and 2 dep premiums, don't count the 2 dep premiums as duplicates 1408810
+#  TODO Fix data frame on PID 1425576
+#  TODO If there are a lot of slashes in a note, count that as a confirm note.
+#  TODO Automatically fill in the tour result when it's a cancel.
 
 def take_screenshot(x, y, width, height):
     with mss.mss() as sct:
@@ -36,6 +41,12 @@ def take_screenshot(x, y, width, height):
         im = sct.grab(monitor)
         screenshot = str(mss.tools.to_png(im.rgb, im.size))
         return screenshot
+
+
+def pause(message):
+    print(message)
+    while pyautogui.position() != (0, 1079):
+        pass
 
 
 def search_pid(pid_number):
@@ -58,7 +69,7 @@ def double_check_pid(pid_number):
             keyboard.send('ctrl + c')
             copied_text = clipboard.paste()
     if copied_text != pid_number:
-        input('Is the pid correct?')
+        pause('Is the pid correct?')
         return
     if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
                                       region=(514, 245, 889, 566)) is not None:
@@ -69,7 +80,7 @@ def double_check_pid(pid_number):
     keyboard.send('ctrl + c')
     copied_text = clipboard.paste()
     if 'pid' in copied_text.lower():
-        input('Is the pid correct?')
+        pause('Is the pid correct?')
         return
 
 
@@ -184,7 +195,7 @@ def check_tour_for_error():
         im = sct.grab(monitor)
         tour_status = str(mss.tools.to_png(im.rgb, im.size))
         if tour_status == sc.error:
-            input('Is this the correct tour?')
+            pause('Is this the correct tour?')
 
 
 def count_accommodations():
@@ -221,13 +232,13 @@ def check_tour_type(number_of_tours):
         im = sct.grab(monitor)
         tour_type = sc.tour_type[str(mss.tools.to_png(im.rgb, im.size))]
     if (tour_type == 'day_drive' or tour_type == 'canceled' or tour_type == 'open_reservation') and number_of_tours > 0:
-        print('\x1b[6;30;41m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
+        print(u"\u001b[31m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
         errors += 1
     elif tour_type == 'minivac' and number_of_tours < 1:
-        print('\x1b[6;30;41m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
+        print(u"\u001b[31m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
         errors += 1
     else:
-        print('\x1b[6;30;42m' + tour_type + ' - ' + str(number_of_tours) + '\x1b[0m')
+        print(u"\u001b[32m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
     return tour_type
 
 
@@ -292,7 +303,6 @@ def read_deposits():
         pyautogui.click(m6['ok'])
     df = pd.DataFrame(d)  # Turn d into a dataframe
     deposit_df = df[['Deposit_Type', 'Price']]  # Reorders the columns in the dataframe.
-    print(tabulate(deposit_df, headers='keys', tablefmt='psql'))
     return deposit_df
 
 
@@ -364,11 +374,11 @@ def apply_to_mv(deposit_df):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\ams_credit_payment.png',
                                                region=(136, 652, 392, 247))
     pyautogui.click(image)
-    pyautogui.click(m8['amount'])
+    pyautogui.doubleClick(m8['amount'])
     keyboard.write(deposit_df.Price[0])
     pyautogui.click(m8['reference'])
     keyboard.write(new_reference)
-    print(input('Ok?'))
+    pause('Ok?')
     pyautogui.click(m8['ok'])
     sc.get_m6_coordinates()
     pyautogui.click(m6['ok'])
@@ -424,10 +434,10 @@ def read_premiums():
         if is_premium_blue is False:
             is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
     if len(list_of_premiums) != len(set(list_of_premiums)):
-        print('\x1b[6;30;41m' + str(number_of_premiums) + ' Premiums - DUPLICATES' + '\x1b[0m')
+        print(u"\u001b[31m" + str(number_of_premiums) + ' Premiums - DUPLICATES' + u"\u001b[0m")
         errors += 1
     else:
-        print('\x1b[6;30;42m' + str(number_of_premiums) + ' Premiums - No Duplicates' + '\x1b[0m')
+        print(u"\u001b[32m" + str(number_of_premiums) + ' Premiums - No Duplicates' + u"\u001b[0m")
     return list_of_premiums
 
 
@@ -437,33 +447,33 @@ def check_for_dep_premium(deposit_df, premiums):
     for index, row in deposit_df.iterrows():
         if row['Deposit_Type'] == 'Refundable' and row['Price'] == '40':
             if '40' in premiums:
-                print('\x1b[6;30;42m' + '$40 DEP is present' + '\x1b[0m')
+                print(u"\u001b[32m" + '$40 DEP is present' + u"\u001b[0m")
             else:
-                print('\x1b[6;30;41m' + 'Missing $40 DEP' + '\x1b[0m')
+                print(u"\u001b[31m" + 'Missing $40 DEP' + u"\u001b[0m")
                 errors += 1
         elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '50':
             if '50' in premiums:
-                print('\x1b[6;30;42m' + '$50 DEP is present' + '\x1b[0m')
+                print(u"\u001b[32m" + '$50 DEP is present' + u"\u001b[0m")
             else:
-                print('\x1b[6;30;41m' + 'Missing $50 DEP' + '\x1b[0m')
+                print(u"\u001b[31m" + 'Missing $50 DEP' + u"\u001b[0m")
                 errors += 1
         elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '20':
             if '20' in premiums:
-                print('\x1b[6;30;42m' + '$20 DEP is present' + '\x1b[0m')
+                print(u"\u001b[32m" + '$20 DEP is present' + u"\u001b[0m")
             else:
-                print('\x1b[6;30;41m' + 'Missing $20 DEP' + '\x1b[0m')
+                print(u"\u001b[31m" + 'Missing $20 DEP' + u"\u001b[0m")
                 errors += 1
         elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '99':
             if '99' in premiums:
-                print('\x1b[6;30;42m' + '$99 DEP is present' + '\x1b[0m')
+                print(u"\u001b[32m" + '$99 DEP is present' + u"\u001b[0m")
             else:
-                print('\x1b[6;30;41m' + 'Missing $99 DEP' + '\x1b[0m')
+                print(u"\u001b[31m" + 'Missing $99 DEP' + u"\u001b[0m")
                 errors += 1
         elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '100':
             if '100' in premiums:
-                print('\x1b[6;30;42m' + '$100 DEP is present' + '\x1b[0m')
+                print(u"\u001b[32m" + '$100 DEP is present' + u"\u001b[0m")
             else:
-                print('\x1b[6;30;41m' + 'Missing $100 DEP' + '\x1b[0m')
+                print(u"\u001b[31m" + 'Missing $100 DEP' + u"\u001b[0m")
                 errors += 1
 
 
@@ -487,31 +497,31 @@ def confirm_tour_status(status):
                                                    region=(x + 27, y + 132, 131, 103))
         else:
             tour_status = 'confirmed'
-            print('\x1b[6;30;42m' + 'Tour status - Confirmed' + '\x1b[0m')
+            print(u"\u001b[32m" + 'Tour status - Confirmed' + u"\u001b[0m")
             return tour_status
         if image is None:
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\on_tour.png',
                                                    region=(x + 27, y + 132, 131, 103))
         else:
             tour_status = 'showed'
-            print('\x1b[6;30;42m' + 'Tour status - Showed' + '\x1b[0m')
+            print(u"\u001b[32m" + 'Tour status - Showed' + u"\u001b[0m")
             return tour_status
         if image is None:
-            print('\x1b[6;30;41m' + 'TOUR STATUS MIGHT BE INCORRECT' + '\x1b[0m')
+            print(u"\u001b[33;1m" + 'TOUR STATUS MIGHT BE INCORRECT' + u"\u001b[0m")
             errors += 1
         else:
             tour_status = 'on_tour'
-            print('\x1b[6;30;42m' + 'Tour status - On Tour' + '\x1b[0m')
+            print(u"\u001b[32m" + 'Tour status - On Tour' + u"\u001b[0m")
             return tour_status
     elif status == 'r':
         if pyautogui.pixelMatchesColor(x + 48, y + 171, (0, 0, 0)) is True:
             tour_status = 'rescheduled'
-            print('\x1b[6;30;42m' + 'Tour status - Rescheduled' + '\x1b[0m')
+            print(u"\u001b[32m" + 'Tour status - Rescheduled' + u"\u001b[0m")
         elif pyautogui.pixelMatchesColor(x + 99, y + 171, (0, 0, 0)) is True:
             tour_status = 'Open'
-            print('\x1b[6;30;42m' + 'Tour status - Open' + '\x1b[0m')
+            print(u"\u001b[32m" + 'Tour status - Open' + u"\u001b[0m")
         else:
-            print('\x1b[6;30;41m' + 'TOUR STATUS MIGHT BE INCORRECT' + '\x1b[0m')
+            print(u"\u001b[33;1m" + 'TOUR STATUS MIGHT BE INCORRECT' + u"\u001b[0m")
             errors += 1
     elif status == 'x':
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\canceled.png',
@@ -522,11 +532,11 @@ def confirm_tour_status(status):
                                                    region=(x + 27, y + 132, 131, 103))
             attempts += 1
         if image is None:
-            print('\x1b[6;30;41m' + 'TOUR STATUS MIGHT BE INCORRECT' + '\x1b[0m')
+            print(u"\u001b[33;1m" + 'TOUR STATUS MIGHT BE INCORRECT' + u"\u001b[0m")
             errors += 1
         else:
             tour_status = 'canceled'
-            print('\x1b[6;30;42m' + 'Tour status - Canceled' + '\x1b[0m')
+            print(u"\u001b[32m" + 'Tour status - Canceled' + u"\u001b[0m")
     return tour_status
 
 
@@ -554,28 +564,28 @@ def notes(status):
             r = Tk()
             result = r.selection_get(selection="CLIPBOARD")
             if result in copied:
-                print('\x1b[6;30;41m' + 'COULDN\'T FIND CORRECT NOTE' + '\x1b[0m')
+                print(u"\u001b[31m" + 'COULDN\'T FIND CORRECT NOTE' + u"\u001b[0m")
                 errors += 1
                 pyautogui.click(x_2 + 200, y_2 + 250)
                 return
             if status == 'c' and 'conf' in result.lower():
-                print('\x1b[6;30;42m' + 'Confirm note is present' + '\x1b[0m')
+                print(u"\u001b[32m" + 'Confirm note is present' + u"\u001b[0m")
                 pyautogui.click(x_2 + 200, y_2 + 250)
                 return
             elif status == 'x' and ('nq' in result.lower() or 'canc' in result.lower() or 'cxl' in result.lower()):
-                print('\x1b[6;30;42m' + 'Cancel note is present' + '\x1b[0m')
+                print(u"\u001b[32m" + 'Cancel note is present' + u"\u001b[0m")
                 pyautogui.click(x_2 + 200, y_2 + 250)
                 if 'nq' in result.lower():
                     pyautogui.click(m3['tour'])
                     if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\tour_result.png',
                                                       region=(514, 400, 889, 500)) is None:
-                        print('\x1b[6;30;42m' + 'Tour Result is correct' + '\x1b[0m')
+                        print(u"\u001b[32m" + 'Tour Result is correct' + u"\u001b[0m")
                     else:
-                        print('\x1b[6;30;41m' + 'NO TOUR RESULT' + '\x1b[0m')
+                        print(u"\u001b[31m" + 'NO TOUR RESULT' + u"\u001b[0m")
                         errors += 1
                 return
-            elif status == 'r' and ('rxl' in result.lower() or 'open' in result.lower()):
-                print('\x1b[6;30;42m' + 'Reschedule note is present' + '\x1b[0m')
+            elif status == 'r' and ('rxl' in result.lower() or 'open' in result.lower() or ' od ' in result.lower()):
+                print(u"\u001b[32m" + 'Reschedule note is present' + u"\u001b[0m")
                 pyautogui.click(x_2 + 200, y_2 + 250)
                 return
             else:
@@ -583,7 +593,7 @@ def notes(status):
                 pyautogui.click(x_2 + 200, y_2 + 250)
                 y += 13
         else:
-            print('\x1b[6;30;41m' + 'NO NOTES' + '\x1b[0m')
+            print(u"\u001b[31m" + 'NO NOTES' + u"\u001b[0m")
             errors += 1
             return
 
@@ -599,7 +609,7 @@ def confirm_sol_in_userfields(sol, tour_status):
         pyautogui.click(x, y + 18)  # User Fields Tab
         if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_confirmer_sol.png',
                                           region=(514, 245, 889, 566)) is None:
-            print('\x1b[6;30;42m' + 'Sol number is good' + '\x1b[0m')
+            print(u"\u001b[32m" + 'Sol number is good' + u"\u001b[0m")
         else:
             pyautogui.doubleClick(x + 115, y + 222)
             keyboard.write(sol)
@@ -700,6 +710,8 @@ def automatic_confirmation():
             if row['Sol'] != '':
                 sol = row['Sol'].replace('.0', '')
                 sol = 'SOL' + sol
+            elif row['Sol'] == '' and sol == 0:
+                sys.exit('No Sol Number')
             pids = row['PID'].replace('.0', '')
             conf = row['conf']
             cxl = row['cxl']
@@ -740,11 +752,13 @@ def automatic_confirmation():
                                                                             deposit_df.Price[1] == '19' or
                                                                             deposit_df.Price[1] == '29'):
                 apply_to_mv(deposit_df)
+            if rows > 0:
+                print(tabulate(deposit_df, headers='keys', tablefmt='psql'))
             premiums = read_premiums()
             if rows > 0:
                 check_for_dep_premium(deposit_df, premiums)
             else:
-                print('\x1b[6;30;42m' + 'No deposits' + '\x1b[0m')
+                print(u"\u001b[32m" + 'No deposits' + u"\u001b[0m")
             try:
                 ug = row['ug']
                 if ug == "X" or ug == "x":
@@ -782,7 +796,7 @@ def automatic_confirmation():
                 notes('x')
                 enter_personnel(sol, 'x')
             if errors > 0 or tour_type == 'Minivac':
-                input("Everything ok?")
+                pause("Everything ok?")
             progress += 1
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                    region=(514, 245, 889, 566))

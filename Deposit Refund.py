@@ -13,10 +13,11 @@ import csv
 
 transaction_code = 0
 
+
 # TODO Make the program handle prev tours automatically.
 # TODO get the reference number. 1312792
-
-
+# TODO 1224070
+# TODO Fix data frame on PID 1425576
 def search_pid(pid_number):
     sc.get_m1_coordinates()
     pyautogui.doubleClick(m1['search'])
@@ -136,6 +137,7 @@ def change_deposit_title(price, cash=None):
     Checks to make sure that the deposit price is correct. Ex: If the sheet says $50, then this makes sure that the
     deposit is also $50.
     Changes the title from 'Refundable' to 'Refunded'
+    :rtype: 'prev', 'ams', 'ir', 'sol', 'ih'
     """
     sc.get_m3_coordinates()
     amount = 0
@@ -217,6 +219,8 @@ def change_deposit_title(price, cash=None):
         return "ams"
     elif 'sol' in new_title.lower() and 'refunded' in new_title.lower():
         return "sol"
+    elif 'ih' in new_title.lower() and 'refunded' in new_title.lower():
+        return 'ih'
 
 
 def copy_reference_number():
@@ -552,14 +556,19 @@ def convert_excel_to_csv():
     df.to_csv('file.csv')
 
 
-def use_excel_sheet():
-    convert_excel_to_csv()
+def count_number_of_pids():
     number_of_pids = 0
-    progress = 1
     with open('file.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             number_of_pids += 1
+    return number_of_pids
+
+
+def use_excel_sheet():
+    convert_excel_to_csv()
+    number_of_pids = count_number_of_pids()
+    progress = 1
     with open('file.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -568,35 +577,60 @@ def use_excel_sheet():
             date = row['date']
             date = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d')
             cash = row['cash']
-            print(str(progress) + '/' + str(number_of_pids))
+            if cash == 'x' or cash == 'X':
+                cash_or_cc = 'cash'
+            else:
+                cash_or_cc = 'cc'
+            print('{} / {} - {}'.format(str(progress), str(number_of_pids), str(pids)))
             search_pid(pids)
             double_check_pid(pids)
             df = create_data_frame()
             select_tour(df, 1, date)
-            if cash != 'x' and cash != 'X':
+            if cash_or_cc == 'cc':
                 deposit_type = change_deposit_title(price)
             else:
                 deposit_type = change_deposit_title(price, cash)
             if deposit_type == 'fail':
                 select_tour(df, 2, date)
-                if cash != 'x' and cash != 'X':
+                if cash_or_cc == 'cc':
                     deposit_type = change_deposit_title(price)
                 else:
                     deposit_type = change_deposit_title(price, cash)
-            if deposit_type != 'prev' and (cash != 'x' and cash != 'X'):
+            if deposit_type != 'prev' and cash_or_cc == 'cc':
                 copy_reference_number()
-            elif cash == 'x' or cash == 'X':
+            elif cash_or_cc == 'cash':
                 clipboard.copy('R-CASH')
             else:
-                ams_ir_or_sol = input('ams, ir, or sol:')
-                old_reference = input('Reference Number starting with D:')
-                reference_number = old_reference.replace("D-", "R-")
-                if ams_ir_or_sol == 'ams':
-                    select_ams_refund_payment(date, price, 'ams', reference_number)
-                elif ams_ir_or_sol == 'ir':
-                    select_ams_refund_payment(date, price, 'ir', reference_number)
-                elif ams_ir_or_sol == 'sol':
-                    select_ams_refund_payment(date, price, 'sol', reference_number)
+                with open('Deposit_Errors.txt', 'a') as out:
+                    out.write('{}\n'.format(pids))
+                    sc.get_m6_coordinates()
+                    pyautogui.click(m6['ok'])
+                    pyautogui.click(m6['ok'])
+                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                                           region=(514, 245, 889, 566))
+                    while image is None:
+                        image = pyautogui.locateCenterOnScreen(
+                            'C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                            region=(514, 245, 889, 566))
+                    x, y = image
+                    pyautogui.click(x + 265, y + 475)
+                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                           region=(514, 245, 889, 566))
+                    while image is None:
+                        image = pyautogui.locateCenterOnScreen(
+                            'C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                            region=(514, 245, 889, 566))
+                    x, y = image
+                    pyautogui.click(x - 20, y + 425)
+                # ams_ir_or_sol = input('ams, ir, or sol:')
+                # old_reference = input('Reference Number starting with D:')
+                # reference_number = old_reference.replace("D-", "R-")
+                # if ams_ir_or_sol == 'ams':
+                #     select_ams_refund_payment(date, price, 'ams', reference_number)
+                # elif ams_ir_or_sol == 'ir':
+                #     select_ams_refund_payment(date, price, 'ir', reference_number)
+                # elif ams_ir_or_sol == 'sol':
+                #     select_ams_refund_payment(date, price, 'sol', reference_number)
             if deposit_type == 'ams':
                 select_ams_refund_payment(date, price, 'ams')
             elif deposit_type == 'ir':
