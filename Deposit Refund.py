@@ -10,7 +10,10 @@ import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 import pandas as pd
 import csv
+from tabulate import tabulate
 
+# import importlib
+# importlib.reload(sc)
 transaction_code = 0
 
 
@@ -18,6 +21,20 @@ transaction_code = 0
 # TODO get the reference number. 1312792
 # TODO 1224070
 # TODO Fix data frame on PID 1425576
+
+
+def take_screenshot(y, x, width, height, save_file=False):
+    with mss.mss() as sct:
+        monitor = {'top': y, 'left': x, 'width': width, 'height': height}
+        im = sct.grab(monitor)
+        screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        if save_file:
+            now = datetime.datetime.now()
+            output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
+            mss.tools.to_png(im.rgb, im.size, output=output)
+        return screenshot
+
+
 def search_pid(pid_number):
     sc.get_m1_coordinates()
     pyautogui.doubleClick(m1['search'])
@@ -37,38 +54,38 @@ def create_data_frame():
     d = []
     x, y = m2['title']
     for i in range(8):
-        with mss.mss() as sct:
-            monitor = {'top': y + 63, 'left': x + 330, 'width': 52, 'height': 10}
-            im = sct.grab(monitor)
+        tour_date = take_screenshot(y + 63, x + 330, 52, 10)
+        tour_type = take_screenshot(y + 63, x + 402, 14, 10)
+        tour_status = take_screenshot(y + 63, x + 484, 14, 10)
+        try:
+            tour_date = sc.dates[tour_date]
+            if tour_date != 'Nothing':
+                tour_date = datetime.datetime.strptime(tour_date, "%m/%d/%y")
+        except KeyError:
+            tour_date = None
+        try:
+            tour_type = sc.m2_tour_types[tour_type]
+        except KeyError:
+            print('Unrecognized tour type')
+            print(tour_type)
+            tour_type = None
+        try:
+            tour_status = sc.m2_tour_status[tour_status]
+        except KeyError:
+            print('Unrecognized tour status')
+            print(tour_status)
+            tour_status = None
+        y += 13
+        if tour_date != 'Nothing':
             try:
-                screenshot = sc.dates[str(mss.tools.to_png(im.rgb, im.size))]
-                date = datetime.datetime.strptime(screenshot, "%m/%d/%y")
-            except KeyError:
-                date = None
-            monitor = {'top': y + 63, 'left': x + 402, 'width': 14, 'height': 10}
-            im = sct.grab(monitor)
-            try:
-                screenshot_2 = sc.m2_tour_types[str(mss.tools.to_png(im.rgb, im.size))]
-            except KeyError:
-                print(str(mss.tools.to_png(im.rgb, im.size)))
-                screenshot_2 = None
-            monitor = {'top': y + 63, 'left': x + 484, 'width': 14, 'height': 10}
-            im = sct.grab(monitor)
-            try:
-                screenshot_3 = sc.m2_tour_status[str(mss.tools.to_png(im.rgb, im.size))]
-            except KeyError:
-                print(mss.tools.to_png(im.rgb, im.size))
-                screenshot_3 = None
-            y += 13
-            if screenshot_2 != 'Nothing':
-                try:
-                    # Where the screenshots get turned into dictionaries.
-                    d.append({'Date': date, 'Tour_Type': screenshot_2, 'Tour_Status': screenshot_3})
-                except NameError:
-                    pass
+                # Where the screenshots get turned into dictionaries.
+                d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
+            except NameError:
+                pass
     df = pd.DataFrame(d)  # Turn d into a dataframe
+    # df['Date'] = df['Date'].apply(lambda x: x.strftime('%Y-%m-%d') if not pd.isnull(x) else '')
     df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
-    print(df)
+    print(tabulate(df, headers='keys', tablefmt='psql'))
     return df
 
 
@@ -154,7 +171,6 @@ def change_deposit_title(price, cash=None):
                                                    region=(700, 245, 850, 566))
         for i in range(3):
             with mss.mss() as sct:
-                # The screen part to capture
                 monitor = {'top': y + 68, 'left': x + 464, 'width': 37, 'height': 11}
                 monitor2 = {'top': y + 69, 'left': x + 267, 'width': 153, 'height': 7}
                 y += 13
@@ -190,6 +206,7 @@ def change_deposit_title(price, cash=None):
                 amount = sc.deposit_item_amount[str(mss.tools.to_png(im.rgb, im.size))]
             except KeyError:
                 amount = 0
+                print('Don\'t recognize the amount')
                 print(mss.tools.to_png(im.rgb, im.size))
         attempts += 1
         if amount != price:
@@ -641,3 +658,4 @@ def use_excel_sheet():
 
 
 use_excel_sheet()
+change_deposit_title(50)

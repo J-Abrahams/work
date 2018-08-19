@@ -13,7 +13,6 @@ import datetime
 from tabulate import tabulate
 import sys
 
-
 # import importlib
 # importlib.reload(sc)
 errors = 0
@@ -35,11 +34,15 @@ errors = 0
 #  TODO If there are a lot of slashes in a note, count that as a confirm note.
 #  TODO Automatically fill in the tour result when it's a cancel.
 
-def take_screenshot(x, y, width, height):
+def take_screenshot(y, x, width, height, save_file=False):
     with mss.mss() as sct:
         monitor = {'top': y, 'left': x, 'width': width, 'height': height}
         im = sct.grab(monitor)
         screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        if save_file:
+            now = datetime.datetime.now()
+            output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
+            mss.tools.to_png(im.rgb, im.size, output=output)
         return screenshot
 
 
@@ -95,38 +98,36 @@ def create_data_frame():
     d = []
     x, y = m2['title']
     for i in range(8):
-        with mss.mss() as sct:
-            monitor = {'top': y + 63, 'left': x + 330, 'width': 52, 'height': 10}
-            im = sct.grab(monitor)
+        tour_date = take_screenshot(y + 63, x + 330, 52, 10)
+        tour_type = take_screenshot(y + 63, x + 402, 14, 10)
+        tour_status = take_screenshot(y + 63, x + 484, 14, 10)
+        try:
+            tour_date = sc.dates[tour_date]
+            if tour_date != 'Nothing':
+                tour_date = datetime.datetime.strptime(tour_date, "%m/%d/%y")
+        except KeyError:
+            tour_date = None
+        try:
+            tour_type = sc.m2_tour_types[tour_type]
+        except KeyError:
+            print('Unrecognized tour type')
+            print(tour_type)
+            tour_type = None
+        try:
+            tour_status = sc.m2_tour_status[tour_status]
+        except KeyError:
+            print('Unrecognized tour status')
+            print(tour_status)
+            tour_status = None
+        y += 13
+        if tour_date != 'Nothing':
             try:
-                screenshot = sc.dates[str(mss.tools.to_png(im.rgb, im.size))]
-                date = datetime.datetime.strptime(screenshot, "%m/%d/%y")
-            except KeyError:
-                date = None
-            monitor = {'top': y + 63, 'left': x + 484, 'width': 14, 'height': 10}
-            im = sct.grab(monitor)
-            try:
-                tour_status = sc.m2_tour_status[str(mss.tools.to_png(im.rgb, im.size))]
-            except KeyError:
-                print(mss.tools.to_png(im.rgb, im.size))
-                tour_status = None
-            monitor = {'top': y + 63, 'left': x + 402, 'width': 14, 'height': 10}
-            im = sct.grab(monitor)
-            try:
-                tour_type = sc.m2_tour_types[str(mss.tools.to_png(im.rgb, im.size))]
-            except KeyError:
-                print(str(mss.tools.to_png(im.rgb, im.size)))
-                tour_type = None
-            y += 13
-            if tour_type == 'Nothing' and tour_status == 'Nothing':
-                break
-            else:
-                try:
-                    # Where the screenshots get turned into dictionaries.
-                    d.append({'Date': date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
-                except NameError:
-                    pass
+                # Where the screenshots get turned into dictionaries.
+                d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
+            except NameError:
+                pass
     df = pd.DataFrame(d)  # Turn d into a dataframe
+    # df['Date'] = df['Date'].apply(lambda x: x.strftime('%Y-%m-%d') if not pd.isnull(x) else '')
     df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
     print(tabulate(df, headers='keys', tablefmt='psql'))
     return df
@@ -231,10 +232,10 @@ def check_tour_type(number_of_tours):
         monitor = {'top': y + 143, 'left': x + 36, 'width': 89, 'height': 12}
         im = sct.grab(monitor)
         tour_type = sc.tour_type[str(mss.tools.to_png(im.rgb, im.size))]
-    if (tour_type == 'day_drive' or tour_type == 'canceled' or tour_type == 'open_reservation') and number_of_tours > 0:
+    if (tour_type == 'Day_Drive' or tour_type == 'Canceled' or tour_type == 'Open_Reservation') and number_of_tours > 0:
         print(u"\u001b[31m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
         errors += 1
-    elif tour_type == 'minivac' and number_of_tours < 1:
+    elif tour_type == 'Minivac' and number_of_tours < 1:
         print(u"\u001b[31m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
         errors += 1
     else:
@@ -245,9 +246,8 @@ def check_tour_type(number_of_tours):
 def read_deposits():
     sc.get_m3_coordinates()
     d = []
-    list_of_refundable_deposits = []
     number_of_deposits = 0
-    non_refundable_total = 0
+    number_of_refundable_deposits = 0
     pyautogui.click(m3['tour_packages'])
     x, y = m3['title']
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
@@ -258,9 +258,9 @@ def read_deposits():
     while True:
         # Counts number of deposits.
         # Breaks 'while' loop once a returned screenshot is blank
-        deposit_screenshot = take_screenshot(x + 255, y + 69, 6, 9)
+        deposit_screenshot = take_screenshot(y + 69, x + 255, 6, 9)
         if deposit_screenshot == sc.no_deposits and number_of_deposits == 0:
-            return non_refundable_total, list_of_refundable_deposits
+            return 'No Deposits', number_of_refundable_deposits
         elif deposit_screenshot == sc.no_deposits:
             break
         else:
@@ -297,13 +297,13 @@ def read_deposits():
             deposit_type = 'Refundable'
         else:
             deposit_type = 'Non_Refundable'
-            # non_refundable_total += int(price)
         d.append({'Deposit_Type': deposit_type, 'Price': price})
         pyautogui.click(m7['cancel'])
         pyautogui.click(m6['ok'])
     df = pd.DataFrame(d)  # Turn d into a dataframe
     deposit_df = df[['Deposit_Type', 'Price']]  # Reorders the columns in the dataframe.
-    return deposit_df
+    number_of_refundable_deposits = len(df[(df.Deposit_Type == 'Refundable')])
+    return deposit_df, number_of_refundable_deposits
 
 
 def count_deposit_items():
@@ -386,11 +386,12 @@ def apply_to_mv(deposit_df):
     deposit_df.Deposit_Type[0] = 'Non_Refundable'
 
 
-def read_premiums():
+def read_premiums(number_of_refundable_deposits):
     """Adds all premiums to the list premiums and checks if there are any duplicates among them"""
     global errors
     sc.get_m3_coordinates()
     list_of_premiums = []
+    number_of_dep_premiums = 0
     pyautogui.click(m3['premiums'])
     time.sleep(0.3)
     pyautogui.click(m3['premium_1'])
@@ -425,6 +426,7 @@ def read_premiums():
             else:
                 try:
                     list_of_premiums.append(str(sc.dep_premiums[screenshot]))
+                    number_of_dep_premiums += 1
                 except KeyError:
                     list_of_premiums.append(str(screenshot))
         y += 13
@@ -433,6 +435,12 @@ def read_premiums():
         is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
         if is_premium_blue is False:
             is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
+    if number_of_dep_premiums != number_of_refundable_deposits:
+        print(u"\u001b[31m" + str(number_of_dep_premiums) + ' DEP Premium(s) - ' +
+              str(number_of_refundable_deposits) + ' Refundable Deposits' + u"\u001b[0m")
+    else:
+        print(u"\u001b[32m" + str(number_of_dep_premiums) + ' DEP Premium(s) - ' +
+              str(number_of_refundable_deposits) + ' Refundable Deposits' + u"\u001b[0m")
     if len(list_of_premiums) != len(set(list_of_premiums)):
         print(u"\u001b[31m" + str(number_of_premiums) + ' Premiums - DUPLICATES' + u"\u001b[0m")
         errors += 1
@@ -743,7 +751,7 @@ def automatic_confirmation():
             check_tour_for_error()
             number_of_tours, number_of_canceled_tours = count_accommodations()
             tour_type = check_tour_type(number_of_tours)
-            deposit_df = read_deposits()
+            deposit_df, number_of_refundable_deposits = read_deposits()
             try:
                 rows, columns = deposit_df.shape
             except AttributeError:
@@ -752,9 +760,10 @@ def automatic_confirmation():
                                                                             deposit_df.Price[1] == '19' or
                                                                             deposit_df.Price[1] == '29'):
                 apply_to_mv(deposit_df)
+                number_of_refundable_deposits -= 1
             if rows > 0:
                 print(tabulate(deposit_df, headers='keys', tablefmt='psql'))
-            premiums = read_premiums()
+            premiums = read_premiums(number_of_refundable_deposits)
             if rows > 0:
                 check_for_dep_premium(deposit_df, premiums)
             else:
