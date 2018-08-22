@@ -5,8 +5,8 @@ import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 import datetime
 
-sc.get_m8_coordinates()
-x, y = m8['title']
+sc.get_m3_coordinates()
+x, y = m3['title']
 with mss.mss() as sct:
     # The screen part to capture
     monitor = {'top': y, 'left': x, 'width': 750, 'height': 500}

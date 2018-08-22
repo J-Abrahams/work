@@ -42,7 +42,10 @@ def take_screenshot(y, x, width, height, save_file=False):
         if save_file:
             now = datetime.datetime.now()
             output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
+            number = 1
+            output = output + str(number)
             mss.tools.to_png(im.rgb, im.size, output=output)
+            number += 1
         return screenshot
 
 
@@ -224,7 +227,7 @@ def count_accommodations():
                 y += 13
 
 
-def check_tour_type(number_of_tours):
+def check_tour_type(number_of_tours, status):
     global errors
     sc.get_m3_coordinates()
     with mss.mss() as sct:
@@ -232,6 +235,10 @@ def check_tour_type(number_of_tours):
         monitor = {'top': y + 143, 'left': x + 36, 'width': 89, 'height': 12}
         im = sct.grab(monitor)
         tour_type = sc.tour_type[str(mss.tools.to_png(im.rgb, im.size))]
+    if 'u' in status and tour_type != 'Minivac':
+        print(u"\u001b[31m" + 'Can\'t upgrade day drive' + u"\u001b[0m")
+    if 't' in status and tour_type != 'Day_Drive':
+        print(u"\u001b[31m" + 'TAVS are only for Day Drives.' + u"\u001b[0m")
     if (tour_type == 'Day_Drive' or tour_type == 'Canceled' or tour_type == 'Open_Reservation') and number_of_tours > 0:
         print(u"\u001b[31m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
         errors += 1
@@ -671,34 +678,17 @@ def enter_personnel(sol, status):
         pyautogui.click(x_4 + 90, y_4 + 350)
 
 
+def check_for_duplicate_personnel(df, status):
+    sc.get_m3_coordinates()
+    pyautogui.click(m3['title'])
+    sc.get_m2_coordinates()
+    select_tour(df, status)
+
+
 def convert_excel_to_csv():
     xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\3.xlsx")
     df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
     df.to_csv('file.csv')
-
-
-def activation_sheet():
-    for pid in pids:
-        if pid != '':
-            search_pid(pid)
-            select_tour()
-            read_premiums()
-            keep_going = input("Everything ok?")
-            if keep_going != '':
-                image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                                       region=(514, 245, 889, 566))
-                while image is None:
-                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                                                           region=(514, 245, 889, 566))
-                x, y = image
-                pyautogui.click(x + 265, y + 475)
-                image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                       region=(514, 245, 889, 566))
-                while image is None:
-                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                                                           region=(514, 245, 889, 566))
-                x, y = image
-                pyautogui.click(x - 20, y + 425)
 
 
 def automatic_confirmation():
@@ -750,7 +740,7 @@ def automatic_confirmation():
             select_tour(df, status)
             check_tour_for_error()
             number_of_tours, number_of_canceled_tours = count_accommodations()
-            tour_type = check_tour_type(number_of_tours)
+            tour_type = check_tour_type(number_of_tours, status)
             deposit_df, number_of_refundable_deposits = read_deposits()
             try:
                 rows, columns = deposit_df.shape
@@ -804,8 +794,10 @@ def automatic_confirmation():
                 tour_status = confirm_tour_status('x')
                 notes('x')
                 enter_personnel(sol, 'x')
-            if errors > 0 or tour_type == 'Minivac':
-                pause("Everything ok?")
+            #check_for_duplicate_personnel(df, status)
+            pause("Everthing ok?")
+            # if errors > 0 or tour_type == 'Minivac':
+                # pause("Everything ok?")
             progress += 1
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                                                    region=(514, 245, 889, 566))
@@ -827,3 +819,9 @@ def automatic_confirmation():
 print("Justin Locke - 4967 \nBrian Bennett - 3055")
 sol = 0
 automatic_confirmation()
+
+sc.get_m3_coordinates()
+# x, y = m3['title']
+# for i in range(8):
+#     print(take_screenshot(y + 257, x + 281, 65, 13, True))
+#     y += 13
