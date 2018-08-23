@@ -4,10 +4,8 @@ import mss
 import mss.tools
 import pyautogui
 import screenshot_data as sc
-from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
+from screenshot_data import m1, m2
 import datetime
-import re
-import os
 
 
 def search_pid(pid_number):
@@ -40,14 +38,15 @@ def enter_phone_number(number):
 
 now = datetime.datetime.now()
 now_str = now.strftime("%m/%d/%Y")
-with open('Phone_Errors.txt', 'a') as erase:
+print(now_str)
+with open('text_files\\phones\\Phone_Errors.txt', 'a') as erase:
     erase.write('\n{}\n'.format(now_str))
-with open('phones\\phone.csv', 'r') as csvfile:
+with open('text_files\\phones\\phone.csv', 'r') as csvfile:
     reader = csv.DictReader(csvfile)
     number_of_phone_numbers = 0
     for row in reader:
         number_of_phone_numbers += 1
-with open('phones\\phone.csv') as csvfile:
+with open('text_files\\phones\\phone.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     duplicate_phone_numbers, progress, errors = 0, 0, 0
     for row in reader:
@@ -59,7 +58,7 @@ with open('phones\\phone.csv') as csvfile:
             status = enter_phone_number(phone_2)
             if status == "Error":
                 errors += 1
-                with open('phones\\Phone_Errors.txt', 'a') as out:
+                with open('text_files\\phones\\Phone_Errors.txt', 'a') as out:
                     out.write('{} {} {}\n'.format(pids, phone_1, phone_2))
         else:
             duplicate_phone_numbers += 1

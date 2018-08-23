@@ -13,6 +13,7 @@ m6 = {}
 m7 = {}
 m8 = {}
 m9 = {}
+m10 = {}
 
 
 def get_m1_coordinates():
@@ -102,6 +103,7 @@ def get_m3_coordinates():
     m3['premium_4'] = (m3_title[0] + 563, m3_title[1] + 103)
     m3['premium_5'] = (m3_title[0] + 563, m3_title[1] + 116)
     m3['premium_6'] = (m3_title[0] + 563, m3_title[1] + 129)
+    m3['change_premium'] = (m3_title[0] + 360, m3_title[1] + 180)
     return m3
 
 
@@ -223,6 +225,19 @@ def get_m9_coordinates():
     m9['added_nights'] = (m9_title[0] + 4, m9_title[1] + 381)
     m9['added_rate'] = (m9_title[0] + 126, m9_title[1] + 381)
     m9['room_rate'] = (m9_title[0] + 4, m9_title[1] + 407)
+
+
+def get_m10_coordinates():
+    global m10
+    m10_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\changingpremium.png',
+                                               region=(514, 245, 889, 566))
+    while m10_title is None:
+        m10_title = pyautogui.locateCenterOnScreen(
+            'C:\\Users\\Jared.Abrahams\\Screenshots\\titles\\changingpremium.png',
+            region=(514, 245, 889, 566))
+    m10['title'] = (m10_title[0], m10_title[1])
+    m10['name'] = (m10_title[0] + 32, m10_title[1] + 78)
+    m10['ok'] = (m10_title[0] + 80, m10_title[1] + 505)
 
 
 audition = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00b\x00\x00\x00\x10\x08\x02\x00\x00\x00b-=\x93\x00\x00'
@@ -648,6 +663,9 @@ no_accommodations = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00a\x00\x
 canceled_accommodation = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x004\x00\x00\x00\x05\x08\x02\x00\x00\x00'
                              b'\x85<X\xb4\x00\x00\x00\x19IDATx\x9cc\xf8?\x88\x01\xc3@;\x00\x1f\x18u\x1c\xb9`P;\x0e'
                              b'\x00\x82\xf4\t"\xac\xe5\x19\xaf\x00\x00\x00\x00IEND\xaeB`\x82')
+
+premiums = {str(
+    b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00Z\x00\x00\x00\t\x08\x02\x00\x00\x00=\xd0\xac\x0c\x00\x00\x00-IDATx\x9c\xed\xd0A\x11\x00 \x0c\xc0\xb0\xf97\r\xdfU\x01<\x12\x05\xbd\xcea\x99\xd7\x01\x7f\xb1#\xec\x08;\xc2\x8e\xb0#\xec\x08;\xe2\x02.\x91u\no\xf2\xca\x91\x00\x00\x00\x00IEND\xaeB`\x82'): 'Nothing'}
 
 phone_error = str(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00&\x00\x00\x00\x10\x08\x02\x00\x00\x00\xf5|\x9aI"
                   b"\x00\x00\x00eIDATx\x9cc\xb8v\xf9\x1c\x9d\x11\xc3\xa8\x95t\xb0\x92\x01\tP\xd9\x1a$\x03\x19\xb0"
