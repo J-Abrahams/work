@@ -11,6 +11,7 @@ from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 import pandas as pd
 import csv
 from tabulate import tabulate
+from confirmations_auto import count_premiums
 
 # import importlib
 # importlib.reload(sc)
@@ -181,13 +182,13 @@ def change_deposit_title(price, cash=None):
                 sct_img2 = sct.grab(monitor2)
                 image = str(mss.tools.to_png(sct_img.rgb, sct_img.size))
                 image2 = str(mss.tools.to_png(sct_img2.rgb, sct_img2.size))
-                if image not in open('screenshot_data.txt').read():
+                if image not in open('text_files\\screenshot_data.txt').read():
                     mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
-                    with open('screenshot_data.txt', 'a') as out:
+                    with open('text_files\\screenshot_data.txt', 'a') as out:
                         out.write('{} - {}\n'.format(output, image))
-                if image2 not in open('screenshot_data.txt').read():
+                if image2 not in open('text_files\\screenshot_data.txt').read():
                     mss.tools.to_png(sct_img2.rgb, sct_img2.size, output=output2)
-                    with open('screenshot_data.txt', 'a') as out:
+                    with open('text_files\\screenshot_data.txt', 'a') as out:
                         out.write('{} - {}\n'.format(output2, image))
         pyautogui.click(x_2, y_2)
         pyautogui.click(m3['change_deposit'])
@@ -603,6 +604,7 @@ def use_excel_sheet():
             double_check_pid(pids)
             df = create_data_frame()
             select_tour(df, 1, date)
+            count_premiums()
             if cash_or_cc == 'cc':
                 deposit_type = change_deposit_title(price)
             else:
@@ -658,4 +660,3 @@ def use_excel_sheet():
 
 
 use_excel_sheet()
-change_deposit_title(50)
