@@ -1,74 +1,121 @@
+import csv
+import time
+from tkinter import Tk
 import keyboard
+import mss
+import mss.tools
+import pandas as pd
 import pyautogui
+import clipboard
 import screenshot_data as sc
+from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10
+import confirmations_auto as conf
+import datetime
+from tabulate import tabulate
+import sys
+import pickle
 
-m1 = {}
-m2 = {}
-m3 = {}
-m4 = {}
-m5 = {}
+import importlib
+# importlib.reload(sc)
 
 
-def switch_site(vendor_dict):
+
+def switch_site(site_number):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\windows_closed.png',
                                            region=(514, 245, 300, 300))
     if image is None:
-        print("Close all windows")
-        raise SystemExit(0)
-
-    pyautogui.click(10, 25)
-    pyautogui.click(10, 150)
-    pyautogui.click(1000, 375)
-    if vendor_dict['location'] == '2':
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_search_for.png',
+                                               region=(514, 245, 889, 566))
+        sc.get_m1_coordinates()
+        x, y = m1['search']
+        pyautogui.click(m1['close'])
+    while pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\windows_closed.png',
+                                         region=(514, 245, 300, 300)) is None:
+        pass
+    pyautogui.click(500, 500)
+    keyboard.send('F3')
+    time.sleep(0.5)
+    if site_number == 2:
         keyboard.write('A1')
-        keyboard.send('enter')
-    elif vendor_dict['location'] == '3':
+    elif site_number == 3:
         keyboard.write('A2')
-        keyboard.send('enter')
-    elif vendor_dict['location'] == '4':
+    elif site_number == 4:
         keyboard.write('A3')
-        keyboard.send('enter')
-    elif vendor_dict['location'] == '5':
-        keyboard.write('T')
-        keyboard.send('enter')
-    elif vendor_dict['location'] == '8':
-        keyboard.write('C')
-        keyboard.send('enter')
-    elif vendor_dict['location'] == '9':
+    elif site_number == 5:
+        keyboard.write('t')
+    elif site_number == 8:
+        keyboard.write('c')
+    elif site_number == 9:
         keyboard.write('Welk Resort N')
-        keyboard.send('enter')
-    elif vendor_dict['location'] == '11':
+    elif site_number == 11:
         keyboard.write('Welk Resort Bre')
-        keyboard.send('enter')
+    # time.sleep(1)
+    keyboard.send('enter')
     pyautogui.click(10, 25)
     pyautogui.click(10, 45)
 
 
+def take_screenshot(y, x, width, height, save_file=False):
+    with mss.mss() as sct:
+        monitor = {'top': y, 'left': x, 'width': width, 'height': height}
+        im = sct.grab(monitor)
+        screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        if save_file:
+            now = datetime.datetime.now()
+            output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
+            number = 1
+            output = output + str(number)
+            mss.tools.to_png(im.rgb, im.size, output=output)
+            number += 1
+        return screenshot
+
+
+def read_pickle_file(file_name):
+    with open('text_files\\' + file_name, 'rb') as file:
+        return pickle.load(file)
+
+
+def pause(message):
+    print(message)
+    while pyautogui.position() != (0, 1079):
+        pass
+
+
 def insert_new_pid():
-    m1 = sc.get_m1_coordinates()
+    sc.get_m1_coordinates()
     pyautogui.click(m1['insert'])
 
 
-def enter_prospect_info(vendor_dict):
-    m2 = sc.get_m2_coordinates()
+def convert_excel_to_dataframe():
+    xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\Vendor.xlsx")
+    df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
+    print(tabulate(df, headers='keys', tablefmt='psql'))
+    return df
+
+
+def enter_m2_info():
+    df = convert_excel_to_dataframe()
+    switch_site(df.loc[0, 'Site'])
+    insert_new_pid()
+    sc.get_m2_coordinates(True)
     pyautogui.click(m2['last_name'])
-    keyboard.write(vendor_dict['last name'])
+    keyboard.write(df.loc[0, 'Last_Name'])
     pyautogui.click(m2['first_name'])
-    keyboard.write(vendor_dict['first_name'])
+    keyboard.write(df.loc[0, 'First_Name'])
     pyautogui.click(m2['address'])
-    keyboard.write(vendor_dict['address'])
+    keyboard.write(df.loc[0, 'Address'])
     pyautogui.click(m2['city'])
-    keyboard.write(vendor_dict['city'])
+    keyboard.write(df.loc[0, 'City'])
     pyautogui.click(m2['state'])
 
     pyautogui.click(m2['postal_code'])
-    keyboard.write(vendor_dict['postal_code'])
+    keyboard.write(str(df.loc[0, 'Zip']))
     pyautogui.click(m2['country'])
     for i in range(5):
         keyboard.send('u')
     pyautogui.click(m2['phone1'])
-    keyboard.write(vendor_dict['phone1'])
-    if vendor_dict['phone2'] != '':
+    keyboard.write(df.loc[0, 'Phone'])
+    """if df.loc[0, 'Phone_2'] != '':
         pyautogui.click(m2['phone2'])
         keyboard.write(vendor_dict['phone2'])
     if vendor_dict['email'] != '':
@@ -163,9 +210,10 @@ def enter_prospect_info(vendor_dict):
     elif vendor_dict['tour_time'] == "1315":
         pyautogui.click(m3['scroll_bar_wave'])
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1315.png',
-                                                       region=(514, 245, 889, 566)))
+                                                       region=(514, 245, 889, 566)))"""
 
 
+enter_m2_info()
 data_dict = {
     'agent_name': '',
     'location': 'br',
@@ -222,6 +270,6 @@ vendor_dict = {
     'tm_center': 'BT'
 }
 
-switch_site(data_dict)
-insert_new_pid()
-enter_prospect_info(data_dict)
+#switch_site('5')
+#insert_new_pid()
+#enter_m2_info(data_dict)

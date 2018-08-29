@@ -170,26 +170,6 @@ def change_deposit_title(price, cash=None):
         while image is None:
             image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
                                                    region=(700, 245, 850, 566))
-        for i in range(3):
-            with mss.mss() as sct:
-                monitor = {'top': y + 68, 'left': x + 464, 'width': 37, 'height': 11}
-                monitor2 = {'top': y + 69, 'left': x + 267, 'width': 153, 'height': 7}
-                y += 13
-                now = datetime.datetime.now()
-                output = now.strftime("%m-%d-%H-%M-%S-%f.png".format(**monitor))
-                output2 = now.strftime("%m-%d-%H-%M-%f.png".format(**monitor2))
-                sct_img = sct.grab(monitor)
-                sct_img2 = sct.grab(monitor2)
-                image = str(mss.tools.to_png(sct_img.rgb, sct_img.size))
-                image2 = str(mss.tools.to_png(sct_img2.rgb, sct_img2.size))
-                if image not in open('text_files\\screenshot_data.txt').read():
-                    mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
-                    with open('text_files\\screenshot_data.txt', 'a') as out:
-                        out.write('{} - {}\n'.format(output, image))
-                if image2 not in open('text_files\\screenshot_data.txt').read():
-                    mss.tools.to_png(sct_img2.rgb, sct_img2.size, output=output2)
-                    with open('text_files\\screenshot_data.txt', 'a') as out:
-                        out.write('{} - {}\n'.format(output2, image))
         pyautogui.click(x_2, y_2)
         pyautogui.click(m3['change_deposit'])
         deposit_item_amount = count_deposit_items()
@@ -199,6 +179,7 @@ def change_deposit_title(price, cash=None):
         pyautogui.click(x, y)
         time.sleep(0.3)
         with mss.mss() as sct:
+            # Takes screenshot of lowest amount inside of the deposit
             x, y = m6['title']
             y = y + 13 * (deposit_item_amount - 1)
             monitor = {'top': y + 189, 'left': x + 185, 'width': 33, 'height': 8}
@@ -209,6 +190,8 @@ def change_deposit_title(price, cash=None):
                 amount = 0
                 print('Don\'t recognize the amount')
                 print(mss.tools.to_png(im.rgb, im.size))
+                output = 'monitor-1-crop.png'
+                mss.tools.to_png(im.rgb, im.size, output=output)
         attempts += 1
         if amount != price:
             pyautogui.click(m6['ok'])
