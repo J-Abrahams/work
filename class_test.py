@@ -12,6 +12,18 @@ import pandas as pd
 import csv
 
 
+def take_screenshot(x, y , width, height, save_file=False):
+    with mss.mss() as sct:
+        monitor = {'top': y, 'left': x, 'width': width, 'height': height}
+        im = sct.grab(monitor)
+        screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        if save_file:
+            now = datetime.datetime.now()
+            output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
+            mss.tools.to_png(im.rgb, im.size, output=output)
+        return screenshot
+
+
 class ExcelSheet:
 
     def __init__(self, file_name):
@@ -62,14 +74,19 @@ class Deposit:
 
     def change_description(self):
         sc.get_m3_coordinates()
-        amount = 0
+        price = 0
         old_title = 'old'
-        x_2, y_2 = m3['deposit_1']
-        while amount != price:
+        while self.amount != price:
             pyautogui.click(m3['tour_packages'])
-            pyautogui.click(x_2, y_2)
+            pyautogui.click(m3['deposit_1'])
             pyautogui.click(m3['change_deposit'])
             sc.get_m6_coordinates()
+            x, y = m6['title']
+            try:
+                price = sc.deposit_item_amount[take_screenshot(x + 168, y + 187, 51, 11)]
+            except KeyError:
+                price = 0
+            take_screenshot(x + 168, y + 187, 51, 11)
             with mss.mss() as sct:
                 x, y = m6['title']
                 monitor = {'top': y + 187, 'left': x + 168, 'width': 51, 'height': 11}

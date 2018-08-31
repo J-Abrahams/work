@@ -11,7 +11,7 @@ from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8
 import pandas as pd
 import csv
 from tabulate import tabulate
-from confirmations_auto import count_premiums
+import openpyxl
 
 # import importlib
 # importlib.reload(sc)
@@ -566,6 +566,18 @@ def count_number_of_pids():
     return number_of_pids
 
 
+def mark_row_as_completed(index):
+    wb = openpyxl.load_workbook(filename='C:\\Users\\Jared.Abrahams\\Downloads\\deposit_pids.xlsx')
+    ws = wb.worksheets[0]
+    ws.cell(row=int(index) + 2, column=5).value = 'x'
+    wb.save('C:\\Users\\Jared.Abrahams\\Downloads\\deposit_pids.xlsx')
+
+
+def show_progress(pid, progress, number_of_pids):
+    percentage = round(progress * 100 / number_of_pids, 2)
+    print('{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid)))
+
+
 def use_excel_sheet():
     convert_excel_to_csv()
     number_of_pids = count_number_of_pids()
@@ -573,21 +585,24 @@ def use_excel_sheet():
     with open('file.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
+            if row['Completed'] == 'x':
+                progress += 1
+                continue
             pids = row['PID'].replace('.0', '')
             price = row['price']
             date = row['date']
             date = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d')
             cash = row['cash']
+            index = row['']
+            show_progress(pids, progress, number_of_pids)
             if cash == 'x' or cash == 'X':
                 cash_or_cc = 'cash'
             else:
                 cash_or_cc = 'cc'
-            print('{} / {} - {}'.format(str(progress), str(number_of_pids), str(pids)))
             search_pid(pids)
             double_check_pid(pids)
             df = create_data_frame()
             select_tour(df, 1, date)
-            count_premiums()
             if cash_or_cc == 'cc':
                 deposit_type = change_deposit_title(price)
             else:
@@ -639,6 +654,7 @@ def use_excel_sheet():
                 select_ams_refund_payment(date, price, 'ir')
             elif deposit_type == 'sol':
                 select_ams_refund_payment(date, price, 'sol')
+            mark_row_as_completed(index)
             progress += 1
 
 

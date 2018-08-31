@@ -186,7 +186,7 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Carter Roedell': 'SOL23345', 'Fernanda Hernandez': 'SOL26788', 'Fern Hernandez': 'SOL26788',
                'Alton Major': 'SOL4809', 'Thuy Pham': 'SOL25688', 'Julianne Martinez': 'SOL22766',
                'Quenton Stroud': 'SOL27228', 'Sadie Oliver': 'SOL26834', 'Valeria Rebollar': 'SOL24218',
-               'Sergio Espinoza': 'SOL23542', 'K': 'SOL27554'}
+               'Sergio Espinoza': 'SOL23542', 'K': 'SOL27554', 'Olivia Larimer': 'SOL5463'}
 f = open('text_files\\premiums.p', 'rb')
 premium_dict = pickle.load(f)
 f.close()
@@ -219,10 +219,7 @@ def take_screenshot(y, x, width, height, save_file=False):
         if save_file:
             now = datetime.datetime.now()
             output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
-            number = 1
-            output = output + str(number)
             mss.tools.to_png(im.rgb, im.size, output=output)
-            number += 1
         return screenshot
 
 
@@ -258,10 +255,18 @@ def gather_m3_data():
     tour_types_dict = read_pickle_file('m3_tour_type.p')
     m3_tour_type = tour_types_dict[take_screenshot(y + 143, x + 36, 89, 12)]
     m3_tour_status = sc.m3_tour_status[take_screenshot(y + 170, x + 37, 94, 11)]
+    month = take_screenshot(y + 196, x + 37, 13, 10)
+    day = take_screenshot(y + 196, x + 52, 15, 10)
+    year = take_screenshot(y + 196, x + 68, 27, 10)
+    m3_date = get_date(month, day, year)
     try:
-        m3_date = sc.dates[take_screenshot(y + 196, x + 40, 52, 10)]
-    except KeyError:
-        m3_date = 'unknown'
+        m3_date = datetime.datetime.strptime(m3_date, "%m/%d/%Y")
+    except ValueError:
+        month = take_screenshot(y + 196, x + 40, 13, 10)
+        day = take_screenshot(y + 196, x + 55, 15, 10)
+        year = take_screenshot(y + 196, x + 71, 27, 10)
+        m3_date = get_date(month, day, year)
+        m3_date = datetime.datetime.strptime(m3_date, "%m/%d/%Y")
     return m3_tour_type, m3_tour_status, m3_date
 
 
@@ -300,6 +305,26 @@ def double_check_pid(pid_number):
         return
 
 
+def get_date(month, day, year):
+    f = open('text_files\\dates.p', 'rb')
+    date_dictionary = pickle.load(f)
+    f.close()
+    try:
+        month = date_dictionary[month]
+        day = date_dictionary[day]
+        year = date_dictionary[year]
+        if month not in ['Nothing', 'Error']:
+            tour_date = ('{}/{}/{}'.format(month, day, year))
+            return tour_date
+            # datetime.datetime.strptime(tour_date, "%m/%d/%Y")
+        elif month == 'Error':
+            return 'Error'
+        elif month == 'Nothing':
+            return 'Nothing'
+    except KeyError:
+        return 'Nothing'
+
+
 def create_data_frame():
     """
     Takes screenshots of the tours. Turns the screenshots into a list of dictionaries 'd'. Turns 'd' into a dataframe.
@@ -309,17 +334,15 @@ def create_data_frame():
     """
     sc.get_m2_coordinates()
     d = []
+    pretty_d = []
     x, y = m2['title']
     for i in range(8):
-        tour_date = take_screenshot(y + 63, x + 330, 52, 10)
+        month = take_screenshot(y + 63, x + 327, 13, 10)
+        day = take_screenshot(y + 63, x + 342, 15, 10)
+        year = take_screenshot(y + 63, x + 358, 27, 10)
+        tour_date = get_date(month, day, year)
         tour_type = take_screenshot(y + 63, x + 402, 14, 10)
         tour_status = take_screenshot(y + 63, x + 484, 14, 10)
-        try:
-            tour_date = sc.dates[tour_date]
-            if tour_date != 'Nothing':
-                tour_date = datetime.datetime.strptime(tour_date, "%m/%d/%y")
-        except KeyError:
-            tour_date = None
         try:
             tour_type = sc.m2_tour_types[tour_type]
         except KeyError:
@@ -337,13 +360,16 @@ def create_data_frame():
         if tour_date != 'Nothing':
             try:
                 # Where the screenshots get turned into dictionaries.
+                pretty_d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
+                tour_date = pd.to_datetime(tour_date)
                 d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
             except NameError:
                 pass
     df = pd.DataFrame(d)  # Turn d into a dataframe
-    # df['Date'] = df['Date'].apply(lambda x: x.strftime('%Y-%m-%d') if not pd.isnull(x) else '')
     df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
-    print(tabulate(df, headers='keys', tablefmt='psql'))
+    pretty_df = pd.DataFrame(pretty_d)
+    pretty_df = pretty_df[['Date', 'Tour_Type', 'Tour_Status']]
+    print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
     return df
 
 
@@ -368,7 +394,7 @@ def select_tour(df, status, attempt_number=1):
             tour_number = df[((df.Tour_Status == 'Rescheduled') &
                               ((df.Date - current_date) >= datetime.timedelta(days=0))) |
                              ((df.Tour_Type == 'Open_Reservation') &
-                              (df.Date == datetime.datetime.strptime('1/01/00', "%m/%d/%y"))) &
+                              (df.Date == datetime.datetime.strptime('1/1/1900', "%m/%d/%Y"))) &
                              (df.Tour_Type != 'Audition')].index[attempt_number - 1]
         except IndexError:
             print('Couldn\'t find correct tour')
@@ -533,6 +559,45 @@ def read_deposits():
     return deposit_df, number_of_refundable_deposits
 
 
+"""def count_premiums():
+    date_1 = '1'
+    date_2 = '1'
+    date_3 = '2005'
+    m = 0
+    date_dictionary = {}
+    while int(date_2) != 32:
+        print('{} - {} - {}'.format(date_1, date_2, date_3))
+        f = open('text_files\\dates.p', 'rb')
+        date_dictionary = pickle.load(f)
+        f.close()
+        screenshot = take_screenshot(367, 958, 13, 10)
+        date_dictionary[str(screenshot)] = 'Error'
+        f = open('text_files\\dates.p', 'wb')
+        pickle.dump(date_dictionary, f)
+        f.close()
+        screenshot = take_screenshot(139 + 13 * m, 284, 13, 10)
+        screenshot_2 = take_screenshot(139 + 13 * m, 299, 15, 10)
+        screenshot_3 = take_screenshot(139 + 13 * m, 315, 27, 10)
+        date_dictionary[str(screenshot)] = date_1
+        date_dictionary[str(screenshot_2)] = date_2
+        date_dictionary[str(screenshot_3)] = date_3
+        f = open('text_files\\dates.p', 'wb')
+        pickle.dump(date_dictionary, f)
+        f.close()
+        m += 1
+        if int(date_1) <= 8:
+            date_1 = int(date_1)
+            date_1 += 1
+            date_1 = str(date_1)
+        date_2 = int(date_2)
+        date_2 += 1
+        date_2 = str(date_2)
+        if int(date_3) <= 2019:
+            date_3 = int(date_3)
+            date_3 += 1
+            date_3 = str(date_3)"""
+
+
 def count_premiums():
     global premium_dict
     sc.get_m3_coordinates()
@@ -668,69 +733,6 @@ def apply_to_mv(deposit_df):
     deposit_df.Deposit_Type[0] = 'Non_Refundable'
 
 
-def read_premiums_old(number_of_refundable_deposits):
-    """Adds all premiums to the list premiums and checks if there are any duplicates among them"""
-    global errors
-    sc.get_m3_coordinates()
-    list_of_premiums = []
-    number_of_dep_premiums = 0
-    pyautogui.click(m3['premiums'])
-    time.sleep(0.3)
-    pyautogui.click(m3['premium_1'])
-    x, y = m3['premium_1']
-    number_of_premiums = 0
-    for i in range(8):
-        with mss.mss() as sct:
-            monitor = {'top': y - 4, 'left': x - 223, 'width': 90, 'height': 9}
-            y += 13
-            now = datetime.datetime.now()
-            output = now.strftime("%m-%d-%H-%M-%S-%f.png".format(**monitor))
-            sct_img = sct.grab(monitor)
-            image = str(mss.tools.to_png(sct_img.rgb, sct_img.size))
-            if image not in open('text_files\\premiums.txt').read():
-                mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
-                with open('text_files\\premiums.txt', 'a') as out:
-                    out.write('{},{}\n'.format(output, image))
-    x, y = m3['premium_1']
-    is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
-    while is_premium_blue is True:
-        number_of_premiums += 1
-        with mss.mss() as sct:
-            monitor = {'top': y - 4, 'left': x - 223, 'width': 90, 'height': 9}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
-            monitor = {'top': y - 4, 'left': x - 129, 'width': 8, 'height': 7}
-            im = sct.grab(monitor)
-            screenshot_2 = str(mss.tools.to_png(im.rgb, im.size))
-            if screenshot_2 == sc.canceled_premium:
-                screenshot += 'canceled'
-                list_of_premiums.append(str(screenshot))
-            else:
-                try:
-                    list_of_premiums.append(str(sc.dep_premiums[screenshot]))
-                    number_of_dep_premiums += 1
-                except KeyError:
-                    list_of_premiums.append(str(screenshot))
-        y += 13
-        pyautogui.click(x, y)
-        time.sleep(0.3)
-        is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
-        if is_premium_blue is False:
-            is_premium_blue = pyautogui.pixelMatchesColor(x, y, (8, 36, 107))
-    if number_of_dep_premiums != number_of_refundable_deposits:
-        print(u"\u001b[31m" + str(number_of_dep_premiums) + ' DEP Premium(s) - ' +
-              str(number_of_refundable_deposits) + ' Refundable Deposits' + u"\u001b[0m")
-    else:
-        print(u"\u001b[32m" + str(number_of_dep_premiums) + ' DEP Premium(s) - ' +
-              str(number_of_refundable_deposits) + ' Refundable Deposits' + u"\u001b[0m")
-    if len(list_of_premiums) != len(set(list_of_premiums)):
-        print(u"\u001b[31m" + str(number_of_premiums) + ' Premiums - DUPLICATES' + u"\u001b[0m")
-        errors += 1
-    else:
-        print(u"\u001b[32m" + str(number_of_premiums) + ' Premiums - No Duplicates' + u"\u001b[0m")
-    return list_of_premiums
-
-
 def read_premiums(number_of_refundable_deposits):
     global premium_dict
     list_of_premiums = []
@@ -753,16 +755,16 @@ def read_premiums(number_of_refundable_deposits):
         elif screenshot != 'Nothing' and screenshot_2 == sc.canceled_premium:
             y += 13
         else:
-            if '20' in screenshot or '40' in screenshot or '50' in screenshot or '99' in screenshot:
-                number_of_dep_premiums += 1
+            if '20' in screenshot or '40' in screenshot or '50 ' in screenshot or '99' in screenshot:
+                if 'Live' in screenshot:
+                    pass
+                else:
+                    number_of_dep_premiums += 1
             if '20' in screenshot:
                 screenshot = '20'
             elif '40' in screenshot:
                 screenshot = '40'
-            elif '$50' in screenshot:
-                if '500' in screenshot:
-                    pass
-                else:
+            elif '$50 ' in screenshot:
                     screenshot = '50'
             elif '99' in screenshot:
                 screenshot = '99'
@@ -775,8 +777,10 @@ def read_premiums(number_of_refundable_deposits):
     else:
         print(u"\u001b[32m" + str(number_of_dep_premiums) + ' DEP Premium(s) - ' +
               str(number_of_refundable_deposits) + ' Refundable Deposit(s)' + u"\u001b[0m")
-    # for x in ['20', '40', '50', '99']:
-    #     if sum(x in s for s in list_of_premiums)
+    if number_of_premiums != len(set(list_of_premiums)):
+        print(u"\u001b[31m" + str(number_of_premiums) + ' Premium(s) - DUPLICATES' + u"\u001b[0m")
+    else:
+        print(u"\u001b[32m" + str(number_of_premiums) + ' Premium(s) - No Duplicates' + u"\u001b[0m")
     return list_of_premiums
 
 
@@ -991,11 +995,11 @@ def count_pids():
 
 
 def show_progress(pid, progress, number_of_pids):
-    percentage = round(progress * 100 / number_of_pids, 2)
+    percentage = round((progress - 1) * 100 / number_of_pids, 2)
     print('{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid)))
 
 
-def assign_variables(row, number_of_pids):
+def assign_variables(row):
     global sol
     global progress
     progress += 1
@@ -1035,7 +1039,7 @@ def automatic_confirmation():
         reader = csv.DictReader(csvfile)
         for row in reader:
             errors = 0
-            index, pid, status, completed = assign_variables(row, number_of_pids)
+            index, pid, status, completed = assign_variables(row)
             if completed == 'x':
                 progress += 1
                 continue
@@ -1047,7 +1051,8 @@ def automatic_confirmation():
             check_tour_for_error()
             number_of_tours, number_of_canceled_tours = count_accommodations()
             m3_tour_type, m3_tour_status, m3_tour_date = gather_m3_data()
-            if (m3_tour_type == 'Open_Reservation' or m3_tour_type == 'No_Tour') and m3_tour_date != '1/01/00':
+            if (m3_tour_type == 'Open_Reservation' or m3_tour_type == 'No_Tour') and \
+                    m3_tour_date != datetime.datetime.strptime('1/1/1900', "%m/%d/%Y"):
                 print(u"\u001b[31m" + 'DATE IS INCORRECT' + u"\u001b[0m")
             tour_type = check_tour_type(number_of_tours, status)
             deposit_df, number_of_refundable_deposits = read_deposits()
