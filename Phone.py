@@ -63,6 +63,7 @@ with open('text_files\\phones\\phone.csv') as csvfile:
         else:
             duplicate_phone_numbers += 1
         progress += 1
+        print(len(phone_1), len(phone_2))
         print(str(progress) + '/' + str(number_of_phone_numbers))
         print(str(duplicate_phone_numbers) + ' duplicate numbers')
         print(str(errors) + ' errors')

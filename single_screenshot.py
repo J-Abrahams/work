@@ -24,7 +24,3 @@ if window != 0:
 
         # Save to the picture file
         mss.tools.to_png(sct_img.rgb, sct_img.size, output=output)
-
-# 257,347,13,10
-# 271,347,13,10
-# 288,374,24,10

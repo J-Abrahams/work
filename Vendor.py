@@ -19,7 +19,6 @@ import importlib
 # importlib.reload(sc)
 
 
-
 def switch_site(site_number):
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\windows_closed.png',
                                            region=(514, 245, 300, 300))
@@ -98,6 +97,7 @@ def enter_m2_info():
     switch_site(df.loc[0, 'Site'])
     insert_new_pid()
     sc.get_m2_coordinates(True)
+    # Menu 2 - Prospect
     pyautogui.click(m2['last_name'])
     keyboard.write(df.loc[0, 'Last_Name'])
     pyautogui.click(m2['first_name'])
@@ -115,37 +115,38 @@ def enter_m2_info():
         keyboard.send('u')
     pyautogui.click(m2['phone1'])
     keyboard.write(df.loc[0, 'Phone'])
-    """if df.loc[0, 'Phone_2'] != '':
+    if str(df.loc[0, 'Phone_2']) != 'nan':
         pyautogui.click(m2['phone2'])
-        keyboard.write(vendor_dict['phone2'])
-    if vendor_dict['email'] != '':
+        keyboard.write(df.loc[0, 'Phone_2'])
+    if str(df.loc[0, 'Email']) != 'nan':
         pyautogui.click(m2['email'])
-        keyboard.write(vendor_dict['email'])
+        keyboard.write(df.loc[0, 'Email'])
     pyautogui.click(m2['demographics'])
-    #  Demographics Tab
+    # Menu 2 - Demographics
     pyautogui.click(m2['marital_status'])
-    if vendor_dict['marital_status'] == 'm':
-        keyboard.send('m')
+    if df.loc[0, 'Marital_Status'] == 'sm':
+        for i in range (2):
+            keyboard.send('s')
+    else:
+        keyboard.send(df.loc[0, 'Marital_Status'])
+        pyautogui.click(m2['marital_status'])
     pyautogui.click(m2['spouse'])
-    keyboard.write(vendor_dict['spouse_first_name'] + ' ' + vendor_dict['spouse_last_name'])
+    keyboard.write(('{} {}'.format(df.loc[0, 'Spouse_First_Name'], df.loc[0, 'Spouse_Last_Name'])))
     pyautogui.click(m2['occupation'])
     keyboard.send('e')
     pyautogui.click(m2['income'])
-    keyboard.write(vendor_dict['income'])
+    keyboard.write('70')
     pyautogui.click(m2['preferred_language'])
     keyboard.send('e')
-    # pyautogui.doubleClick(m2['card_number'])
-    # keyboard.write(vendor_dict['card_number'])
-    # pyautogui.doubleClick(m2['expiration'])
-    # keyboard.write(vendor_dict['expiration'])
-    pyautogui.click(m2['notes_co_tab'])
-    pyautogui.click(m2['insert_coprospect'])
+    pyautogui.click(m2['notes_co'])
+    pyautogui.click(m2['insert_coprospects'])
     # Menu 4 - Adding a co-prospect
     sc.get_m5_coordinates()
     pyautogui.click(m5['get_from_prospect'])
     pyautogui.click(m5['first'])
-    keyboard.send(vendor_dict['spouse_first_name'])
+    keyboard.write(df.loc[0, 'Spouse_First_Name'])
     pyautogui.click(m5['ok'])
+    sc.get_m2_coordinates(True)
     pyautogui.click(m2['insert_tour'])
     #  Menu 3 - Adding a Tour Record
     sc.get_m3_coordinates()
@@ -154,63 +155,63 @@ def enter_m2_info():
     sc.get_m4_coordinates()
     pyautogui.click(m4['clear'])
     pyautogui.click(m4['campaign'])
-    keyboard.write(vendor_dict['campaign'])
+    keyboard.write('bttordm')
     pyautogui.click(m4['select'])
     # Menu 3 - Adding a Tour Record
     sc.get_m3_coordinates()
     pyautogui.click(m3['tour_type'])
-    keyboard.write(vendor_dict['tour_type'])
+    keyboard.send('m')
     pyautogui.click(m3['tour_status'])
     keyboard.write('b')
     pyautogui.click(m3['tour_date'])
-    keyboard.write(vendor_dict['tour_date'])
+    keyboard.write(df.loc[0, 'Tour_Date'])
     pyautogui.click(m3['tour_location'])
     for i in range(5):
         keyboard.send('down')
     pyautogui.click(m3['wave'])
-    if vendor_dict['tour_time'] == "800":
+    if df.loc[0, 'Tour_Time'] == "800":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_800.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "815":
+    elif df.loc[0, 'Tour_Time'] == "815":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_815.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "830":
+    elif df.loc[0, 'Tour_Time'] == "830":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_830.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "900":
+    elif df.loc[0, 'Tour_Time'] == "900":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_900.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "915":
+    elif df.loc[0, 'Tour_Time'] == "915":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_915.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "930":
+    elif df.loc[0, 'Tour_Time']== "930":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_930.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "1030":
+    elif df.loc[0, 'Tour_Time']== "1030":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1030.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "1045":
+    elif df.loc[0, 'Tour_Time']== "1045":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1045.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "1130":
+    elif df.loc[0, 'Tour_Time']== "1130":
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1130.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "1145":
+    elif df.loc[0, 'Tour_Time']== "1145":
         pyautogui.click(m3['scroll_bar_wave'])
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1145.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "1230":
+    elif df.loc[0, 'Tour_Time']== "1230":
         pyautogui.click(m3['scroll_bar_wave'])
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1230.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "1300":
+    elif df.loc[0, 'Tour_Time']== "1300":
         pyautogui.click(m3['scroll_bar_wave'])
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1300.png',
                                                        region=(514, 245, 889, 566)))
-    elif vendor_dict['tour_time'] == "1315":
+    elif df.loc[0, 'Tour_Time']== "1315":
         pyautogui.click(m3['scroll_bar_wave'])
         pyautogui.click(pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_1315.png',
-                                                       region=(514, 245, 889, 566)))"""
+                                                       region=(514, 245, 889, 566)))
 
 
 enter_m2_info()

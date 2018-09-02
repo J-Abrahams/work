@@ -14,8 +14,7 @@ from tabulate import tabulate
 import sys
 import pickle
 import openpyxl
-import re
-import pytest
+
 # import importlib
 # importlib.reload(sc)
 errors = 0
@@ -25,32 +24,48 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Carter Roedell': 'SOL23345', 'Fernanda Hernandez': 'SOL26788', 'Fern Hernandez': 'SOL26788',
                'Alton Major': 'SOL4809', 'Thuy Pham': 'SOL25688', 'Julianne Martinez': 'SOL22766',
                'Quenton Stroud': 'SOL27228', 'Sadie Oliver': 'SOL26834', 'Valeria Rebollar': 'SOL24218',
-               'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604'}
+               'Sergio Espinoza': 'SOL23542', 'K': 'SOL27554', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604'}
 f = open('text_files\\premiums.p', 'rb')
 premium_dict = pickle.load(f)
 f.close()
 
 
-#  TODO Make it so the confirmer number only gets changed when the tour status is confirmed.
-#  TODO If there is no item in a deposit, make it so the program doesn't hang on that deposit. 1398246
-#  TODO If the description of a deposit is AMS/Refundable Deposit/Apply to Minivac, make it treat that as non-refundable
-#  TODO Check for accommodation cancel notes 1423766
-#  TODO Partial refunds 1423766
-#  TODO Check title of note when it's a cancel
-#  TODO Fix duplicate deposits.
-#  TODO If a deposit is refunded, don't create a missing dep message 1384377
-#  TODO Make program recognize CS $50 CC Deposit 1005465
-#  TODO If an accommodation is canceled, check if the cancel box is ticked 1218776
-#  TODO Make program recognize an Additional Nights deposit 984256
-#  TODO If there are 2 refundable deposits and 2 dep premiums, don't count the 2 dep premiums as duplicates 1408810
-#  TODO Fix data frame on PID 1425576
-#  TODO If there are a lot of slashes in a note, count that as a confirm note.
-#  TODO Automatically fill in the tour result when it's a cancel.
-#  TODO If tour is InHouse and labeled as Minivac, make it print Minivac - 0 in green because there shouldn't be any
-#  TODO accommodations. 1427980
+class ExcelSheet:
+
+    def __init__(self, file_name):
+        self.file_name = file_name
+        self.number_of_pids = 0
+        self.excel_dataframe = 0
+
+    def convert_excel_to_csv(self):
+        xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\" + self.file_name)
+        df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
+        df.to_csv('file.csv')
+        self.file_name = 'file.csv'
+
+    def count_number_of_pids(self):
+        with open(self.file_name) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                self.number_of_pids += 1
+
+    def get_deposit_info(self):
+        d = []
+        with open(self.file_name) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                pid = row['PID'].replace('.0', '')
+                price = row['price']
+                date = row['date']
+                date = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d')
+                cash = row['cash']
+                d.append({'PID': pid, 'Price': price, 'Date': date, 'Cash': cash})
+        df = pd.DataFrame(d)
+        self.excel_dataframe = df
+        print(self.excel_dataframe)
 
 
-def take_screenshot(x, y, width, height, save_file=False):
+def take_screenshot(y, x, width, height, save_file=False):
     with mss.mss() as sct:
         monitor = {'top': y, 'left': x, 'width': width, 'height': height}
         im = sct.grab(monitor)
@@ -92,18 +107,18 @@ def gather_m3_data():
     sc.get_m3_coordinates()
     x, y = m3['title']
     tour_types_dict = read_pickle_file('m3_tour_type.p')
-    m3_tour_type = tour_types_dict[take_screenshot(x + 36, y + 143, 89, 12)]
-    m3_tour_status = sc.m3_tour_status[take_screenshot(x + 37, y + 170, 94, 11)]
-    month = take_screenshot(x + 37, y + 196, 13, 10)
-    day = take_screenshot(x + 52, y + 196, 15, 10)
-    year = take_screenshot(x + 68, y + 196, 27, 10)
+    m3_tour_type = tour_types_dict[take_screenshot(y + 143, x + 36, 89, 12)]
+    m3_tour_status = sc.m3_tour_status[take_screenshot(y + 170, x + 37, 94, 11)]
+    month = take_screenshot(y + 196, x + 37, 13, 10)
+    day = take_screenshot(y + 196, x + 52, 15, 10)
+    year = take_screenshot(y + 196, x + 68, 27, 10)
     m3_date = get_date(month, day, year)
     try:
         m3_date = datetime.datetime.strptime(m3_date, "%m/%d/%Y")
     except ValueError:
-        month = take_screenshot(x + 40, y + 196, 13, 10)
-        day = take_screenshot(x + 55, y + 196, 15, 10)
-        year = take_screenshot(x + 71, y + 196, 27, 10)
+        month = take_screenshot(y + 196, x + 40, 13, 10)
+        day = take_screenshot(y + 196, x + 55, 15, 10)
+        year = take_screenshot(y + 196, x + 71, 27, 10)
         m3_date = get_date(month, day, year)
         m3_date = datetime.datetime.strptime(m3_date, "%m/%d/%Y")
     return m3_tour_type, m3_tour_status, m3_date
@@ -176,12 +191,12 @@ def create_data_frame():
     pretty_d = []
     x, y = m2['title']
     for i in range(8):
-        month = take_screenshot(x + 327, y + 63, 13, 10)
-        day = take_screenshot(x + 342, y + 63, 15, 10)
-        year = take_screenshot(x + 358, y + 63, 27, 10)
+        month = take_screenshot(y + 63, x + 327, 13, 10)
+        day = take_screenshot(y + 63, x + 342, 15, 10)
+        year = take_screenshot(y + 63, x + 358, 27, 10)
         tour_date = get_date(month, day, year)
-        tour_type = take_screenshot(x + 402, y + 63, 14, 10)
-        tour_status = take_screenshot(x + 484, y + 63, 14, 10)
+        tour_type = take_screenshot(y + 63, x + 402, 14, 10)
+        tour_status = take_screenshot(y + 63, x + 484, 14, 10)
         try:
             tour_type = sc.m2_tour_types[tour_type]
         except KeyError:
@@ -315,7 +330,7 @@ def check_tour_type(number_of_tours, status):
     sc.get_m3_coordinates()
     x, y = m3['title']
     tour_types_dict = read_pickle_file('m3_tour_type.p')
-    tour_type = tour_types_dict[take_screenshot(x + 36, y + 14389, 12)]
+    tour_type = tour_types_dict[take_screenshot(y + 143, x + 36, 89, 12)]
     if 'u' in status and tour_type != 'Minivac':
         print(u"\u001b[31m" + 'Can\'t upgrade day drive' + u"\u001b[0m")
     if 't' in status and tour_type != 'Day_Drive':
@@ -346,7 +361,7 @@ def read_deposits():
     while True:
         # Counts number of deposits.
         # Breaks 'while' loop once a returned screenshot is blank
-        deposit_screenshot = take_screenshot(x + 255, y + 69, 6, 9)
+        deposit_screenshot = take_screenshot(y + 69, x + 255, 6, 9)
         if deposit_screenshot == sc.no_deposits and number_of_deposits == 0:
             return 'No Deposits', number_of_refundable_deposits
         elif deposit_screenshot == sc.no_deposits:
@@ -367,9 +382,7 @@ def read_deposits():
         r = Tk()
         result = r.selection_get(selection="CLIPBOARD")
         while result == 'bad':
-            pyautogui.click(m6['description'])
-            keyboard.send('ctrl + z')
-            keyboard.send('ctrl + c')
+            print('bad')
             result = r.selection_get(selection="CLIPBOARD")
         pyautogui.click(m6['view'])
         item_in_deposit = sc.get_m7_coordinates()
@@ -411,14 +424,14 @@ def read_deposits():
         f = open('text_files\\dates.p', 'rb')
         date_dictionary = pickle.load(f)
         f.close()
-        screenshot = take_screenshot(958, 367, 13, 10)
+        screenshot = take_screenshot(367, 958, 13, 10)
         date_dictionary[str(screenshot)] = 'Error'
         f = open('text_files\\dates.p', 'wb')
         pickle.dump(date_dictionary, f)
         f.close()
-        screenshot = take_screenshot(284, 139 + 13 * m, 13, 10)
-        screenshot_2 = take_screenshot(299, 139 + 13 * m, 15, 10)
-        screenshot_3 = take_screenshot(315, 139 + 13 * m, 27, 10)
+        screenshot = take_screenshot(139 + 13 * m, 284, 13, 10)
+        screenshot_2 = take_screenshot(139 + 13 * m, 299, 15, 10)
+        screenshot_3 = take_screenshot(139 + 13 * m, 315, 27, 10)
         date_dictionary[str(screenshot)] = date_1
         date_dictionary[str(screenshot_2)] = date_2
         date_dictionary[str(screenshot_3)] = date_3
@@ -452,7 +465,7 @@ def count_premiums():
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
                                                region=(514, 245, 889, 566))
     while True:
-        screenshot = take_screenshot(x - 223, y - 4, 90, 9)
+        screenshot = take_screenshot(y - 4, x - 223, 90, 9)
         screenshot_number += 1
         try:
             screenshot = premium_dict[screenshot]
@@ -588,8 +601,8 @@ def read_premiums(number_of_refundable_deposits):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
                                                region=(514, 245, 889, 566))
     while True:
-        screenshot = take_screenshot(x - 223, y - 4, 90, 9)
-        screenshot_2 = take_screenshot(x - 129, y - 4, 8, 7)
+        screenshot = take_screenshot(y - 4, x - 223, 90, 9)
+        screenshot_2 = take_screenshot(y - 4, x - 129, 8, 7)
         screenshot = premium_dict[screenshot]
         if screenshot == 'Nothing':
             break
@@ -668,7 +681,7 @@ def confirm_tour_status(status):
     pyautogui.click(m3['tour'])
     pyautogui.click(m3['accommodations'])
     x, y = m3['title']
-    tour_status = sc.m3_tour_status[take_screenshot(x + 37, y + 170, 94, 11)]
+    tour_status = sc.m3_tour_status[take_screenshot(y + 170, x + 37, 94, 11)]
     if status == 'c' and tour_status not in ['Confirmed', 'Showed', 'On_Tour', 'No_Show']:
         print(u"\u001b[33;1m" + 'TOUR STATUS MIGHT BE INCORRECT' + u"\u001b[0m")
         errors += 1
@@ -711,10 +724,6 @@ def notes(status):
                 errors += 1
                 pyautogui.click(x_2 + 200, y_2 + 250)
                 return
-            for key, value in sol_numbers.items():
-                words = re.findall(r'\w+', key)
-                if words[1].lower() in result.lower():
-                    print(u"\u001b[31m" + 'IMPORTANT NOTE' + u"\u001b[0m")
             if status == 'c' and 'conf' in result.lower():
                 print(u"\u001b[32m" + 'Confirm note is present' + u"\u001b[0m")
                 pyautogui.click(x_2 + 200, y_2 + 250)
@@ -847,7 +856,6 @@ def show_progress(pid, progress, number_of_pids):
 def assign_variables(row):
     global sol
     global progress
-    progress = 0
     progress += 1
     status = []
     index = row['']
@@ -980,11 +988,3 @@ def automatic_confirmation():
 if __name__ == "__main__":
     sol = 0
     automatic_confirmation()
-
-sc.get_m3_coordinates()
-x, y = m3['title']
-def test_screenshot():
-    assert take_screenshot(x + 431, y + 256 + 13 * 6, 55, 10) == sc.day_drive_event
-
-test_screenshot()
-print(take_screenshot(x + 431, y + 256 + 13 * 6, 55, 10, True))

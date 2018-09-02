@@ -200,13 +200,18 @@ def change_deposit_title(price, cash=None):
         pyautogui.click(m3['ok'])
         return 'fail'
     attempts = 0
-    while 'ref' not in old_title.lower() and attempts <= 2:
+    while 'ref' not in old_title.lower() and attempts <= 3:
         pyautogui.click(m6['description'])
         keyboard.send('ctrl + z')
         keyboard.send('ctrl + c')
         old_title = clipboard.paste()
+        attempts += 1
+        print(old_title.lower())
     if 'ref' not in old_title.lower():
-        sys.exit("Wrong Title")
+        if old_title.lower() == 'ams dep':
+            old_title = 'AMS/Refunded Deposit'
+        else:
+            sys.exit("Wrong Title")
     new_title = old_title.replace("able", "ed")
     new_title = new_title.replace("ABLE", "ED")
     new_title = new_title.replace(" /", "/")

@@ -46,6 +46,8 @@ def get_m2_coordinates(default=False):
                                                       '\\changing_a_prospect.png',
                                                       region=(514, 245, 889, 566))
     m2['title'] = (m2_title[0], m2_title[1])
+    m2['demographics'] = (m2_title[0] + 41, m2_title[1] + 21)
+    m2['notes_co'] = (m2_title[0] + 271, m2_title[1] + 21)
     m2['prospect_id'] = (m2_title[0] + 103, m2_title[1] + 50)
     m2['first_tour'] = (m2_title[0] + 375, m2_title[1] + 65)
     m2['second_tour'] = (m2_title[0] + 375, m2_title[1] + 78)
@@ -66,6 +68,11 @@ def get_m2_coordinates(default=False):
     m2['fax'] = (m2_title[0] + 129, m2_title[1] + 328)
     m2['email'] = (m2_title[0] + 271, m2_title[1] + 353)
     m2['ok'] = (m2_title[0] + 330, m2_title[1] + 475)
+    m2['marital_status'] = (m2_title[0] + 174, m2_title[1] + 83)
+    m2['spouse'] = (m2_title[0] + 275, m2_title[1] + 109)
+    m2['occupation'] = (m2_title[0] + 174, m2_title[1] + 136)
+    m2['income'] = (m2_title[0] + 72, m2_title[1] + 161)
+    m2['insert_coprospects'] = (m2_title[0] + 35, m2_title[1] + 428)
     return m2
 
 
@@ -84,6 +91,7 @@ def get_m3_coordinates():
     m3['tour_packages'] = (m3_title[0] + 324, m3_title[1] + 24)
     m3['premiums'] = (m3_title[0] + 397, m3_title[1] + 24)
     m3['personnel'] = (m3_title[0] + 225, m3_title[1] + 217)
+    m3['events'] = (m3_title[0] + 274, m3_title[1] + 217)
     m3['prospect'] = (m3_title[0] + 143, m3_title[1] + 45)
     m3['prospect_id'] = (m3_title[0] + 84, m3_title[1] + 69)
     m3['tour_id'] = (m3_title[0] + 84, m3_title[1] + 89)
@@ -142,9 +150,9 @@ def get_m5_coordinates():
         m5_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles'
                                                   '\\record_will_be_added.png',
                                                   region=(514, 245, 889, 566))
-    m5['get_from_prospect'] = (m5[0] + 198, m5[1] + 428)
-    m5['first'] = (m5[0] + 212, m5[1] + 101)
-    m5['ok'] = (m5[0] + 141, m5[1] + 462)
+    m5['get_from_prospect'] = (m5_title[0] + 198, m5_title[1] + 428)
+    m5['first'] = (m5_title[0] + 212, m5_title[1] + 101)
+    m5['ok'] = (m5_title[0] + 141, m5_title[1] + 462)
 
 
 # Deposits menu
@@ -986,6 +994,22 @@ personnel_type = {
         b'\x00,IDATx\x9cc\xf8?\xf4\x01\xc3@;\x80\n`\xd4\x0f\x83\x03\x8c\xfaap\x80Q?\x0c\x0e0\xea\x87\xc1\x01F\xfd08'
         b'\xc0p\xf0\x03\x008\xd5\xdd\xa1\x93\x82\x1f\xd3\x00\x00\x00\x00IEND\xaeB`\x82'): 'Nothing'}
 
+# Events - Menu where changes that are made to a tour get logged.
+day_drive_event = str(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x007\x00\x00\x00\n\x08\x02\x00\x00\x00\x9f]Qb\x00"
+                      b"\x00\x00|IDATx\x9c\xd5\x93A\x0e\xc0 "
+                      b"\x08\x04\xfd\xff\xa7\xb5\x87\xc6\x10\\v\x11z)\x87\xd6F\x19\x06\xadc\xfe!\xc6\xfb2Q\x04)B\x99"
+                      b"<\xade\x13\xd7'08\xe4\x16\xca\xf4\t\x0c.k\xb8s<\x07\xfcs\xe7\xda'\\C\x1a\xbb\xd8KW&o\t\xd3"
+                      b"\xb9\xf7\xb5\xa5\xbb\x16MK\xd8\xad\xbey\xc9\x1a\x90\xfe\x95%4\x13\x96r\x0c\x9b\xced\xe5\x17"
+                      b"\x87\x96\xd1\x9e\x9fS\xd1_\x0b\t\xd2\xd2\xe6B\xc5'\x16\x9c\xe3 "
+                      b"'\x9c>\x14\t\x00\x00\x00\x00IEND\xaeB`\x82")
+
+minivac_event = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x007\x00\x00\x00\n\x08\x02\x00\x00\x00\x9f]Qb\x00'
+                    b'\x00\x00 IDATx\x9cchij\x19\xfc\x88a\xc0]0\xea\xcaQW\x8e\xbar\xd4\x95\xa3\xae\xa4\x1e\x02\x00'
+                    b'\x1d[N\xaa\xa5\x9c}h\x00\x00\x00\x00IEND\xaeB`\x82')
+
+event_nothing = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00R\x00\x00\x00\n\x08\x02\x00\x00\x00\xa8\x93\x9eV'
+                    b'\x00\x00\x00%IDATx\x9cc\xf8?"\x01\xc3@;``\xc0\xa8\xb7G\x12\x18\xf5\xf6H\x02\xa3\xde\x1eI`\xd4'
+                    b'\xdb#\t\x00\x00\xf6\xd3\x92\xec\xb2\xeau\x14\x00\x00\x00\x00IEND\xaeB`\x82')
 """get_m3_coordinates()
 with mss.mss() as sct:
     x, y = m3['title']
@@ -4031,6 +4055,8 @@ dates = {str(
          '\\xb6-\\x939N\\xed\\x7f\\xb8L\\xd8\\xd9\\xb9|\\x06jp\\xc9\\x03*\\xc1\\xc1\\xb2\\x00Wr\\xb1t\\xcd\\xf7\\xc0'
          '\\xf5C\\xb5\\xe6\\xcc\\x85\\x01\\x1dT\\xdc\\xe4\\x05E\\x90PA{'
          '\\xf8\\x0c.\\x00\\x00\\x00\\x00IEND\\xaeB`\\x82\'': '12/31/18'}
+
+
 
 if __name__ == "__main__":
     with open('text_files\\m2_tour_types.p', 'wb') as file:
