@@ -4057,7 +4057,6 @@ dates = {str(
          '\\xf8\\x0c.\\x00\\x00\\x00\\x00IEND\\xaeB`\\x82\'': '12/31/18'}
 
 
-
 if __name__ == "__main__":
     with open('text_files\\m2_tour_types.p', 'wb') as file:
         pickle.dump(m2_tour_types, file)

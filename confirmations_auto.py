@@ -25,21 +25,18 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Carter Roedell': 'SOL23345', 'Fernanda Hernandez': 'SOL26788', 'Fern Hernandez': 'SOL26788',
                'Alton Major': 'SOL4809', 'Thuy Pham': 'SOL25688', 'Julianne Martinez': 'SOL22766',
                'Quenton Stroud': 'SOL27228', 'Sadie Oliver': 'SOL26834', 'Valeria Rebollar': 'SOL24218',
-               'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604'}
+               'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604',
+               'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125'}
 f = open('text_files\\premiums.p', 'rb')
 premium_dict = pickle.load(f)
 f.close()
 
 
-#  TODO Make it so the confirmer number only gets changed when the tour status is confirmed.
-#  TODO If there is no item in a deposit, make it so the program doesn't hang on that deposit. 1398246
-#  TODO If the description of a deposit is AMS/Refundable Deposit/Apply to Minivac, make it treat that as non-refundable
 #  TODO Check for accommodation cancel notes 1423766
 #  TODO Partial refunds 1423766
 #  TODO Check title of note when it's a cancel
 #  TODO Fix duplicate deposits.
 #  TODO If a deposit is refunded, don't create a missing dep message 1384377
-#  TODO Make program recognize CS $50 CC Deposit 1005465
 #  TODO If an accommodation is canceled, check if the cancel box is ticked 1218776
 #  TODO Make program recognize an Additional Nights deposit 984256
 #  TODO If there are 2 refundable deposits and 2 dep premiums, don't count the 2 dep premiums as duplicates 1408810
@@ -48,6 +45,71 @@ f.close()
 #  TODO Automatically fill in the tour result when it's a cancel.
 #  TODO If tour is InHouse and labeled as Minivac, make it print Minivac - 0 in green because there shouldn't be any
 #  TODO accommodations. 1427980
+
+
+class ConfirmationSheet:
+
+    def __init__(self, file_name):
+        self.file_name = file_name
+        self.excel_dataframe = 0
+
+    def convert_to_csv(self):
+        xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\" + self.file_name)
+        df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
+        df.to_csv('file.csv')
+        self.file_name = 'file.csv'
+
+    def count_pids(self):
+        number_of_pids = 0
+        with open(self.file_name) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                number_of_pids += 1
+            return number_of_pids
+
+class PID:
+
+    def __init__(self, pid, status):
+        self.pid = pid
+
+    def double_check_pid(self):
+        sc.get_m2_coordinates()
+        pyautogui.doubleClick(m2['prospect_id'])
+        keyboard.send('ctrl + c')
+        copied_text = clipboard.paste()
+        for i in range(3):
+            if copied_text != self.pid:
+                time.sleep(0.3)
+                pyautogui.doubleClick(m2['prospect_id'])
+                keyboard.send('ctrl + c')
+                copied_text = clipboard.paste()
+        if copied_text != self.pid:
+            pause('Is the pid correct?')
+            return
+        if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
+                                          region=(514, 245, 889, 566)) is not None:
+            return
+        pyautogui.click(m2['company'])
+        keyboard.send('ctrl + z')
+        time.sleep(1)
+        keyboard.send('ctrl + c')
+        copied_text = clipboard.paste()
+        if 'pid' in copied_text.lower():
+            pause('Is the pid correct?')
+            return
+
+
+def get_current_date():
+    now = datetime.datetime.now()
+    now = now.strftime("%m/%d/%y")
+    return datetime.datetime.strptime(now, "%m/%d/%y")
+
+
+def print_colored_text(text, color):
+    if color == 'red':
+        print('{}{}{}'.format(u"\u001b[31m", text, u"\u001b[0m"))
+    elif color == 'green':
+        print('{}{}{}'.format(u"\u001b[32m", text, u"\u001b[0m"))
 
 
 def take_screenshot(x, y, width, height, save_file=False):
@@ -97,14 +159,14 @@ def gather_m3_data():
     month = take_screenshot(x + 37, y + 196, 13, 10)
     day = take_screenshot(x + 52, y + 196, 15, 10)
     year = take_screenshot(x + 68, y + 196, 27, 10)
-    m3_date = get_date(month, day, year)
+    m3_date = turn_screenshots_into_date(month, day, year)
     try:
         m3_date = datetime.datetime.strptime(m3_date, "%m/%d/%Y")
     except ValueError:
         month = take_screenshot(x + 40, y + 196, 13, 10)
         day = take_screenshot(x + 55, y + 196, 15, 10)
         year = take_screenshot(x + 71, y + 196, 27, 10)
-        m3_date = get_date(month, day, year)
+        m3_date = turn_screenshots_into_date(month, day, year)
         m3_date = datetime.datetime.strptime(m3_date, "%m/%d/%Y")
     return m3_tour_type, m3_tour_status, m3_date
 
@@ -117,6 +179,7 @@ def search_pid(pid_number):
     pyautogui.click(m1['change'])
 
 
+# m2 functions
 def double_check_pid(pid_number):
     sc.get_m2_coordinates()
     pyautogui.doubleClick(m2['prospect_id'])
@@ -144,27 +207,27 @@ def double_check_pid(pid_number):
         return
 
 
-def get_date(month, day, year):
+def turn_screenshots_into_date(month_screenshot, day_screenshot, year_screenshot):
     f = open('text_files\\dates.p', 'rb')
     date_dictionary = pickle.load(f)
     f.close()
     try:
-        month = date_dictionary[month]
-        day = date_dictionary[day]
-        year = date_dictionary[year]
-        if month not in ['Nothing', 'Error']:
-            tour_date = ('{}/{}/{}'.format(month, day, year))
+        month_screenshot = date_dictionary[month_screenshot]
+        day_screenshot = date_dictionary[day_screenshot]
+        year_screenshot = date_dictionary[year_screenshot]
+        if month_screenshot not in ['Nothing', 'Error']:
+            tour_date = ('{}/{}/{}'.format(month_screenshot, day_screenshot, year_screenshot))
             return tour_date
             # datetime.datetime.strptime(tour_date, "%m/%d/%Y")
-        elif month == 'Error':
+        elif month_screenshot == 'Error':
             return 'Error'
-        elif month == 'Nothing':
+        elif month_screenshot == 'Nothing':
             return 'Nothing'
     except KeyError:
         return 'Nothing'
 
 
-def create_data_frame():
+def create_accommodations_dataframe():
     """
     Takes screenshots of the tours. Turns the screenshots into a list of dictionaries 'd'. Turns 'd' into a dataframe.
     d is a list of dictionaries such as [{''Date': '7/06/18', 'Tour_Type': 'Audition', 'Tour_Status': 'Showed'},
@@ -176,18 +239,29 @@ def create_data_frame():
     pretty_d = []
     x, y = m2['title']
     for i in range(8):
+
+        # Take screenshots of dates
         month = take_screenshot(x + 327, y + 63, 13, 10)
         day = take_screenshot(x + 342, y + 63, 15, 10)
         year = take_screenshot(x + 358, y + 63, 27, 10)
-        tour_date = get_date(month, day, year)
+
+        # Turn the screenshots into a datetime object
+        tour_date = turn_screenshots_into_date(month, day, year)
+
+        # Take screenshots of the tour type and tour status
         tour_type = take_screenshot(x + 402, y + 63, 14, 10)
         tour_status = take_screenshot(x + 484, y + 63, 14, 10)
+
+        # TODO Use pickle file here instead of dictionary in screenshot_data.
+        # Turn screenshot of tour type into string using the dictionary m2_tour_types
         try:
             tour_type = sc.m2_tour_types[tour_type]
         except KeyError:
             print('Unrecognized tour type')
             print(tour_type)
             tour_type = None
+
+        # Turn screenshot of tour status into string using the pickle file m2_tour_status
         try:
             tour_status_dict = read_pickle_file('m2_tour_status.p')
             tour_status = tour_status_dict[tour_status]
@@ -196,27 +270,36 @@ def create_data_frame():
             print(tour_status)
             tour_status = None
         y += 13
+
+        # Turns the screenshots into dictionaries.
         if tour_date != 'Nothing':
             try:
-                # Where the screenshots get turned into dictionaries.
+                # pretty_d uses strings instead of datetime objects because strings look better.
                 pretty_d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
+
+                # Turn strings into datetime objects and creates the dictionaries for the actual dataframe.
                 tour_date = pd.to_datetime(tour_date)
                 d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
             except NameError:
                 pass
-    df = pd.DataFrame(d)  # Turn d into a dataframe
-    df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
+
+    # Turns d into a dataframe and then reorders the columns in the dataframe.
+    df = pd.DataFrame(d)
+    df = df[['Date', 'Tour_Type', 'Tour_Status']]
+
+    # Turns pretty_d into a dataframe and then reorders the columns in the dataframe.
     pretty_df = pd.DataFrame(pretty_d)
     pretty_df = pretty_df[['Date', 'Tour_Type', 'Tour_Status']]
+
+    # Prints the pretty dataframe, returns the actual dataframe.
     print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
     return df
 
 
-def select_tour(df, status, attempt_number=1):
+def select_tour(status, attempt_number=1):
     x, y = m2['title']
-    now = datetime.datetime.now()
-    now = now.strftime("%m/%d/%y")
-    current_date = datetime.datetime.strptime(now, "%m/%d/%y")
+    current_date = get_current_date()
+    df = create_accommodations_dataframe()
     # Returns the top tour that is Showed, not an Audition, and at most a week before the date we entered.
     # tour_number is the index of the correct tour. Ex: 1 if the second tour is the correct one.
     if 'c' in status:
@@ -224,7 +307,8 @@ def select_tour(df, status, attempt_number=1):
             tour_number = df[((df.Tour_Status == 'Showed') | (df.Tour_Status == 'Confirmed') |
                               (df.Tour_Status == 'No_Show') | (df.Tour_Status == 'On_Tour')) &
                              (df.Tour_Type != 'Audition') &
-                             ((df.Date - current_date) >= datetime.timedelta(days=-1))].index[attempt_number - 1]
+                             ((df.Date - current_date) >= datetime.timedelta(days=-1)) &
+                             ((df.Date - current_date) <= datetime.timedelta(days=14))].index[attempt_number - 1]
         except IndexError:
             print('Couldn\'t find correct tour')
             tour_number = df[(df.Tour_Type != 'Audition')].index[attempt_number - 1]
@@ -262,6 +346,7 @@ def select_tour(df, status, attempt_number=1):
         print('Couldn\'t find correct tour')
         tour_number = df[(df.Tour_Type != 'Audition')].index[attempt_number - 1]
     pyautogui.doubleClick(x + 469, y + 67 + 13 * tour_number)
+
     # Checks if "You need to change sites" message comes up
     # Messed up here and had to make it confusing
     screen_shot = None
@@ -274,6 +359,7 @@ def select_tour(df, status, attempt_number=1):
         pyautogui.click(m2['yes_change_sites'])
 
 
+# m3 functions
 def check_tour_for_error():
     sc.get_m3_coordinates()
     with mss.mss() as sct:
@@ -291,17 +377,11 @@ def count_accommodations():
     number_of_canceled_accommodations = 0
     x, y = m3['title']
     while True:
-        with mss.mss() as sct:
-            monitor = {'top': y + 64, 'left': x + 330, 'width': 97, 'height': 7}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        screenshot = take_screenshot(x + 330, y + 64, 97, 7)
         if screenshot == sc.no_accommodations:
             return number_of_accommodations, number_of_canceled_accommodations
         else:
-            with mss.mss() as sct:
-                monitor = {'top': y + 66, 'left': x + 211, 'width': 52, 'height': 5}
-                im = sct.grab(monitor)
-                screenshot_2 = str(mss.tools.to_png(im.rgb, im.size))
+            screenshot_2 = take_screenshot(x + 211, y + 66, 52, 5)
             if screenshot_2 == sc.canceled_accommodation:
                 number_of_canceled_accommodations += 1
                 y += 13
@@ -315,27 +395,27 @@ def check_tour_type(number_of_tours, status):
     sc.get_m3_coordinates()
     x, y = m3['title']
     tour_types_dict = read_pickle_file('m3_tour_type.p')
-    tour_type = tour_types_dict[take_screenshot(x + 36, y + 14389, 12)]
+    tour_type = tour_types_dict[take_screenshot(x + 36, y + 143, 89, 12)]
     if 'u' in status and tour_type != 'Minivac':
-        print(u"\u001b[31m" + 'Can\'t upgrade day drive' + u"\u001b[0m")
+        print_colored_text('Can\'t upgrade day drive', 'red')
+        errors += 1
     if 't' in status and tour_type != 'Day_Drive':
-        print(u"\u001b[31m" + 'TAVS are only for Day Drives.' + u"\u001b[0m")
+        print_colored_text('TAVS are only for Day Drives.', 'red')
+        errors += 1
     if (tour_type == 'Day_Drive' or tour_type == 'Canceled' or tour_type == 'Open_Reservation') and number_of_tours > 0:
-        print(u"\u001b[31m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
+        print_colored_text(tour_type + ' - ' + str(number_of_tours), 'red')
         errors += 1
     elif tour_type == 'Minivac' and number_of_tours < 1:
-        print(u"\u001b[31m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
+        print_colored_text(tour_type + ' - ' + str(number_of_tours), 'red')
         errors += 1
     else:
-        print(u"\u001b[32m" + tour_type + ' - ' + str(number_of_tours) + u"\u001b[0m")
+        print_colored_text(tour_type + ' - ' + str(number_of_tours), 'green')
     return tour_type
 
 
-def read_deposits():
+def count_deposits():
     sc.get_m3_coordinates()
-    d = []
     number_of_deposits = 0
-    number_of_refundable_deposits = 0
     pyautogui.click(m3['tour_packages'])
     x, y = m3['title']
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\balance.png',
@@ -347,14 +427,21 @@ def read_deposits():
         # Counts number of deposits.
         # Breaks 'while' loop once a returned screenshot is blank
         deposit_screenshot = take_screenshot(x + 255, y + 69, 6, 9)
-        if deposit_screenshot == sc.no_deposits and number_of_deposits == 0:
-            return 'No Deposits', number_of_refundable_deposits
-        elif deposit_screenshot == sc.no_deposits:
-            break
+        if deposit_screenshot == sc.no_deposits:
+            return number_of_deposits
         else:
             number_of_deposits += 1
             y += 13
+
+
+def create_deposit_dataframe():
+    sc.get_m3_coordinates()
     x, y = m3['deposit_1']
+    d = []
+    number_of_deposits = count_deposits()
+    if number_of_deposits == 0:
+        number_of_refundable_deposits = 0
+        return 'No Deposits', number_of_refundable_deposits
     for i in range(number_of_deposits):
         clipboard.copy('bad')
         pyautogui.click(x, y)
@@ -439,7 +526,7 @@ def read_deposits():
             date_3 = str(date_3)"""
 
 
-def count_premiums():
+def add_premium_to_dictionary():
     global premium_dict
     sc.get_m3_coordinates()
     number_of_premiums = 0
@@ -464,7 +551,7 @@ def count_premiums():
             pyautogui.doubleClick(m10['name'])
             keyboard.send('ctrl + z')
             keyboard.send('ctrl + c')
-            pyautogui.click(m3['change_premium'])
+            # pyautogui.click(m3['change_premium'])
             copied_text = str(clipboard.paste())
             premium_dict[str(screenshot)] = copied_text
             f = open('text_files\\premiums.p', 'wb')
@@ -476,9 +563,6 @@ def count_premiums():
             f = open('text_files\\premiums_backup.p', 'ab')
             pickle.dump(premium_dict, f)
             f.close()
-            # with open('text_files\\premiums.json', 'a') as out:
-            #     json.dump(premiums, out)
-            #     out.write('\n')
             pyautogui.click(m10['ok'])
             image = pyautogui.locateCenterOnScreen(
                 'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changingpremium.png', region=(514, 245, 889, 566))
@@ -493,15 +577,12 @@ def count_premiums():
             y += 13
 
 
-def count_deposit_items():
+def count_items_in_deposit():
     sc.get_m6_coordinates()
     number_of_deposit_items = 0
     x, y = m6['title']
     while True:
-        with mss.mss() as sct:
-            monitor = {'top': y + 189, 'left': x + 339, 'width': 10, 'height': 8}
-            im = sct.grab(monitor)
-            screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        screenshot = take_screenshot(x + 339, y + 189, 10, 8)
         if screenshot == sc.no_deposit_items:
             return number_of_deposit_items
         else:
@@ -513,7 +594,7 @@ def apply_to_mv(deposit_df):
     pyautogui.click(m3['tour_packages'])
     pyautogui.click(m3['deposit_1'])
     pyautogui.click(m3['change_deposit'])
-    deposit_item_amount = count_deposit_items()
+    deposit_item_amount = count_items_in_deposit()
     sc.get_m6_coordinates()
     x, y = m6['deposit_1']
     y = y + 13 * (deposit_item_amount - 1)
@@ -578,8 +659,8 @@ def read_premiums(number_of_refundable_deposits):
     global premium_dict
     list_of_premiums = []
     number_of_dep_premiums = 0
-    sc.get_m3_coordinates()
     number_of_premiums = 0
+    sc.get_m3_coordinates()
     pyautogui.click(m3['premiums'])
     x, y = m3['premium_1']
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
@@ -593,7 +674,7 @@ def read_premiums(number_of_refundable_deposits):
         screenshot = premium_dict[screenshot]
         if screenshot == 'Nothing':
             break
-        elif screenshot != 'Nothing' and screenshot_2 == sc.canceled_premium:
+        elif screenshot_2 == sc.canceled_premium:
             y += 13
         else:
             if '20' in screenshot or '40' in screenshot or '50 ' in screenshot or '99' in screenshot:
@@ -606,7 +687,7 @@ def read_premiums(number_of_refundable_deposits):
             elif '40' in screenshot:
                 screenshot = '40'
             elif '$50 ' in screenshot:
-                    screenshot = '50'
+                screenshot = '50'
             elif '99' in screenshot:
                 screenshot = '99'
             list_of_premiums.append(screenshot)
@@ -892,8 +973,7 @@ def automatic_confirmation():
             show_progress(pid, progress, number_of_pids)
             search_pid(pid)
             double_check_pid(pid)
-            df = create_data_frame()
-            select_tour(df, status)
+            select_tour(status)
             check_tour_for_error()
             number_of_tours, number_of_canceled_tours = count_accommodations()
             m3_tour_type, m3_tour_status, m3_tour_date = gather_m3_data()
@@ -901,23 +981,22 @@ def automatic_confirmation():
                     m3_tour_date != datetime.datetime.strptime('1/1/1900', "%m/%d/%Y"):
                 print(u"\u001b[31m" + 'DATE IS INCORRECT' + u"\u001b[0m")
             tour_type = check_tour_type(number_of_tours, status)
-            deposit_df, number_of_refundable_deposits = read_deposits()
+
+            # Deposit Stuff
+            deposit_df, number_of_refundable_deposits = create_deposit_dataframe()
             try:
                 rows, columns = deposit_df.shape
+                print(tabulate(deposit_df, headers='keys', tablefmt='psql'))
+                if rows > 1 and deposit_df.Deposit_Type[0] == 'Refundable' and (deposit_df.Price[1] == '9' or
+                                                                                deposit_df.Price[1] == '19' or
+                                                                                deposit_df.Price[1] == '29'):
+                    apply_to_mv(deposit_df)
+                    number_of_refundable_deposits -= 1
+                premiums = read_premiums(number_of_refundable_deposits)
+                check_for_dep_premium(deposit_df, premiums)
             except AttributeError:
                 rows, columns = 0, 0
-            if rows > 1 and deposit_df.Deposit_Type[0] == 'Refundable' and (deposit_df.Price[1] == '9' or
-                                                                            deposit_df.Price[1] == '19' or
-                                                                            deposit_df.Price[1] == '29'):
-                apply_to_mv(deposit_df)
-                number_of_refundable_deposits -= 1
-            if rows > 0:
-                print(tabulate(deposit_df, headers='keys', tablefmt='psql'))
-            premiums = read_premiums(number_of_refundable_deposits)
-            if rows > 0:
-                check_for_dep_premium(deposit_df, premiums)
-            else:
-                print(u"\u001b[32m" + 'No deposits' + u"\u001b[0m")
+                print_colored_text('No deposits', 'green')
             try:
                 ug = row['ug']
                 if ug == "X" or ug == "x":
@@ -980,11 +1059,6 @@ def automatic_confirmation():
 if __name__ == "__main__":
     sol = 0
     automatic_confirmation()
-
-sc.get_m3_coordinates()
-x, y = m3['title']
-def test_screenshot():
-    assert take_screenshot(x + 431, y + 256 + 13 * 6, 55, 10) == sc.day_drive_event
-
-test_screenshot()
-print(take_screenshot(x + 431, y + 256 + 13 * 6, 55, 10, True))
+    """confirmation_sheet = ConfirmationSheet('3.xlsx')
+    confirmation_sheet.convert_to_csv()
+    number_of_pids = confirmation_sheet.count_pids()"""

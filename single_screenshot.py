@@ -11,8 +11,8 @@ window = 0
 with mss.mss() as sct:
     filename = sct.shot()
 if window != 0:
-    sc.get_m3_coordinates()
-    x, y = m3['title']
+    sc.get_m8_coordinates()
+    x, y = m8['title']
     with mss.mss() as sct:
         # The screen part to capture
         monitor = {'top': y, 'left': x, 'width': 800, 'height': 500}

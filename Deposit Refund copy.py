@@ -44,21 +44,52 @@ def read_pickle_file(file_name):
         return pickle.load(file)
 
 
-def get_date(month, day, year):
+def take_screenshots_of_refund_options():
+    sc.get_m8_coordinates()
+    x, y = m8['title']
+    dict_temp = {}
+    for i in range(10):
+        refund_option = take_screenshot(x + 32, y + 91, 135, 11, save_file=True)
+        if i == 0:
+            dict_temp[refund_option] = 'ih cash deposit'
+        elif i == 1:
+            dict_temp[refund_option] = 'ih cc payment'
+        elif i == 2:
+            dict_temp[refund_option] = 'ir cc refund'
+        elif i == 3:
+            dict_temp[refund_option] = 'ir credit card'
+        elif i == 4:
+            dict_temp[refund_option] = 'or cc refund'
+        elif i == 5:
+            dict_temp[refund_option] = 'or credit card'
+        elif i == 6:
+            dict_temp[refund_option] = 'sl ams an cc charge'
+        elif i == 7:
+            dict_temp[refund_option] = 'sol cash payment'
+        elif i == 8:
+            dict_temp[refund_option] = 'sol check payment'
+        elif i == 9:
+            dict_temp[refund_option] = 'sol credit payment'
+        y += 13
+    with open('text_files\\deposit_options.txt', 'a') as file:
+        file.write('{}\n'.format(dict_temp))
+
+
+def turn_screenshots_into_date(month_screenshot, day_screenshot, year_screenshot):
     f = open('text_files\\dates.p', 'rb')
     date_dictionary = pickle.load(f)
     f.close()
     try:
-        month = date_dictionary[month]
-        day = date_dictionary[day]
-        year = date_dictionary[year]
-        if month not in ['Nothing', 'Error']:
-            tour_date = ('{}/{}/{}'.format(month, day, year))
+        month_screenshot = date_dictionary[month_screenshot]
+        day_screenshot = date_dictionary[day_screenshot]
+        year_screenshot = date_dictionary[year_screenshot]
+        if month_screenshot not in ['Nothing', 'Error']:
+            tour_date = ('{}/{}/{}'.format(month_screenshot, day_screenshot, year_screenshot))
             return tour_date
             # datetime.datetime.strptime(tour_date, "%m/%d/%Y")
-        elif month == 'Error':
+        elif month_screenshot == 'Error':
             return 'Error'
-        elif month == 'Nothing':
+        elif month_screenshot == 'Nothing':
             return 'Nothing'
     except KeyError:
         return 'Nothing'
@@ -72,7 +103,7 @@ def search_pid(pid_number):
     pyautogui.click(m1['change'])
 
 
-def create_data_frame():
+def accommodations_create_dataframe():
     """
     Takes screenshots of the tours. Turns the screenshots into a list of dictionaries 'd'. Turns 'd' into a dataframe.
     d is a list of dictionaries such as [{''Date': '7/06/18', 'Tour_Type': 'Audition', 'Tour_Status': 'Showed'},
@@ -84,18 +115,29 @@ def create_data_frame():
     pretty_d = []
     x, y = m2['title']
     for i in range(8):
+
+        # Take screenshots of dates
         month = take_screenshot(x + 327, y + 63, 13, 10)
         day = take_screenshot(x + 342, y + 63, 15, 10)
         year = take_screenshot(x + 358, y + 63, 27, 10)
-        tour_date = get_date(month, day, year)
+
+        # Turn the screenshots into a datetime object
+        tour_date = turn_screenshots_into_date(month, day, year)
+
+        # Take screenshots of the tour type and tour status
         tour_type = take_screenshot(x + 402, y + 63, 14, 10)
         tour_status = take_screenshot(x + 484, y + 63, 14, 10)
+
+        # TODO Use pickle file here instead of dictionary in screenshot_data.
+        # Turn screenshot of tour type into string using the dictionary m2_tour_types
         try:
             tour_type = sc.m2_tour_types[tour_type]
         except KeyError:
             print('Unrecognized tour type')
             print(tour_type)
             tour_type = None
+
+        # Turn screenshot of tour status into string using the pickle file m2_tour_status
         try:
             tour_status_dict = read_pickle_file('m2_tour_status.p')
             tour_status = tour_status_dict[tour_status]
@@ -104,18 +146,28 @@ def create_data_frame():
             print(tour_status)
             tour_status = None
         y += 13
+
+        # Turns the screenshots into dictionaries.
         if tour_date != 'Nothing':
             try:
-                # Where the screenshots get turned into dictionaries.
+                # pretty_d uses strings instead of datetime objects because strings look better.
                 pretty_d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
+
+                # Turn strings into datetime objects and creates the dictionaries for the actual dataframe.
                 tour_date = pd.to_datetime(tour_date)
                 d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
             except NameError:
                 pass
-    df = pd.DataFrame(d)  # Turn d into a dataframe
-    df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
+
+    # Turns d into a dataframe and then reorders the columns in the dataframe.
+    df = pd.DataFrame(d)
+    df = df[['Date', 'Tour_Type', 'Tour_Status']]
+
+    # Turns pretty_d into a dataframe and then reorders the columns in the dataframe.
     pretty_df = pd.DataFrame(pretty_d)
     pretty_df = pretty_df[['Date', 'Tour_Type', 'Tour_Status']]
+
+    # Prints the pretty dataframe, returns the actual dataframe.
     print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
     return df
 
@@ -636,7 +688,7 @@ def use_excel_sheet():
                 cash_or_cc = 'cc'
             search_pid(pids)
             double_check_pid(pids)
-            df = create_data_frame()
+            df = accommodations_create_dataframe()
             select_tour(df, 1, date)
             if cash_or_cc == 'cc':
                 deposit_type = change_deposit_title(price)
