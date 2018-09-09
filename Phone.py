@@ -56,7 +56,7 @@ with open('text_files\\phones\\phone.csv') as csvfile:
         if phone_1 != phone_2:
             search_pid(pids)
             status = enter_phone_number(phone_2)
-            if status == "Error":
+            if status == "Error" or len(phone_1) != len(phone_2):
                 errors += 1
                 with open('text_files\\phones\\Phone_Errors.txt', 'a') as out:
                     out.write('{} {} {}\n'.format(pids, phone_1, phone_2))

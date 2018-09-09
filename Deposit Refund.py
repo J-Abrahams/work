@@ -15,6 +15,7 @@ import sys
 import pickle
 import openpyxl
 import re
+import random
 
 # import importlib
 # importlib.reload(sc)
@@ -495,6 +496,7 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
     keyboard.send('tab')
     pyautogui.click(m8['ok'])
     time.sleep(0.3)
+    # time.sleep(0.3)
     pyautogui.click(880, 565)  # Clicking yes to the warning that appears
     pyautogui.click(m6['ok'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',

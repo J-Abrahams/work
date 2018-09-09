@@ -9,7 +9,6 @@ import pyautogui
 import clipboard
 import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10
-import confirmations_auto as conf
 import datetime
 from tabulate import tabulate
 import sys
@@ -136,7 +135,8 @@ def enter_m2_info():
     keyboard.send('e')
     pyautogui.click(m2['income'])
     keyboard.write('70')
-    pyautogui.click(m2['preferred_language'])
+    x, y = m2['income']
+    pyautogui.click(x, y + 25)
     keyboard.send('e')
     pyautogui.click(m2['notes_co'])
     pyautogui.click(m2['insert_coprospects'])

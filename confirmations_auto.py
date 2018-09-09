@@ -26,7 +26,8 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Alton Major': 'SOL4809', 'Thuy Pham': 'SOL25688', 'Julianne Martinez': 'SOL22766',
                'Quenton Stroud': 'SOL27228', 'Sadie Oliver': 'SOL26834', 'Valeria Rebollar': 'SOL24218',
                'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604',
-               'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125'}
+               'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125', 'Deeandra Castillo': 'SOL5495',
+               'Kenan Williams': 'SOL27567'}
 f = open('text_files\\premiums.p', 'rb')
 premium_dict = pickle.load(f)
 f.close()

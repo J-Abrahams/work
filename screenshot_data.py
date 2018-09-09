@@ -214,7 +214,6 @@ def get_m8_coordinates():
     m8['date'] = (m8_title[0] + 87, m8_title[1] + 169)
     m8['ok'] = (m8_title[0] + 100, m8_title[1] + 214)
     m8['cancel'] = (m8_title[0] + 250, m8_title[1] + 215)
-    pyautogui.moveTo(m8['transaction_code_scroll_bar'])
 
 
 def get_m9_coordinates():
