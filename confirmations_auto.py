@@ -15,7 +15,10 @@ import sys
 import pickle
 import openpyxl
 import re
+import core_functions as cf
 import pytest
+import logging
+
 # import importlib
 # importlib.reload(sc)
 errors = 0
@@ -68,6 +71,7 @@ class ConfirmationSheet:
                 number_of_pids += 1
             return number_of_pids
 
+
 class PID:
 
     def __init__(self, pid, status):
@@ -85,7 +89,7 @@ class PID:
                 keyboard.send('ctrl + c')
                 copied_text = clipboard.paste()
         if copied_text != self.pid:
-            pause('Is the pid correct?')
+            cf.pause('Is the pid correct?')
             return
         if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
                                           region=(514, 245, 889, 566)) is not None:
@@ -100,207 +104,34 @@ class PID:
             return
 
 
-def get_current_date():
-    now = datetime.datetime.now()
-    now = now.strftime("%m/%d/%y")
-    return datetime.datetime.strptime(now, "%m/%d/%y")
-
-
-def print_colored_text(text, color):
-    if color == 'red':
-        print('{}{}{}'.format(u"\u001b[31m", text, u"\u001b[0m"))
-    elif color == 'green':
-        print('{}{}{}'.format(u"\u001b[32m", text, u"\u001b[0m"))
-
-
-def take_screenshot(x, y, width, height, save_file=False):
-    with mss.mss() as sct:
-        monitor = {'top': y, 'left': x, 'width': width, 'height': height}
-        im = sct.grab(monitor)
-        screenshot = str(mss.tools.to_png(im.rgb, im.size))
-        if save_file:
-            now = datetime.datetime.now()
-            output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
-            mss.tools.to_png(im.rgb, im.size, output=output)
-        return screenshot
-
-
-def remove_duplicate_pickle_keys():
-    """
-Removes duplicate dictionary keys from the premiums.p file.
-    """
-    global premiums
-    global premium_dict
-    premiums = {}
-    for key, value in premium_dict.items():
-        if key not in premiums.keys():
-            premiums[key] = value
-    f = open('text_files\\premiums.p', 'wb')
-    pickle.dump(premiums, f)
-    f.close()
-
-
-def read_pickle_file(file_name):
-    with open('text_files\\' + file_name, 'rb') as file:
-        return pickle.load(file)
-
-
-def pause(message):
-    print(message)
-    while pyautogui.position() != (0, 1079):
-        pass
-
-
 def gather_m3_data():
     sc.get_m3_coordinates()
     x, y = m3['title']
-    tour_types_dict = read_pickle_file('m3_tour_type.p')
-    m3_tour_type = tour_types_dict[take_screenshot(x + 36, y + 143, 89, 12)]
-    m3_tour_status = sc.m3_tour_status[take_screenshot(x + 37, y + 170, 94, 11)]
-    month = take_screenshot(x + 37, y + 196, 13, 10)
-    day = take_screenshot(x + 52, y + 196, 15, 10)
-    year = take_screenshot(x + 68, y + 196, 27, 10)
-    m3_date = turn_screenshots_into_date(month, day, year)
+    tour_types_dict = cf.read_pickle_file('m3_tour_type.p')
+    m3_tour_type = tour_types_dict[cf.take_screenshot(x + 36, y + 143, 89, 12)]
+    m3_tour_status = sc.m3_tour_status[cf.take_screenshot(x + 37, y + 170, 94, 11)]
+    month = cf.take_screenshot(x + 37, y + 196, 13, 10)
+    day = cf.take_screenshot(x + 52, y + 196, 15, 10)
+    year = cf.take_screenshot(x + 68, y + 196, 27, 10)
+    m3_date = cf.turn_screenshots_into_date(month, day, year)
     try:
         m3_date = datetime.datetime.strptime(m3_date, "%m/%d/%Y")
     except ValueError:
-        month = take_screenshot(x + 40, y + 196, 13, 10)
-        day = take_screenshot(x + 55, y + 196, 15, 10)
-        year = take_screenshot(x + 71, y + 196, 27, 10)
-        m3_date = turn_screenshots_into_date(month, day, year)
+        month = cf.take_screenshot(x + 40, y + 196, 13, 10)
+        day = cf.take_screenshot(x + 55, y + 196, 15, 10)
+        year = cf.take_screenshot(x + 71, y + 196, 27, 10)
+        m3_date = cf.turn_screenshots_into_date(month, day, year)
         m3_date = datetime.datetime.strptime(m3_date, "%m/%d/%Y")
     return m3_tour_type, m3_tour_status, m3_date
 
 
-def search_pid(pid_number):
-    sc.get_m1_coordinates()
-    pyautogui.doubleClick(m1['search'])
-    keyboard.write(pid_number)
-    pyautogui.click(m1['find_now'])
-    pyautogui.click(m1['change'])
-
-
 # m2 functions
-def double_check_pid(pid_number):
-    sc.get_m2_coordinates()
-    pyautogui.doubleClick(m2['prospect_id'])
-    keyboard.send('ctrl + c')
-    copied_text = clipboard.paste()
-    for i in range(3):
-        if copied_text != pid_number:
-            time.sleep(0.3)
-            pyautogui.doubleClick(m2['prospect_id'])
-            keyboard.send('ctrl + c')
-            copied_text = clipboard.paste()
-    if copied_text != pid_number:
-        pause('Is the pid correct?')
-        return
-    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
-                                      region=(514, 245, 889, 566)) is not None:
-        return
-    pyautogui.click(m2['company'])
-    keyboard.send('ctrl + z')
-    time.sleep(1)
-    keyboard.send('ctrl + c')
-    copied_text = clipboard.paste()
-    if 'pid' in copied_text.lower():
-        pause('Is the pid correct?')
-        return
-
-
-def turn_screenshots_into_date(month_screenshot, day_screenshot, year_screenshot):
-    f = open('text_files\\dates.p', 'rb')
-    date_dictionary = pickle.load(f)
-    f.close()
-    try:
-        month_screenshot = date_dictionary[month_screenshot]
-        day_screenshot = date_dictionary[day_screenshot]
-        year_screenshot = date_dictionary[year_screenshot]
-        if month_screenshot not in ['Nothing', 'Error']:
-            tour_date = ('{}/{}/{}'.format(month_screenshot, day_screenshot, year_screenshot))
-            return tour_date
-            # datetime.datetime.strptime(tour_date, "%m/%d/%Y")
-        elif month_screenshot == 'Error':
-            return 'Error'
-        elif month_screenshot == 'Nothing':
-            return 'Nothing'
-    except KeyError:
-        return 'Nothing'
-
-
-def create_accommodations_dataframe():
-    """
-    Takes screenshots of the tours. Turns the screenshots into a list of dictionaries 'd'. Turns 'd' into a dataframe.
-    d is a list of dictionaries such as [{''Date': '7/06/18', 'Tour_Type': 'Audition', 'Tour_Status': 'Showed'},
-    {'Date': '7/06/18', 'Tour_Type': 'minivac', 'Tour_Status': 'Showed'}]
-    :return:
-    """
-    sc.get_m2_coordinates()
-    d = []
-    pretty_d = []
-    x, y = m2['title']
-    for i in range(8):
-
-        # Take screenshots of dates
-        month = take_screenshot(x + 327, y + 63, 13, 10)
-        day = take_screenshot(x + 342, y + 63, 15, 10)
-        year = take_screenshot(x + 358, y + 63, 27, 10)
-
-        # Turn the screenshots into a datetime object
-        tour_date = turn_screenshots_into_date(month, day, year)
-
-        # Take screenshots of the tour type and tour status
-        tour_type = take_screenshot(x + 402, y + 63, 14, 10)
-        tour_status = take_screenshot(x + 484, y + 63, 14, 10)
-
-        # TODO Use pickle file here instead of dictionary in screenshot_data.
-        # Turn screenshot of tour type into string using the dictionary m2_tour_types
-        try:
-            tour_type = sc.m2_tour_types[tour_type]
-        except KeyError:
-            print('Unrecognized tour type')
-            print(tour_type)
-            tour_type = None
-
-        # Turn screenshot of tour status into string using the pickle file m2_tour_status
-        try:
-            tour_status_dict = read_pickle_file('m2_tour_status.p')
-            tour_status = tour_status_dict[tour_status]
-        except KeyError:
-            print('Unrecognized tour status')
-            print(tour_status)
-            tour_status = None
-        y += 13
-
-        # Turns the screenshots into dictionaries.
-        if tour_date != 'Nothing':
-            try:
-                # pretty_d uses strings instead of datetime objects because strings look better.
-                pretty_d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
-
-                # Turn strings into datetime objects and creates the dictionaries for the actual dataframe.
-                tour_date = pd.to_datetime(tour_date)
-                d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
-            except NameError:
-                pass
-
-    # Turns d into a dataframe and then reorders the columns in the dataframe.
-    df = pd.DataFrame(d)
-    df = df[['Date', 'Tour_Type', 'Tour_Status']]
-
-    # Turns pretty_d into a dataframe and then reorders the columns in the dataframe.
-    pretty_df = pd.DataFrame(pretty_d)
-    pretty_df = pretty_df[['Date', 'Tour_Type', 'Tour_Status']]
-
-    # Prints the pretty dataframe, returns the actual dataframe.
-    print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
-    return df
-
 
 def select_tour(status, attempt_number=1):
     x, y = m2['title']
-    current_date = get_current_date()
-    df = create_accommodations_dataframe()
+    current_date = cf.get_current_date()
+    df, pretty_df = cf.create_accommodations_dataframe()
+    print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
     # Returns the top tour that is Showed, not an Audition, and at most a week before the date we entered.
     # tour_number is the index of the correct tour. Ex: 1 if the second tour is the correct one.
     if 'c' in status:
@@ -361,28 +192,17 @@ def select_tour(status, attempt_number=1):
 
 
 # m3 functions
-def check_tour_for_error():
-    sc.get_m3_coordinates()
-    with mss.mss() as sct:
-        x, y = m3['title']
-        monitor = {'top': y + 171, 'left': x + 40, 'width': 52, 'height': 12}
-        im = sct.grab(monitor)
-        tour_status = str(mss.tools.to_png(im.rgb, im.size))
-        if tour_status == sc.error:
-            pause('Is this the correct tour?')
-
-
 def count_accommodations():
     sc.get_m3_coordinates()
     number_of_accommodations = 0
     number_of_canceled_accommodations = 0
     x, y = m3['title']
     while True:
-        screenshot = take_screenshot(x + 330, y + 64, 97, 7)
+        screenshot = cf.take_screenshot(x + 330, y + 64, 97, 7)
         if screenshot == sc.no_accommodations:
             return number_of_accommodations, number_of_canceled_accommodations
         else:
-            screenshot_2 = take_screenshot(x + 211, y + 66, 52, 5)
+            screenshot_2 = cf.take_screenshot(x + 211, y + 66, 52, 5)
             if screenshot_2 == sc.canceled_accommodation:
                 number_of_canceled_accommodations += 1
                 y += 13
@@ -395,22 +215,23 @@ def check_tour_type(number_of_tours, status):
     global errors
     sc.get_m3_coordinates()
     x, y = m3['title']
-    tour_types_dict = read_pickle_file('m3_tour_type.p')
-    tour_type = tour_types_dict[take_screenshot(x + 36, y + 143, 89, 12)]
+    tour_types_dict = cf.read_pickle_file('m3_tour_type.p')
+    tour_type = tour_types_dict[cf.take_screenshot(x + 36, y + 143, 89, 12)]
     if 'u' in status and tour_type != 'Minivac':
-        print_colored_text('Can\'t upgrade day drive', 'red')
+        cf.print_colored_text('Can\'t upgrade day drive', 'red')
         errors += 1
     if 't' in status and tour_type != 'Day_Drive':
-        print_colored_text('TAVS are only for Day Drives.', 'red')
+        cf.print_colored_text('TAVS are only for Day Drives.', 'red')
         errors += 1
     if (tour_type == 'Day_Drive' or tour_type == 'Canceled' or tour_type == 'Open_Reservation') and number_of_tours > 0:
-        print_colored_text(tour_type + ' - ' + str(number_of_tours), 'red')
+        cf.print_colored_text(tour_type + ' - ' + str(number_of_tours), 'red')
         errors += 1
     elif tour_type == 'Minivac' and number_of_tours < 1:
-        print_colored_text(tour_type + ' - ' + str(number_of_tours), 'red')
+        cf.print_colored_text(tour_type + ' - ' + str(number_of_tours), 'red')
         errors += 1
     else:
-        print_colored_text(tour_type + ' - ' + str(number_of_tours), 'green')
+        log.info(tour_type + ' - ' + str(number_of_tours))
+        cf.print_colored_text(tour_type + ' - ' + str(number_of_tours), 'green')
     return tour_type
 
 
@@ -427,7 +248,7 @@ def count_deposits():
     while True:
         # Counts number of deposits.
         # Breaks 'while' loop once a returned screenshot is blank
-        deposit_screenshot = take_screenshot(x + 255, y + 69, 6, 9)
+        deposit_screenshot = cf.take_screenshot(x + 255, y + 69, 6, 9)
         if deposit_screenshot == sc.no_deposits:
             return number_of_deposits
         else:
@@ -499,14 +320,14 @@ def create_deposit_dataframe():
         f = open('text_files\\dates.p', 'rb')
         date_dictionary = pickle.load(f)
         f.close()
-        screenshot = take_screenshot(958, 367, 13, 10)
+        screenshot = cf.take_screenshot(958, 367, 13, 10)
         date_dictionary[str(screenshot)] = 'Error'
         f = open('text_files\\dates.p', 'wb')
         pickle.dump(date_dictionary, f)
         f.close()
-        screenshot = take_screenshot(284, 139 + 13 * m, 13, 10)
-        screenshot_2 = take_screenshot(299, 139 + 13 * m, 15, 10)
-        screenshot_3 = take_screenshot(315, 139 + 13 * m, 27, 10)
+        screenshot = cf.take_screenshot(284, 139 + 13 * m, 13, 10)
+        screenshot_2 = cf.take_screenshot(299, 139 + 13 * m, 15, 10)
+        screenshot_3 = cf.take_screenshot(315, 139 + 13 * m, 27, 10)
         date_dictionary[str(screenshot)] = date_1
         date_dictionary[str(screenshot_2)] = date_2
         date_dictionary[str(screenshot_3)] = date_3
@@ -540,7 +361,7 @@ def add_premium_to_dictionary():
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
                                                region=(514, 245, 889, 566))
     while True:
-        screenshot = take_screenshot(x - 223, y - 4, 90, 9)
+        screenshot = cf.take_screenshot(x - 223, y - 4, 90, 9)
         screenshot_number += 1
         try:
             screenshot = premium_dict[screenshot]
@@ -583,7 +404,7 @@ def count_items_in_deposit():
     number_of_deposit_items = 0
     x, y = m6['title']
     while True:
-        screenshot = take_screenshot(x + 339, y + 189, 10, 8)
+        screenshot = cf.take_screenshot(x + 339, y + 189, 10, 8)
         if screenshot == sc.no_deposit_items:
             return number_of_deposit_items
         else:
@@ -648,7 +469,7 @@ def apply_to_mv(deposit_df):
     keyboard.write(deposit_df.Price[0])
     pyautogui.click(m8['reference'])
     keyboard.write(new_reference)
-    pause('Ok?')
+    cf.pause('Ok?')
     pyautogui.click(m8['ok'])
     sc.get_m6_coordinates()
     pyautogui.click(m6['ok'])
@@ -670,9 +491,13 @@ def read_premiums(number_of_refundable_deposits):
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
                                                region=(514, 245, 889, 566))
     while True:
-        screenshot = take_screenshot(x - 223, y - 4, 90, 9)
-        screenshot_2 = take_screenshot(x - 129, y - 4, 8, 7)
-        screenshot = premium_dict[screenshot]
+        screenshot = cf.take_screenshot(x - 223, y - 4, 90, 9)
+        screenshot_2 = cf.take_screenshot(x - 129, y - 4, 8, 7)
+        try:
+            screenshot = premium_dict[screenshot]
+        except KeyError:
+            add_premium_to_dictionary()
+            read_premiums(number_of_refundable_deposits)
         if screenshot == 'Nothing':
             break
         elif screenshot_2 == sc.canceled_premium:
@@ -695,6 +520,8 @@ def read_premiums(number_of_refundable_deposits):
             number_of_premiums += 1
             y += 13
     if number_of_dep_premiums != number_of_refundable_deposits:
+        log.info(str(number_of_dep_premiums) + ' DEP Premium(s) - ' +
+                 str(number_of_refundable_deposits) + ' Refundable Deposit(s)')
         print(u"\u001b[31m" + str(number_of_dep_premiums) + ' DEP Premium(s) - ' +
               str(number_of_refundable_deposits) + ' Refundable Deposit(s)' + u"\u001b[0m")
     else:
@@ -750,7 +577,7 @@ def confirm_tour_status(status):
     pyautogui.click(m3['tour'])
     pyautogui.click(m3['accommodations'])
     x, y = m3['title']
-    tour_status = sc.m3_tour_status[take_screenshot(x + 37, y + 170, 94, 11)]
+    tour_status = sc.m3_tour_status[cf.take_screenshot(x + 37, y + 170, 94, 11)]
     if status == 'c' and tour_status not in ['Confirmed', 'Showed', 'On_Tour', 'No_Show']:
         print(u"\u001b[33;1m" + 'TOUR STATUS MIGHT BE INCORRECT' + u"\u001b[0m")
         errors += 1
@@ -972,10 +799,9 @@ def automatic_confirmation():
                 progress += 1
                 continue
             show_progress(pid, progress, number_of_pids)
-            search_pid(pid)
-            double_check_pid(pid)
+            cf.search_pid(pid)
+            cf.double_check_pid(pid)
             select_tour(status)
-            check_tour_for_error()
             number_of_tours, number_of_canceled_tours = count_accommodations()
             m3_tour_type, m3_tour_status, m3_tour_date = gather_m3_data()
             if (m3_tour_type == 'Open_Reservation' or m3_tour_type == 'No_Tour') and \
@@ -997,7 +823,7 @@ def automatic_confirmation():
                 check_for_dep_premium(deposit_df, premiums)
             except AttributeError:
                 rows, columns = 0, 0
-                print_colored_text('No deposits', 'green')
+                cf.print_colored_text('No deposits', 'green')
             try:
                 ug = row['ug']
                 if ug == "X" or ug == "x":
@@ -1036,7 +862,7 @@ def automatic_confirmation():
                 enter_personnel(sol, 'x')
             #  check_for_duplicate_personnel(df, status)
             mark_row_as_completed(index)
-            pause("Everthing ok?")
+            cf.pause("Everthing ok?")
             # if errors > 0 or tour_type == 'Minivac':
             # pause("Everything ok?")
             progress += 1
@@ -1059,6 +885,14 @@ def automatic_confirmation():
 
 if __name__ == "__main__":
     sol = 0
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(fmt="%(asctime)s:%(filename)s:%(levelname)s:%(message)s",
+                                  datefmt="%Y-%m-%d - %H:%M:%S")
+    fh = logging.FileHandler("mylog.log")
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
     automatic_confirmation()
     """confirmation_sheet = ConfirmationSheet('3.xlsx')
     confirmation_sheet.convert_to_csv()

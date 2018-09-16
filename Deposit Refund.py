@@ -117,7 +117,7 @@ def create_data_frame():
     df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
     pretty_df = pd.DataFrame(pretty_d)
     pretty_df = pretty_df[['Date', 'Tour_Type', 'Tour_Status']]
-    print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
+    #  print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
     return df
 
 
@@ -237,7 +237,6 @@ def change_deposit_title(price, cash=None):
         keyboard.send('ctrl + c')
         old_title = clipboard.paste()
         attempts += 1
-        print(old_title.lower())
     if 'ref' not in old_title.lower():
         if old_title.lower() == 'ams dep':
             old_title = 'AMS/Refunded Deposit'
@@ -301,7 +300,63 @@ def ams_credit_refund(date):
 
 def select_ams_refund_payment(date, price, description, reference_number=None):
     sc.get_m6_coordinates()
-    attempts = 0
+    sites_dictionary = read_pickle_file('sites.p')
+    deposit_options_dictionary = read_pickle_file('deposit_options.p')
+    site = take_screenshot(1517, 1036, 146, 17)
+    if (description == 'ams' and sites_dictionary[site] in ['A1', 'A3']) or \
+       (description == 'ir' and sites_dictionary[site] in ['A2', 'A3', 'Northstar', 'Breckenridge']) or \
+       (description == 'sol' and sites_dictionary[site] in ['Breckenridge']):
+        button = 'payment'
+    else:
+        button = 'insert'
+    if description == 'ams':
+        pyautogui.click(m6[button])
+        sc.get_m8_coordinates()
+        pyautogui.click(m8['transaction_code'])
+        x, y = m8['title']
+        for i in range(9):
+            refund_option = take_screenshot(x + 32, y + 91, 135, 11)
+            if deposit_options_dictionary[refund_option] == 'ams cc refund':
+                pyautogui.click(x + 75, y + 91)
+                break
+            elif i == 8:
+                sys.exit("Couldn't find correct option.")
+            else:
+                y += 13
+    elif description == 'ir':
+        pyautogui.click(m6[button])
+        sc.get_m8_coordinates()
+        pyautogui.click(m8['transaction_code'])
+        x, y = m8['title']
+        for i in range(9):
+
+            refund_option = take_screenshot(x + 32, y + 91, 135, 11)
+            if deposit_options_dictionary[refund_option] == 'ir cc refund':
+                pyautogui.click(x + 75, y + 91)
+                break
+            elif i == 8:
+                sys.exit("Couldn't find correct option.")
+            else:
+                y += 13
+    elif description == 'sol':
+        pyautogui.click(m6[button])
+        sc.get_m8_coordinates()
+        pyautogui.click(m8['transaction_code'])
+        pyautogui.click(m8['transaction_code_scroll_bar'])
+        x, y = m8['title']
+        for i in range(9):
+            refund_option = take_screenshot(x + 32, y + 91, 135, 1)
+            if deposit_options_dictionary[refund_option] == 'sol cc refund':
+                pyautogui.click(x + 75, y + 91)
+                break
+            elif i == 8:
+                sys.exit("Couldn't find correct option.")
+            else:
+                y += 13
+    if button == 'insert':
+        pyautogui.doubleClick(m8['amount'])
+        keyboard.write(price)
+    """attempts = 0
     change_description_name = 0
     image = None
     global transaction_code
@@ -485,7 +540,7 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
         keyboard.write(price)
     if (2 < transaction_code < 6) or (6 < transaction_code < 9):
         pyautogui.doubleClick(m8['amount'])
-        keyboard.write(price)
+        keyboard.write(price)"""
     pyautogui.doubleClick(m8['reference'])
     if reference_number is None:
         keyboard.send('ctrl + v')
@@ -496,7 +551,6 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
     keyboard.send('tab')
     pyautogui.click(m8['ok'])
     time.sleep(0.3)
-    # time.sleep(0.3)
     pyautogui.click(880, 565)  # Clicking yes to the warning that appears
     pyautogui.click(m6['ok'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
@@ -632,6 +686,7 @@ def use_excel_sheet():
             cash = row['cash']
             index = row['']
             show_progress(pids, progress, number_of_pids)
+            print('{} - {}\n'.format(price, date))
             if cash == 'x' or cash == 'X':
                 cash_or_cc = 'cash'
             else:
