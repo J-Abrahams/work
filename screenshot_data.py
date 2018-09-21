@@ -112,6 +112,7 @@ def get_m3_coordinates():
     m3['deposit_1'] = (m3_title[0] + 563, m3_title[1] + 71)
     m3['deposit_2'] = (m3_title[0] + 563, m3_title[1] + 94)
     m3['change_deposit'] = (m3_title[0] + 437, m3_title[1] + 181)
+    m3['insert_deposit'] = (m3_title[0] + 375, m3_title[1] + 181)
     #  Premiums Tab
     m3['premium_1'] = (m3_title[0] + 563, m3_title[1] + 64)
     m3['premium_2'] = (m3_title[0] + 563, m3_title[1] + 77)
@@ -207,7 +208,7 @@ def get_m8_coordinates():
             'C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_tour_package_item.png', region=(136, 652, 392, 247))
     m8['title'] = (m8_title[0], m8_title[1])
     m8['transaction_code'] = (m8_title[0] + 179, m8_title[1] + 64)
-    m8['transaction_code_scroll_bar'] = (m8_title[0] + 179, m8_title[1] + 175)
+    m8['transaction_code_scroll_bar'] = (m8_title[0] + 179, m8_title[1] + 190)
     m8['description'] = (m8_title[0] + 229, m8_title[1] + 91)
     m8['amount'] = (m8_title[0] + 32, m8_title[1] + 117)
     m8['reference'] = (m8_title[0] + 87, m8_title[1] + 144)

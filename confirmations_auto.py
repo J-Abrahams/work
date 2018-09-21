@@ -49,59 +49,8 @@ f.close()
 #  TODO Automatically fill in the tour result when it's a cancel.
 #  TODO If tour is InHouse and labeled as Minivac, make it print Minivac - 0 in green because there shouldn't be any
 #  TODO accommodations. 1427980
-
-
-class ConfirmationSheet:
-
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.excel_dataframe = 0
-
-    def convert_to_csv(self):
-        xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\" + self.file_name)
-        df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
-        df.to_csv('file.csv')
-        self.file_name = 'file.csv'
-
-    def count_pids(self):
-        number_of_pids = 0
-        with open(self.file_name) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                number_of_pids += 1
-            return number_of_pids
-
-
-class PID:
-
-    def __init__(self, pid, status):
-        self.pid = pid
-
-    def double_check_pid(self):
-        sc.get_m2_coordinates()
-        pyautogui.doubleClick(m2['prospect_id'])
-        keyboard.send('ctrl + c')
-        copied_text = clipboard.paste()
-        for i in range(3):
-            if copied_text != self.pid:
-                time.sleep(0.3)
-                pyautogui.doubleClick(m2['prospect_id'])
-                keyboard.send('ctrl + c')
-                copied_text = clipboard.paste()
-        if copied_text != self.pid:
-            cf.pause('Is the pid correct?')
-            return
-        if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
-                                          region=(514, 245, 889, 566)) is not None:
-            return
-        pyautogui.click(m2['company'])
-        keyboard.send('ctrl + z')
-        time.sleep(1)
-        keyboard.send('ctrl + c')
-        copied_text = clipboard.paste()
-        if 'pid' in copied_text.lower():
-            pause('Is the pid correct?')
-            return
+#  TODO If a person offers an upgrade and the person takes the offer within 72 hours, then the upgrade goes to the
+#  TODO person who offered it. 1433656
 
 
 def gather_m3_data():

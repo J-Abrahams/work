@@ -16,6 +16,7 @@ import pickle
 import openpyxl
 import re
 import random
+import core_functions as cf
 
 # import importlib
 # importlib.reload(sc)
@@ -305,7 +306,7 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
     site = take_screenshot(1517, 1036, 146, 17)
     if (description == 'ams' and sites_dictionary[site] in ['A1', 'A3']) or \
        (description == 'ir' and sites_dictionary[site] in ['A2', 'A3', 'Northstar', 'Breckenridge']) or \
-       (description == 'sol' and sites_dictionary[site] in ['Breckenridge']):
+       (description == 'sol' and sites_dictionary[site] in ['Northstar', 'Breckenridge']):
         button = 'payment'
     else:
         button = 'insert'
@@ -316,43 +317,62 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
         x, y = m8['title']
         for i in range(9):
             refund_option = take_screenshot(x + 32, y + 91, 135, 11)
-            if deposit_options_dictionary[refund_option] == 'ams cc refund':
-                pyautogui.click(x + 75, y + 91)
-                break
-            elif i == 8:
-                sys.exit("Couldn't find correct option.")
-            else:
+            try:
+                if deposit_options_dictionary[refund_option] == 'ams cc refund':
+                    pyautogui.click(x + 75, y + 91)
+                    break
+                elif i == 8:
+                    sys.exit("Couldn't find correct option.")
+                else:
+                    y += 13
+            except KeyError:
                 y += 13
+                if i == 8:
+                    sys.exit("Couldn't find correct option.")
     elif description == 'ir':
         pyautogui.click(m6[button])
         sc.get_m8_coordinates()
         pyautogui.click(m8['transaction_code'])
+        if button == 'payment':
+            pyautogui.click(m8['transaction_code_scroll_bar'])
         x, y = m8['title']
         for i in range(9):
-
             refund_option = take_screenshot(x + 32, y + 91, 135, 11)
-            if deposit_options_dictionary[refund_option] == 'ir cc refund':
-                pyautogui.click(x + 75, y + 91)
-                break
-            elif i == 8:
-                sys.exit("Couldn't find correct option.")
-            else:
+            try:
+                print(deposit_options_dictionary[refund_option])
+                if deposit_options_dictionary[refund_option] == 'ir cc refund':
+                    pyautogui.click(x + 75, y + 91)
+                    break
+                elif i == 8:
+                    sys.exit("Couldn't find correct option.")
+                else:
+                    y += 13
+            except KeyError:
                 y += 13
+                if i == 8:
+                    sys.exit("Couldn't find correct option.")
     elif description == 'sol':
         pyautogui.click(m6[button])
         sc.get_m8_coordinates()
         pyautogui.click(m8['transaction_code'])
-        pyautogui.click(m8['transaction_code_scroll_bar'])
+        if button == 'payment' or sites_dictionary[site] in ['Cabo', 'A2', 'A3']:
+            pyautogui.click(m8['transaction_code_scroll_bar'])
+            pyautogui.click(m8['transaction_code_scroll_bar'])
         x, y = m8['title']
         for i in range(9):
-            refund_option = take_screenshot(x + 32, y + 91, 135, 1)
-            if deposit_options_dictionary[refund_option] == 'sol cc refund':
-                pyautogui.click(x + 75, y + 91)
-                break
-            elif i == 8:
-                sys.exit("Couldn't find correct option.")
-            else:
+            refund_option = take_screenshot(x + 32, y + 91, 135, 11)
+            try:
+                if deposit_options_dictionary[refund_option] == 'sol cc refund':
+                    pyautogui.click(x + 75, y + 91)
+                    break
+                elif i == 8:
+                    sys.exit("Couldn't find correct option.")
+                else:
+                    y += 13
+            except KeyError:
                 y += 13
+                if i == 8:
+                    sys.exit("Couldn't find correct option.")
     if button == 'insert':
         pyautogui.doubleClick(m8['amount'])
         keyboard.write(price)
@@ -750,4 +770,5 @@ def use_excel_sheet():
             progress += 1
 
 
+cf.pause('Minimize Pycharm')
 use_excel_sheet()
