@@ -20,6 +20,16 @@ import pytest
 import logging
 
 
+sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'Katherine Albini': 'SOL23521',
+               'Katherine England/Abini': 'SOL23521', 'Justin Locke': 'SOL4967', 'Brian Bennett': 'SOL3055',
+               'Carter Roedell': 'SOL23345', 'Fernanda Hernandez': 'SOL26788', 'Fern Hernandez': 'SOL26788',
+               'Alton Major': 'SOL4809', 'Thuy Pham': 'SOL25688', 'Julianne Martinez': 'SOL22766',
+               'Quenton Stroud': 'SOL27228', 'Sadie Oliver': 'SOL26834', 'Valeria Rebollar': 'SOL24218',
+               'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604',
+               'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125', 'Deeandra Castillo': 'SOL5495',
+               'Kenan Williams': 'SOL27567'}
+
+
 class ConfirmationSheet:
 
     def __init__(self, file_name):
@@ -39,17 +49,6 @@ class ConfirmationSheet:
             for row in reader:
                 number_of_pids += 1
             return number_of_pids
-
-    def get_sol(self):
-        with open(self.file_name) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if row['Sol'] != '':
-                    try:
-                        sol = sol_numbers[row['Sol']]
-                    except TypeError:
-                        print('Unrecognized Name - ' + sol)
-                        sol = 'SOL' + input('Type Sol number (just numbers):')
 
 
 class Row:
@@ -160,6 +159,37 @@ class Row:
             pyautogui.click(m2['yes_change_sites'])
 
 
+class Tour:
+
+    def __init__(self):
+        self.campaign = None
+        self.tour_type = None
+        self.tour_status = None
+        self.tour_date = None
+        self.tour_location = None
+        self.wave = None
+
+    def gather_info(self):
+        sc.get_m3_coordinates()
+        x, y = m3['title']
+        tour_types_dict = cf.read_pickle_file('m3_tour_type.p')
+        self.tour_type = tour_types_dict[cf.take_screenshot(x + 36, y + 143, 89, 12)]
+        self.tour_status = sc.m3_tour_status[cf.take_screenshot(x + 37, y + 170, 94, 11)]
+        month = cf.take_screenshot(x + 37, y + 196, 13, 10)
+        day = cf.take_screenshot(x + 52, y + 196, 15, 10)
+        year = cf.take_screenshot(x + 68, y + 196, 27, 10)
+        self.tour_date = cf.turn_screenshots_into_date(month, day, year)
+        try:
+            self.tour_date = datetime.datetime.strptime(self.tour_date, "%m/%d/%Y")
+        except ValueError:
+            month = cf.take_screenshot(x + 40, y + 196, 13, 10)
+            day = cf.take_screenshot(x + 55, y + 196, 15, 10)
+            year = cf.take_screenshot(x + 71, y + 196, 27, 10)
+            self.tour_date = cf.turn_screenshots_into_date(month, day, year)
+            self.tour_date = datetime.datetime.strptime(self.tour_date, "%m/%d/%Y")
+        return self.tour_type, self.tour_status, self.tour_date
+
+
 confirmation_sheet = ConfirmationSheet('3.xlsx')
 confirmation_sheet.convert_to_csv()
 number_of_pids = confirmation_sheet.count_pids()
@@ -174,4 +204,8 @@ with open('file.csv') as csvfile:
         row.search_pid()
         row.double_check_pid()
         row.select_tour()
-
+        tour = Tour()
+        tour.gather_info()
+        print(tour.tour_type)
+        print(tour.tour_status)
+        print(tour.tour_date)

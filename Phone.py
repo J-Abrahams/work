@@ -45,11 +45,9 @@ with open('text_files\\phones\\Phone_Errors.txt', 'a') as erase:
 with open('text_files\\phones\\phone.csv', 'r') as csvfile:
     reader = csv.DictReader(csvfile)
     number_of_phone_numbers = 0
+    duplicate_phone_numbers, progress, errors = 0, 0, 0
     for row in reader:
         number_of_phone_numbers += 1
-with open('text_files\\phones\\phone.csv') as csvfile:
-    reader = csv.DictReader(csvfile)
-    duplicate_phone_numbers, progress, errors = 0, 0, 0
     for row in reader:
         pids = row['PID'].replace('.0', '')
         phone_1 = row['phone_1']
@@ -64,7 +62,6 @@ with open('text_files\\phones\\phone.csv') as csvfile:
         else:
             duplicate_phone_numbers += 1
         progress += 1
-        print(len(phone_1), len(phone_2))
         print(str(progress) + '/' + str(number_of_phone_numbers))
         print(str(duplicate_phone_numbers) + ' duplicate numbers')
         print(str(errors) + ' errors')

@@ -1,6 +1,5 @@
 import csv
 import time
-from tkinter import Tk
 import keyboard
 import mss
 import mss.tools
@@ -10,14 +9,12 @@ import clipboard
 import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10
 import datetime
-from tabulate import tabulate
 import sys
 import pickle
 import openpyxl
-import re
-import random
 import core_functions as cf
-
+import cv2
+import numpy as np
 # import importlib
 # importlib.reload(sc)
 transaction_code = 0
@@ -222,6 +219,7 @@ def change_deposit_title(price, cash=None):
                 amount = 0
                 print('Don\'t recognize the amount')
                 print(mss.tools.to_png(im.rgb, im.size))
+                print(deposit_item_amount, x, y)
                 output = 'monitor-1-crop.png'
                 mss.tools.to_png(im.rgb, im.size, output=output)
         attempts += 1
@@ -339,7 +337,6 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
         for i in range(9):
             refund_option = take_screenshot(x + 32, y + 91, 135, 11)
             try:
-                print(deposit_options_dictionary[refund_option])
                 if deposit_options_dictionary[refund_option] == 'ir cc refund':
                     pyautogui.click(x + 75, y + 91)
                     break
