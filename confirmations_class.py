@@ -180,6 +180,8 @@ class Tour:
         year = cf.take_screenshot(x + 68, y + 196, 27, 10)
         self.tour_date = cf.turn_screenshots_into_date(month, day, year)
         try:
+            self.tour_location =
+        try:
             self.tour_date = datetime.datetime.strptime(self.tour_date, "%m/%d/%Y")
         except ValueError:
             month = cf.take_screenshot(x + 40, y + 196, 13, 10)
@@ -192,19 +194,38 @@ class Tour:
 
 confirmation_sheet = ConfirmationSheet('3.xlsx')
 confirmation_sheet.convert_to_csv()
+
+# Count number of PIDs
 number_of_pids = confirmation_sheet.count_pids()
+
 with open('file.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
+
+        # Changes the sol number if the column 'Sol' is not empty.
         if row['Sol'] != '':
             sol = row['Sol']
+
+        # Create a row object.
         row = Row(row['PID'].replace('.0', ''), row['conf'], row['rxl'], row['cxl'], row['ug'], row['tav'], row['Completed'])
+
+        # Skips row if the completed column is checked off.
         if row.completed == 'x':
             continue
+
+        # Enters, searches, and selects the PID.
         row.search_pid()
+
+        # Checks that that the correct PID was selected.
         row.double_check_pid()
+
+        # Creates dataframe of tours and selects the correct tour.
         row.select_tour()
+
+        # Creates a tour object.
         tour = Tour()
+
+        # Gets all of the face info for the tour and re-creates the tour object with this new info.
         tour.gather_info()
         print(tour.tour_type)
         print(tour.tour_status)

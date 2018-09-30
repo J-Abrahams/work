@@ -20,7 +20,7 @@ import pytest
 import logging
 
 # import importlib
-# importlib.reload(sc)
+# importlib.reload(cf)
 errors = 0
 progress = 0
 sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'Katherine Albini': 'SOL23521',
@@ -30,7 +30,7 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Quenton Stroud': 'SOL27228', 'Sadie Oliver': 'SOL26834', 'Valeria Rebollar': 'SOL24218',
                'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604',
                'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125', 'Deeandra Castillo': 'SOL5495',
-               'Kenan Williams': 'SOL27567'}
+               'Kenan Williams': 'SOL27567', 'Jenniffer Abbott': 'SOL5456', 'Met Austin Simon': 'SOL27647'}
 f = open('text_files\\premiums.p', 'rb')
 premium_dict = pickle.load(f)
 f.close()
@@ -571,7 +571,7 @@ def notes(status):
                 return
             for key, value in sol_numbers.items():
                 words = re.findall(r'\w+', key)
-                if words[1].lower() in result.lower():
+                if words[1].lower() in result.lower() and words[1].lower() != 'major':
                     print(u"\u001b[31m" + 'IMPORTANT NOTE' + u"\u001b[0m")
             if status == 'c' and 'conf' in result.lower():
                 print(u"\u001b[32m" + 'Confirm note is present' + u"\u001b[0m")
@@ -698,7 +698,7 @@ def count_pids():
 
 
 def show_progress(pid, progress, number_of_pids):
-    percentage = round((progress - 1) * 100 / number_of_pids, 2)
+    percentage = round(progress * 100 / number_of_pids, 2)
     print('{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid)))
 
 
@@ -831,6 +831,29 @@ def automatic_confirmation():
             pyautogui.click(x - 20, y + 425)
             errors = 0
 
+
+"""number_dictionary = {}
+x = 0
+for i in range(11):
+    screenshot = cf.take_screenshot(284, 140 + x * 13, 6, 9, True)
+    if x < 10:
+        number_dictionary[screenshot] = str(x)
+    else:
+        number_dictionary[screenshot] = 'nothing'
+    x += 1
+f = open('text_files\\numbers.p', 'wb')
+pickle.dump(number_dictionary, f)
+f.close()
+with mss.mss() as sct:
+    monitor = {'top': 555 - 0, 'left': 1489 - 6, 'width': 6, 'height': 9}
+    im = sct.grab(monitor)
+    screenshot = str(mss.tools.to_png(im.rgb, im.size))
+    print(screenshot)
+numbers = cf.read_pickle_file('numbers.p')
+screenshot = cf.take_screenshot(1489 - 6, 555 - 0, 6, 9)
+print(screenshot)
+number = numbers[screenshot]
+print(number)"""
 
 if __name__ == "__main__":
     sol = 0

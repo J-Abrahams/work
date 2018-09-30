@@ -13,8 +13,6 @@ import sys
 import pickle
 import openpyxl
 import core_functions as cf
-import cv2
-import numpy as np
 # import importlib
 # importlib.reload(sc)
 transaction_code = 0
@@ -361,6 +359,29 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
             try:
                 if deposit_options_dictionary[refund_option] == 'sol cc refund':
                     pyautogui.click(x + 75, y + 91)
+                    break
+                elif i == 8:
+                    sys.exit("Couldn't find correct option.")
+                else:
+                    y += 13
+            except KeyError:
+                y += 13
+                if i == 8:
+                    sys.exit("Couldn't find correct option.")
+    elif description == 'ih':
+        button = 'insert'
+        pyautogui.click(m6[button])
+        sc.get_m8_coordinates()
+        pyautogui.click(m8['transaction_code'])
+        x, y = m8['title']
+        for i in range(9):
+            refund_option = take_screenshot(x + 32, y + 91, 135, 11)
+            try:
+                if deposit_options_dictionary[refund_option] == 'ir cc refund':
+                    pyautogui.click(x + 75, y + 91)
+                    pyautogui.click(m8['description'])
+                    keyboard.send('ctrl + z')
+                    keyboard.write('IH REFUND')
                     break
                 elif i == 8:
                     sys.exit("Couldn't find correct option.")
@@ -763,6 +784,8 @@ def use_excel_sheet():
                 select_ams_refund_payment(date, price, 'ir')
             elif deposit_type == 'sol':
                 select_ams_refund_payment(date, price, 'sol')
+            elif deposit_type == 'ih':
+                select_ams_refund_payment(date, price, 'ih')
             mark_row_as_completed(index)
             progress += 1
 

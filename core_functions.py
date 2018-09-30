@@ -10,6 +10,10 @@ import pandas as pd
 import time
 import datetime
 import csv
+import random
+import cv2
+import numpy as np
+
 
 def search_pid(pid_number):
     sc.get_m1_coordinates()
@@ -118,14 +122,93 @@ def create_accommodations_dataframe():
 
 def take_screenshot(x, y, width, height, save_file=False):
     with mss.mss() as sct:
+        sct.compression_level = 3
         monitor = {'top': y, 'left': x, 'width': width, 'height': height}
         im = sct.grab(monitor)
         screenshot = str(mss.tools.to_png(im.rgb, im.size))
+        # nparr = np.frombuffer(screenshot, np.uint8)
+        # img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        # img_np = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
+        # img_np[np.where(img_np == [255])] = [0]
+        # img_np[np.where(img_np == [8, 36, 107])] = [255]
+        # screenshot = cv2.imencode('.png', img_np)[1]
+        # # screenshot = screenshot.tostring()
+        # # print(screenshot)
+        # screenshot = screenshot.tobytes()
         if save_file:
             now = datetime.datetime.now()
-            output = now.strftime("%m-%d-%H-%M-%S.png".format(**monitor))
+            date = now.strftime("%m-%d-%H-%M-%S".format(**monitor))
+            output = date + str(random.randrange(0, 1000, 1)) + '.png'
             mss.tools.to_png(im.rgb, im.size, output=output)
         return screenshot
+
+
+# with mss.mss() as sct:
+#     monitor = {'top': 555 - 13, 'left': 1489 - 6, 'width': 6, 'height': 9}
+#     img = np.array(sct.grab(monitor))
+# # print(img)
+# cv2.imshow('img', img)
+# cv2.destroyAllWindows()
+# height, width, channels = img.shape
+#
+# print(height, width, channels)
+#
+# blue = [107, 36, 8, 255]
+# white = [255, 255, 255, 255]
+# black = [0, 0, 0, 255]
+# for x in range(0,width):
+#     for y in range(0,height):
+#         channels_xy = img[y,x]
+#         if all(channels_xy == white):
+#             img[y,x] = black
+#
+#         elif all(channels_xy == blue):
+#             img[y,x] = white
+# cv2.imshow('img',img)
+# screenshot = cv2.imencode('.png', img)[1]
+# print(str(screenshot.tobytes()))
+# with mss.mss() as sct:
+#     monitor = {'top': 555 - 0, 'left': 1489 - 6, 'width': 6, 'height': 9}
+#     sct_img = sct.grab(monitor)
+#     screenshot = str(mss.tools.to_png(sct_img.raw, sct_img.size, level=1))
+#     print(screenshot)
+
+# for x in range(0, width):
+#     for y in range(0, height):
+#         if img[x, y, 0] == 255 and img[x, y, 1] == 255 and img[x, y, 2] == 255:
+#             img[x, y, 0] = 0
+#             img[x, y, 1] = 0
+#             img[x, y, 2] = 0
+#
+#         elif img[x, y, 0] == 0 and img[x, y, 1] == 0 and img[x, y, 2] == 0:
+#             img[x, y, 0] = 255
+#             img[x, y, 1] = 255
+#             img[x, y, 2] = 255
+# screenshot = cv2.imencode('.png', img)[1]
+# print(screenshot)
+# screenshot = str(screenshot.tobytes())
+# with mss.mss() as sct:
+#     monitor = {'top': 555 - 13, 'left': 1489 - 6, 'width': 6, 'height': 9}
+#     img_np = np.array(sct.grab(monitor))
+#     # img_np = cv2.imdecode(img, cv2.IMREAD_COLOR)
+#     # img_np = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#     img_np = cv2.bitwise_not(img_np)
+#     cv2.imshow("OpenCV/Numpy normal", img_np)
+#     img_np[np.where(img_np == [255])] = [0]
+#     img_np[np.where(img_np == [8, 36, 107])] = [255]
+#     screenshot = cv2.imencode('.png', img_np)[1]
+#     print(screenshot.tobytes())
+#     screenshot = cv2.imdecode(screenshot, cv2.IMREAD_COLOR)
+#     cv2.imshow("OpenCV/Numpy normal", screenshot)
+#     # print(screenshot)
+#     screenshot = str(screenshot.tobytes())
+#     print(screenshot)
+# with mss.mss() as sct:
+#     monitor = {'top': 555 - 13, 'left': 1489 - 6, 'width': 6, 'height': 9}
+#     sct_img = sct.grab(monitor)
+#     screenshot = str(mss.tools.to_png(sct_img.rgb, sct_img.size))
+#     print(screenshot)
+# take_screenshot(1489 - 6, 555 - 13, 6, 9, True)
 
 
 def get_current_date():
