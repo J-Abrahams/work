@@ -1,6 +1,6 @@
 import mss.tools
 import screenshot_data as sc
-from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10
+from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11
 import pyautogui
 import keyboard
 import pickle
@@ -126,15 +126,6 @@ def take_screenshot(x, y, width, height, save_file=False):
         monitor = {'top': y, 'left': x, 'width': width, 'height': height}
         im = sct.grab(monitor)
         screenshot = str(mss.tools.to_png(im.rgb, im.size))
-        # nparr = np.frombuffer(screenshot, np.uint8)
-        # img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        # img_np = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
-        # img_np[np.where(img_np == [255])] = [0]
-        # img_np[np.where(img_np == [8, 36, 107])] = [255]
-        # screenshot = cv2.imencode('.png', img_np)[1]
-        # # screenshot = screenshot.tostring()
-        # # print(screenshot)
-        # screenshot = screenshot.tobytes()
         if save_file:
             now = datetime.datetime.now()
             date = now.strftime("%m-%d-%H-%M-%S".format(**monitor))
@@ -143,72 +134,30 @@ def take_screenshot(x, y, width, height, save_file=False):
         return screenshot
 
 
-# with mss.mss() as sct:
-#     monitor = {'top': 555 - 13, 'left': 1489 - 6, 'width': 6, 'height': 9}
-#     img = np.array(sct.grab(monitor))
-# # print(img)
-# cv2.imshow('img', img)
-# cv2.destroyAllWindows()
-# height, width, channels = img.shape
-#
-# print(height, width, channels)
-#
-# blue = [107, 36, 8, 255]
-# white = [255, 255, 255, 255]
-# black = [0, 0, 0, 255]
-# for x in range(0,width):
-#     for y in range(0,height):
-#         channels_xy = img[y,x]
-#         if all(channels_xy == white):
-#             img[y,x] = black
-#
-#         elif all(channels_xy == blue):
-#             img[y,x] = white
-# cv2.imshow('img',img)
-# screenshot = cv2.imencode('.png', img)[1]
-# print(str(screenshot.tobytes()))
-# with mss.mss() as sct:
-#     monitor = {'top': 555 - 0, 'left': 1489 - 6, 'width': 6, 'height': 9}
-#     sct_img = sct.grab(monitor)
-#     screenshot = str(mss.tools.to_png(sct_img.raw, sct_img.size, level=1))
-#     print(screenshot)
+def take_screenshot_change_color(x, y, width, height, save_file=False):
+    with mss.mss() as sct:
+        monitor = {'top': y, 'left': x, 'width': width, 'height': height}
+        # monitor = {'top': 139, 'left': 284, 'width': 80, 'height': 11}
+        img = np.array(sct.grab(monitor))
 
-# for x in range(0, width):
-#     for y in range(0, height):
-#         if img[x, y, 0] == 255 and img[x, y, 1] == 255 and img[x, y, 2] == 255:
-#             img[x, y, 0] = 0
-#             img[x, y, 1] = 0
-#             img[x, y, 2] = 0
-#
-#         elif img[x, y, 0] == 0 and img[x, y, 1] == 0 and img[x, y, 2] == 0:
-#             img[x, y, 0] = 255
-#             img[x, y, 1] = 255
-#             img[x, y, 2] = 255
-# screenshot = cv2.imencode('.png', img)[1]
-# print(screenshot)
-# screenshot = str(screenshot.tobytes())
-# with mss.mss() as sct:
-#     monitor = {'top': 555 - 13, 'left': 1489 - 6, 'width': 6, 'height': 9}
-#     img_np = np.array(sct.grab(monitor))
-#     # img_np = cv2.imdecode(img, cv2.IMREAD_COLOR)
-#     # img_np = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-#     img_np = cv2.bitwise_not(img_np)
-#     cv2.imshow("OpenCV/Numpy normal", img_np)
-#     img_np[np.where(img_np == [255])] = [0]
-#     img_np[np.where(img_np == [8, 36, 107])] = [255]
-#     screenshot = cv2.imencode('.png', img_np)[1]
-#     print(screenshot.tobytes())
-#     screenshot = cv2.imdecode(screenshot, cv2.IMREAD_COLOR)
-#     cv2.imshow("OpenCV/Numpy normal", screenshot)
-#     # print(screenshot)
-#     screenshot = str(screenshot.tobytes())
-#     print(screenshot)
-# with mss.mss() as sct:
-#     monitor = {'top': 555 - 13, 'left': 1489 - 6, 'width': 6, 'height': 9}
-#     sct_img = sct.grab(monitor)
-#     screenshot = str(mss.tools.to_png(sct_img.rgb, sct_img.size))
-#     print(screenshot)
-# take_screenshot(1489 - 6, 555 - 13, 6, 9, True)
+    height, width, channels = img.shape
+
+    blue = [107, 36, 8, 255]
+    white = [255, 255, 255, 255]
+    black = [0, 0, 0, 255]
+
+    if np.any(img[:, 0] == 107):
+        for x in range(0, width):
+            for y in range(0, height):
+                channels_xy = img[y, x]
+                if all(channels_xy == white):
+                    img[y, x] = black
+                elif all(channels_xy == blue):
+                    img[y, x] = white
+    if save_file:
+        cv2.imshow('img', img)
+    screenshot = cv2.imencode('.png', img)[1]
+    return str(screenshot.tobytes())
 
 
 def get_current_date():

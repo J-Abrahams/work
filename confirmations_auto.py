@@ -8,7 +8,8 @@ import pandas as pd
 import pyautogui
 import clipboard
 import screenshot_data as sc
-from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10
+from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11
+import logging
 import datetime
 from tabulate import tabulate
 import sys
@@ -16,8 +17,10 @@ import pickle
 import openpyxl
 import re
 import core_functions as cf
-import pytest
-import logging
+import sqlite3
+# import importlib
+# importlib.reload(sc)
+# from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11
 
 # import importlib
 # importlib.reload(cf)
@@ -545,63 +548,68 @@ def notes(status):
     global errors
     sc.get_m3_coordinates()
     pyautogui.click(m3['notes'])
+    x, y = m3['title']
+    number_of_notes = 0
+    while cf.take_screenshot(x - 54, y + 58, 25, 10) != sc.note_nothing:
+        number_of_notes += 1
+        y += 13
     x, y = m3['notes']
-    copied = []
-    while True:
+    if number_of_notes == 0:
+        print(u"\u001b[31m" + 'NO NOTES' + u"\u001b[0m")
+        errors += 1
+        return
+    for note in range(number_of_notes):
+        copied = []
         pyautogui.click(x, y + 40)
         pyautogui.click(m3['notes_change'])
-        attempts = 0
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_note.png',
-                                               region=(514, 245, 889, 566))
-        while attempts <= 3 and image is None:
-            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\changing_note.png',
-                                                   region=(514, 245, 889, 566))
-            attempts += 1
-        if image is not None:
-            x_2, y_2 = image
-            pyautogui.click(x_2 + 25, y_2 + 75)
-            pyautogui.dragTo(x_2 + 250, y_2 + 150, button='left')
-            keyboard.send('ctrl + c')  # Copy note
-            r = Tk()
-            result = r.selection_get(selection="CLIPBOARD")
-            if result in copied:
-                print(u"\u001b[31m" + 'COULDN\'T FIND CORRECT NOTE' + u"\u001b[0m")
-                errors += 1
-                pyautogui.click(x_2 + 200, y_2 + 250)
-                return
-            for key, value in sol_numbers.items():
-                words = re.findall(r'\w+', key)
-                if words[1].lower() in result.lower() and words[1].lower() != 'major':
-                    print(u"\u001b[31m" + 'IMPORTANT NOTE' + u"\u001b[0m")
-            if status == 'c' and 'conf' in result.lower():
-                print(u"\u001b[32m" + 'Confirm note is present' + u"\u001b[0m")
-                pyautogui.click(x_2 + 200, y_2 + 250)
-                return
-            elif status == 'x' and ('nq' in result.lower() or 'canc' in result.lower() or 'cxl' in result.lower()):
-                print(u"\u001b[32m" + 'Cancel note is present' + u"\u001b[0m")
-                pyautogui.click(x_2 + 200, y_2 + 250)
-                if 'nq' in result.lower():
-                    pyautogui.click(m3['tour'])
-                    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\tour_result.png',
-                                                      region=(514, 400, 889, 500)) is None:
-                        print(u"\u001b[32m" + 'Tour Result is correct' + u"\u001b[0m")
-                    else:
-                        print(u"\u001b[31m" + 'NO TOUR RESULT' + u"\u001b[0m")
-                        errors += 1
-                return
-            elif status == 'r' and ('rxl' in result.lower() or 'open' in result.lower() or ' od ' in result.lower()):
-                print(u"\u001b[32m" + 'Reschedule note is present' + u"\u001b[0m")
-                pyautogui.click(x_2 + 200, y_2 + 250)
-                return
-            else:
-                copied.append(result)
-                pyautogui.click(x_2 + 200, y_2 + 250)
-                y += 13
-        else:
-            print(u"\u001b[31m" + 'NO NOTES' + u"\u001b[0m")
+        sc.get_m11_coordinates()
+        x_2, y_2 = m11['title']
+        # Take screenshot of note title
+        screenshot = cf.take_screenshot_change_color(x_2 + 25, y_2 + 47, 28, 13)
+        # Drag mouse cursor to select text in note.
+        pyautogui.click(x_2 + 25, y_2 + 75)
+        pyautogui.dragTo(x_2 + 250, y_2 + 150, button='left')
+        # Copy Note
+        keyboard.send('ctrl + c')
+        r = Tk()
+        result = r.selection_get(selection="CLIPBOARD")
+        if result in copied:
+            print(u"\u001b[31m" + 'COULDN\'T FIND CORRECT NOTE' + u"\u001b[0m")
             errors += 1
+            pyautogui.click(x_2 + 200, y_2 + 250)
             return
-
+        for key, value in sol_numbers.items():
+            words = re.findall(r'\w+', key)
+            if words[1].lower() in result.lower() and words[1].lower() != 'major':
+                print(u"\u001b[31m" + 'IMPORTANT NOTE' + u"\u001b[0m")
+        if status == 'c' and 'conf' in result.lower():
+            print(u"\u001b[32m" + 'Confirm note is present' + u"\u001b[0m")
+            pyautogui.click(x_2 + 200, y_2 + 250)
+            return
+        elif status == 'x' and screenshot == sc.note_canc:
+            print(u"\u001b[32m" + 'Cancel note is present' + u"\u001b[0m")
+            pyautogui.click(x_2 + 200, y_2 + 250)
+            if 'nq' in result.lower():
+                pyautogui.click(m3['tour'])
+                if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\tour_result.png',
+                                                  region=(514, 400, 889, 500)) is None:
+                    print(u"\u001b[32m" + 'Tour Result is correct' + u"\u001b[0m")
+                else:
+                    print(u"\u001b[31m" + 'NO TOUR RESULT' + u"\u001b[0m")
+                    errors += 1
+            return
+        elif status == 'r' and any(i in result.lower() for i in
+                                   ['rxl', 'reschedule', 'od', 'open', 'new date']):
+            print(u"\u001b[32m" + 'Reschedule note is present' + u"\u001b[0m")
+            pyautogui.click(x_2 + 200, y_2 + 250)
+            return
+        else:
+            pyautogui.click(x_2 + 200, y_2 + 250)
+            y += 13
+    # If the for loop ends that means none of the notes fit the criteria above. An error message is then printed.
+    print(u"\u001b[31m" + 'COULDN\'T FIND CORRECT NOTE' + u"\u001b[0m")
+    errors += 1
+    return
 
 def confirm_sol_in_userfields(sol, tour_status):
     if tour_status == 'Confirmed':
@@ -676,7 +684,7 @@ def check_for_duplicate_personnel(df, status):
 
 
 def convert_excel_to_csv():
-    xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\3.xlsx")
+    xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\Book1.xlsx")
     df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
     df.to_csv('file.csv')
 
@@ -831,7 +839,6 @@ def automatic_confirmation():
             pyautogui.click(x - 20, y + 425)
             errors = 0
 
-
 """number_dictionary = {}
 x = 0
 for i in range(11):
@@ -854,7 +861,27 @@ screenshot = cf.take_screenshot(1489 - 6, 555 - 0, 6, 9)
 print(screenshot)
 number = numbers[screenshot]
 print(number)"""
-
+"""convert_excel_to_csv()
+premiums = {}
+x = 0
+y = 139
+with open('file.csv') as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        if x == 66:
+            print(premiums)
+            break
+        premium_description = row['Premium Description']
+        screenshot = cf.take_screenshot_change_color(284, y, 80, 11)
+        premiums[screenshot] = 'nothing'
+        x += 1
+        y += 13
+conn = sqlite3.connect('sqlite.sqlite')
+c = conn.cursor()
+for key, value in premiums.items():
+    c.execute('INSERT OR IGNORE INTO premiums (screenshot, name) VALUES (?, ?)', [key, value])
+conn.commit()
+conn.close()"""
 if __name__ == "__main__":
     sol = 0
     log = logging.getLogger(__name__)
