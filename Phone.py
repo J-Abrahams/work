@@ -1,3 +1,4 @@
+from __future__ import print_function
 import csv
 import keyboard
 import mss
@@ -7,6 +8,8 @@ import screenshot_data as sc
 from screenshot_data import m1, m2
 import datetime
 import core_functions as cf
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
 
 
 def search_pid(pid_number):
@@ -37,11 +40,16 @@ def enter_phone_number(number):
         return "Good"
 
 
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name('Phone-6ad41718c799.json', scope)
+client = gspread.authorize(creds)
+sheet = client.open("Phone Errors").sheet1
+
 cf.pause('Minimize Pycharm')
 now = datetime.datetime.now()
 now_str = now.strftime("%m/%d/%Y")
-with open('text_files\\phones\\Phone_Errors.txt', 'a') as erase:
-    erase.write('\n{}\n'.format(now_str))
+# with open('text_files\\phones\\Phone_Errors.txt', 'a') as erase:
+#     erase.write('\n{}\n'.format(now_str))
 with open('text_files\\phones\\phone.csv', 'r') as csvfile:
     reader = csv.DictReader(csvfile)
     number_of_phone_numbers = 0
@@ -58,13 +66,16 @@ with open('text_files\\phones\\phone.csv') as csvfile:
             search_pid(pids)
             status = enter_phone_number(phone_2)
             if status == "Error" or len(phone_1) != len(phone_2):
+                if progress == 0:
+                    sheet.append_row([now_str, pids, phone_1, phone_2])
+                else:
+                    sheet.append_row(['', pids, phone_1, phone_2])
                 errors += 1
-                with open('text_files\\phones\\Phone_Errors.txt', 'a') as out:
-                    out.write('{} {} {}\n'.format(pids, phone_1, phone_2))
+                # with open('text_files\\phones\\Phone_Errors.txt', 'a') as out:
+                #     out.write('{} {} {}\n'.format(pids, phone_1, phone_2))
         else:
             duplicate_phone_numbers += 1
         progress += 1
-        print(len(phone_1), len(phone_2))
         print(str(progress) + '/' + str(number_of_phone_numbers))
         print(str(duplicate_phone_numbers) + ' duplicate numbers')
         print(str(errors) + ' errors')
