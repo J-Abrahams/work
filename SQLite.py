@@ -15,11 +15,11 @@ c = conn.cursor()
           name TEXT,
           coordinates TEXT)''')"""
 """for key, value in premiums.items():"""
-sc.get_m13_coordinates()
-x, y = m13['title']
+sc.get_m3_coordinates()
+x, y = m3['title']
 # print(x, y)
-# c.execute('INSERT INTO menu_coordinates (name, x, y, description) VALUES (?, ?, ?, ?)', ['m2', 631, 291, 'Changing a Prospect Record'])
-c.execute('UPDATE misc SET screenshot=(?) WHERE name=("confirmer")', [cf.take_screenshot_change_color(m13['title'][0] + 26, m13['title'][1] + 73, 45, 15)])
+c.execute('INSERT INTO premiums (name, screenshot) VALUES (?, ?)', ['$40 CC Dep', cf.take_screenshot_change_color(x + 342, y + 60, 80, 11)])
+# c.execute('UPDATE premiums SET screenshot=(?) WHERE name=("$50 CC Dep")', [cf.take_screenshot_change_color(x + 342, y + 60, 80, 11)])
 """for row in c.execute('SELECT * FROM premiums'):
     print(row)"""
 """sc.get_m3_coordinates()

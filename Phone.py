@@ -66,7 +66,7 @@ with open('text_files\\phones\\phone.csv') as csvfile:
             search_pid(pids)
             status = enter_phone_number(phone_2)
             if status == "Error" or len(phone_1) != len(phone_2):
-                if progress == 0:
+                if errors == 0:
                     sheet.append_row([now_str, pids, phone_1, phone_2])
                 else:
                     sheet.append_row(['', pids, phone_1, phone_2])

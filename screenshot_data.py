@@ -20,6 +20,7 @@ m10 = {}
 m11 = {}
 m12 = {}
 m13 = {}
+m14 = {}
 
 
 def get_m1_coordinates():
@@ -307,6 +308,20 @@ def get_m13_coordinates():
     m13['type'] = (m13_title[0] + 175, m13_title[1] + 107)
     m13['ok'] = (m13_title[0] + 81, m13_title[1] + 347)
     m13['cancel'] = (m13_title[0] + 182, m13_title[1] + 347)
+
+
+# Adding Note
+def get_m14_coordinates():
+    global m14
+    m14_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_note.png',
+                                               region=(514, 245, 889, 566))
+    while m14_title is None:
+        m14_title = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\Titles\\adding_note.png',
+                                                   region=(514, 245, 889, 566))
+    m14['title'] = (m14_title[0], m14_title[1])
+    m14['note_name'] = (m14_title[0] + 175, m14_title[1] + 51)
+    m14['note'] = (m14_title[0] + 235, m14_title[1] + 159)
+    m14['ok'] = (m14_title[0] + 102, m14_title[1] + 243)
 
 
 no_popup = str(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x17\x00\x00\x00\r\x08\x02\x00\x00\x00\xcd\x05b\n\x00'

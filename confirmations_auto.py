@@ -35,7 +35,8 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Quenton Stroud': 'SOL27228', 'Sadie Oliver': 'SOL26834', 'Valeria Rebollar': 'SOL24218',
                'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604',
                'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125', 'Deeandra Castillo': 'SOL5495',
-               'Kenan Williams': 'SOL27567', 'Jenniffer Abbott': 'SOL5456', 'Met Austin Simon': 'SOL27647'}
+               'Kenan Williams': 'SOL27567', 'Jenniffer Abbott': 'SOL5456', 'Met Austin Simon': 'SOL27647',
+               'Dana Durant': 'SOL27561'}
 f = open('text_files\\premiums.p', 'rb')
 premium_dict = pickle.load(f)
 f.close()
@@ -462,19 +463,19 @@ def read_premiums(number_of_refundable_deposits):
     number_of_dep_premiums = 0
     number_of_premiums = 0
     sc.get_m3_coordinates()
-    pyautogui.click(m3['premiums'])
     x, y = m3['title']
+    pyautogui.click(m3['premiums'])
     image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
                                            region=(514, 245, 889, 566))
     while image is None:
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
                                                region=(514, 245, 889, 566))
     while True:
-        screenshot_2 = cf.take_screenshot(x - 129, y - 4, 8, 7)
+        screenshot_2 = cf.take_screenshot_change_color(x + 433, y + 60, 10, 8)
         premium = sqlite_select(cf.take_screenshot_change_color(x + 342, y + 60, 80, 11), 'premiums')
         if premium == 'nothing':
             break
-        elif screenshot_2 == sc.canceled_premium:
+        elif screenshot_2 == sqlite_get_item("SELECT screenshot FROM premiums WHERE name=?", ['Did Not Issue']):
             y += 13
         else:
             if 'DEP' in premium:
@@ -487,7 +488,6 @@ def read_premiums(number_of_refundable_deposits):
                 #     screenshot = '50'
                 # elif '99' in premium:
                 #     screenshot = '99'
-            print(premium)
             list_of_premiums.append(premium)
             number_of_premiums += 1
             y += 13
@@ -674,8 +674,6 @@ def enter_personnel(sol, status):
                 sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['confirmer']):
             pyautogui.click(m13['title_personnel'])
             keyboard.write("cc")
-        print(cf.take_screenshot_change_color(m13['title'][0] + 26, m13['title'][1] + 73, 45, 15))
-        print(sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['confirmer']))
         pyautogui.click(m13['type'])
         if i == 'c':
             keyboard.write("cc")
@@ -763,7 +761,6 @@ def automatic_confirmation():
     client = gspread.authorize(creds)
     sheet = client.open("Confirmation Sheet").sheet1
     dictionaries = sheet.get_all_records()
-    sheet.resize(cols=8)
     number_of_rows = len(sheet.get_all_records())
     index = 1
     for row in dictionaries:
