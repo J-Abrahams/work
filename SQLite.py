@@ -11,21 +11,24 @@ conn = sqlite3.connect('sqlite.sqlite')
 c = conn.cursor()
 
 # Creating a new SQLite table with 1 column
-"""c.execute('''CREATE TABLE premiums (ID INTEGER PRIMARY KEY,
-          name TEXT,
-          screenshot TEXT)''')"""
+c.execute('''CREATE TABLE numbers (ID INTEGER PRIMARY KEY,
+          name INTEGER ,
+          coordinates TEXT,
+          screenshot TEXT)''')
 """for key, value in premiums.items():
     c.execute('INSERT INTO premiums (screenshot, name) VALUES (?, ?)', [key, value])"""
 """c.execute('UPDATE dates SET ID=(?) WHERE name=("1")', [0o1])"""
 """for row in c.execute('SELECT * FROM premiums'):
     print(row)"""
-sc.get_m3_coordinates()
+"""sc.get_m3_coordinates()
 x, y = m3['title']
-# screenshot = cf.take_screenshot_change_color(284, 139, 80, 11)
-screenshot = cf.take_screenshot_change_color(x + 342, y + 60, 80, 11)
-c.execute("SELECT name FROM premiums WHERE screenshot=?", [screenshot])
-rows = c.fetchone()[0]
-print(rows)
+tour_type = cf.take_screenshot_change_color(x + 36, y + 143, 89, 11)
+tour_status = cf.take_screenshot_change_color(x + 36, y + 170, 89, 11)
+# c.execute('Insert INTO misc (screenshot, name, description, menu, coordinates) VALUES (?, ?, ?, ?, ?)', [tour_type, 'telesales', 'tour type', 'm3', 'x + 36, y + 143, 89, 11'])
+c.execute('Insert INTO misc (screenshot, name, description, menu, coordinates) VALUES (?, ?, ?, ?, ?)', [tour_status, 'booked', 'tour status', 'm3', 'x + 36, y + 170, 89, 11'])
+# c.execute("SELECT name FROM premiums WHERE screenshot=?", [screenshot])"""
+# rows = c.fetchone()[0]
+# print(rows)
 
 # Committing changes and closing the connection to the database file
 conn.commit()
