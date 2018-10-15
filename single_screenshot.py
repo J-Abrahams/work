@@ -1,6 +1,6 @@
 import mss.tools
 import screenshot_data as sc
-from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11
+from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13
 import datetime
 # import importlib
 # importlib.reload(sc)
@@ -14,7 +14,7 @@ if window != 0:
     x, y = m3['title']
     with mss.mss() as sct:
         # The screen part to capture
-        monitor = {'top': y, 'left': x, 'width': 800, 'height': 500}
+        monitor = {'top': y, 'left': x, 'width': 800, 'height': 600}
         now = datetime.datetime.now()
         output = 'monitor-1-crop.png'
 
