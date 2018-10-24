@@ -14,7 +14,6 @@ import datetime
 from tabulate import tabulate
 import sys
 import pickle
-import openpyxl
 import re
 import core_functions as cf
 import sqlite3
@@ -36,7 +35,8 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604',
                'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125', 'Deeandra Castillo': 'SOL5495',
                'Kenan Williams': 'SOL27567', 'Jenniffer Abbott': 'SOL5456', 'Met Austin Simon': 'SOL27647',
-               'Dana Durant': 'SOL27561'}
+               'Dana Durant': 'SOL27561', 'Seo Ra Yoo': 'SOL27551'}
+conn = sqlite3.connect('sqlite.sqlite')
 f = open('text_files\\premiums.p', 'rb')
 premium_dict = pickle.load(f)
 f.close()
@@ -475,10 +475,10 @@ def read_premiums(number_of_refundable_deposits):
         premium = sqlite_select(cf.take_screenshot_change_color(x + 342, y + 60, 80, 11), 'premiums')
         if premium == 'nothing':
             break
-        elif screenshot_2 == sqlite_get_item("SELECT screenshot FROM premiums WHERE name=?", ['Did Not Issue']):
-            y += 13
         else:
-            if 'DEP' in premium:
+            if screenshot_2 == sqlite_get_item("SELECT screenshot FROM premiums WHERE name=?", ['Did Not Issue']):
+                premium = f'{premium} - Canceled'
+            if 'DEP' in premium and 'Canceled' not in premium:
                 number_of_dep_premiums += 1
                 # if '20' in premium:
                 #     screenshot = '20'
@@ -511,13 +511,13 @@ def check_for_dep_premium(deposit_df, premiums):
     global errors
     for index, row in deposit_df.iterrows():
         if row['Deposit_Type'] == 'Refundable' and row['Price'] == '40':
-            if 'DEP $40 CC' in premiums:
+            if any(i in premiums for i in ['DEP $40 CC', 'DEP $40 Cash']):
                 print(u"\u001b[32m" + '$40 DEP is present' + u"\u001b[0m")
             else:
                 print(u"\u001b[31m" + 'Missing $40 DEP' + u"\u001b[0m")
                 errors += 1
         elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '50':
-            if any(i in premiums for i in ['DEP $50 CC', 'DEP $50 Cash']):
+            if any(i in premiums for i in ['DEP $50 CC', 'DEP $50 Cash', 'CS $50 CC Deposit']):
                 print(u"\u001b[32m" + '$50 DEP is present' + u"\u001b[0m")
             else:
                 print(u"\u001b[31m" + 'Missing $50 DEP' + u"\u001b[0m")
@@ -535,7 +535,7 @@ def check_for_dep_premium(deposit_df, premiums):
                 print(u"\u001b[31m" + 'Missing $99 DEP' + u"\u001b[0m")
                 errors += 1
         elif row['Deposit_Type'] == 'Refundable' and row['Price'] == '100':
-            if '100' in premiums:
+            if 'DEP $100 CC' in premiums:
                 print(u"\u001b[32m" + '$100 DEP is present' + u"\u001b[0m")
             else:
                 print(u"\u001b[31m" + 'Missing $100 DEP' + u"\u001b[0m")
@@ -570,6 +570,11 @@ def notes(status):
     pyautogui.click(m3['notes'])
     x, y = m3['title']
     number_of_notes = 0
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\note.png',
+                                           region=(1045, 515, 50, 30))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\note'
+                                               '.png', region=(1045, 515, 50, 30))
     while cf.take_screenshot(x - 54, y + 58, 25, 10) != sc.note_nothing:
         number_of_notes += 1
         y += 13
@@ -657,9 +662,13 @@ def enter_personnel(sol, status):
         pyautogui.click(m3['personnel'])
         pyautogui.click(m3['insert_personnel'])
         sc.get_m12_coordinates()
-        while cf.take_screenshot_change_color(m12['title'][0] + 44, m12['title'][1] + 16, 9, 27) != \
-                sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['by_personnel_number_selected']):
+        x, y = m12['title']
+        screenshot = cf.take_screenshot_change_color(x + 44, y + 16, 9, 27)
+        screenshot_2 = sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['by_personnel_number_selected'])
+        while screenshot != screenshot_2:
             pyautogui.click(m12['by_personnel_number'])
+            screenshot = cf.take_screenshot_change_color(x + 44, y + 16, 9, 27)
+            screenshot_2 = sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['by_personnel_number_selected'])
         keyboard.write(sol)
         pyautogui.click(m12['select'])
         image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
@@ -693,19 +702,6 @@ def check_for_duplicate_personnel(df, status):
     pyautogui.click(m3['title'])
     sc.get_m2_coordinates()
     select_tour(df, status)
-
-
-def convert_excel_to_csv():
-    xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\3.xlsx")
-    df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
-    df.to_csv('file.csv')
-
-
-def mark_row_as_completed(index):
-    wb = openpyxl.load_workbook(filename='C:\\Users\\Jared.Abrahams\\Downloads\\3.xlsx')
-    ws = wb.worksheets[0]
-    ws.cell(row=int(index) + 2, column=8).value = 'x'
-    wb.save('C:\\Users\\Jared.Abrahams\\Downloads\\3.xlsx')
 
 
 def count_pids():

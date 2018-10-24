@@ -31,7 +31,7 @@ setup(
     keywords = 'keyboard hook simulate hotkey',
     long_description=long_description,
     install_requires=["pyobjc; sys_platform=='darwin'", 'pyautogui', 'pyperclip', 'keyboard', 'pandas', 'mss',
-                      'clipboard'], # OSX-specific dependency
+                      'clipboard', 'gspread', 'google-api-python-client', 'tabulate'], # OSX-specific dependency
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',

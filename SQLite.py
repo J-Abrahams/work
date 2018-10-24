@@ -11,15 +11,20 @@ conn = sqlite3.connect('sqlite.sqlite')
 c = conn.cursor()
 
 # Creating a new SQLite table with 1 column
-"""c.execute('''CREATE TABLE menu_coordinates (ID INTEGER PRIMARY KEY,
-          name TEXT,
-          coordinates TEXT)''')"""
+# c.execute('''CREATE TABLE deposits (ID INTEGER PRIMARY KEY,
+#           name TEXT,
+#           screenshot TEXT,
+#           coordinates TEXT,
+#           description TEXT)''')
 """for key, value in premiums.items():"""
 sc.get_m3_coordinates()
 x, y = m3['title']
 # print(x, y)
-c.execute('INSERT INTO premiums (name, screenshot) VALUES (?, ?)', ['$40 CC Dep', cf.take_screenshot_change_color(x + 342, y + 60, 80, 11)])
-# c.execute('UPDATE premiums SET screenshot=(?) WHERE name=("$50 CC Dep")', [cf.take_screenshot_change_color(x + 342, y + 60, 80, 11)])
+c.execute('INSERT INTO deposits (name, screenshot, description, coordinates, type) VALUES (?, ?, ?, ?, ?)', ['ams/refundable deposit', cf.take_screenshot_change_color(x + 266, y + 68, 154, 10), 'Description of deposit (m3)', 'x + 266, y + 68, 154, 10', 'd'])
+# c.execute('UPDATE premiums SET screenshot=(?) WHERE name=("Did Not Issue")', [cf.take_screenshot_change_color(x + 433, y + 60, 10, 8)])
+# c.execute("SELECT {} FROM {} WHERE screenshot=?".format('name', 'numbers'), [cf.take_screenshot_change_color(x + 74, y + 48, 6, 9)])
+# number = c.fetchone()[0]
+# print(number)
 """for row in c.execute('SELECT * FROM premiums'):
     print(row)"""
 """sc.get_m3_coordinates()

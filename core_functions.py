@@ -13,6 +13,7 @@ import csv
 import random
 import cv2
 import numpy as np
+import sqlite3
 
 
 def search_pid(pid_number):
@@ -25,27 +26,19 @@ def search_pid(pid_number):
 
 def double_check_pid(pid_number):
     sc.get_m2_coordinates()
-    pyautogui.doubleClick(m2['prospect_id'])
-    keyboard.send('ctrl + c')
-    copied_text = clipboard.paste()
-    for i in range(3):
-        if copied_text != pid_number:
-            time.sleep(0.3)
-            pyautogui.doubleClick(m2['prospect_id'])
-            keyboard.send('ctrl + c')
-            copied_text = clipboard.paste()
-    if copied_text != pid_number:
-        pause('Is the pid correct?')
-        return
-    if pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\company.png',
-                                      region=(514, 245, 889, 566)) is not None:
-        return
-    pyautogui.click(m2['company'])
-    keyboard.send('ctrl + z')
-    time.sleep(1)
-    keyboard.send('ctrl + c')
-    copied_text = clipboard.paste()
-    if 'pid' in copied_text.lower():
+    x, y = m2['title']
+    pid_screenshot = ''
+    conn = sqlite3.connect('sqlite.sqlite')
+    c = conn.cursor()
+    for i in range(7):
+        screenshot = take_screenshot_change_color(x + 74 + 6 * i, y + 48, 6, 9)
+        c.execute("SELECT name FROM numbers WHERE screenshot=?", [screenshot])
+        number = str(c.fetchone()[0])
+        if number != 'nothing':
+            pid_screenshot += number
+        else:
+            continue
+    if pid_screenshot != pid_number:
         pause('Is the pid correct?')
         return
 
@@ -143,8 +136,12 @@ def take_screenshot_change_color(x, y, width, height, save_file=False):
     height, width, channels = img.shape
 
     blue = [107, 36, 8, 255]
+    gray = [198, 195, 198, 255]
     white = [255, 255, 255, 255]
     black = [0, 0, 0, 255]
+
+    # if np.all(img == white):
+    #     return 'nothing'
 
     if np.any(img[:, 0] == 107):
         for x in range(0, width):
@@ -154,8 +151,19 @@ def take_screenshot_change_color(x, y, width, height, save_file=False):
                     img[y, x] = black
                 elif all(channels_xy == blue):
                     img[y, x] = white
+                elif all(channels_xy == gray):
+                    img[y, x] = white
+
+    elif np.any(img[:, 0] == 198):
+        for x in range(0, width):
+            for y in range(0, height):
+                channels_xy = img[y, x]
+                if all(channels_xy == gray):
+                    img[y, x] = white
+
     if save_file:
         cv2.imshow('img', img)
+        cv2.waitKey(0)
     screenshot = cv2.imencode('.png', img)[1]
     return str(screenshot.tobytes())
 
