@@ -22,18 +22,6 @@ import sqlite3
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 
-sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'Katherine Albini': 'SOL23521',
-               'Katherine England/Abini': 'SOL23521', 'Justin Locke': 'SOL4967', 'Brian Bennett': 'SOL3055',
-               'Carter Roedell': 'SOL23345', 'Fernanda Hernandez': 'SOL26788', 'Fern Hernandez': 'SOL26788',
-               'Alton Major': 'SOL4809', 'Thuy Pham': 'SOL25688', 'Julianne Martinez': 'SOL22766',
-               'Quenton Stroud': 'SOL27228', 'Sadie Oliver': 'SOL26834', 'Valeria Rebollar': 'SOL24218',
-               'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604',
-               'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125', 'Deeandra Castillo': 'SOL5495',
-               'Kenan Williams': 'SOL27567'}
-
-
-conn = sqlite3.connect('sqlite.sqlite')
-
 
 def sqlite_select(screenshot, table):
     conn = sqlite3.connect('sqlite.sqlite')
@@ -42,21 +30,11 @@ def sqlite_select(screenshot, table):
     try:
         name = c.fetchone()[0]
     except TypeError:
-        if table == 'numbers':
-            name = ''
-        elif table == 'premiums':
-            name = 'Old Premium'
+        name = 'Old Premium'
     return name
 
 
-def sqlite_get_item(sqlite_statement, *parameters):
-    global conn
-    c = conn.cursor()
-    c.execute(sqlite_statement, *parameters)
-    return c.fetchone()[0]
-
-
-def open_sheet(sheet_name='Confirmation Sheet'):
+def open_sheet(sheet_name='Reflections'):
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name('Phone-6ad41718c799.json', scope)
     client = gspread.authorize(creds)
@@ -70,45 +48,17 @@ def count_rows(sheet):
     return number_of_rows, dictionaries
 
 
-def select_tour(tours_list, row):
+def select_tour(attempt_number, date):
     x, y = m2['title']
-    current_date = cf.get_current_date()
-    correct_tour = None
-    for tour in tours_list:
-        if row.c in ['x', 'X'] and tour.type != 'Audition' \
-                and tour.status in ['Showed', 'Confirmed', 'No_Show', 'On_Tour'] \
-                and ((tour.date - current_date) >= datetime.timedelta(days=-1)
-                     or (tour.date - current_date) <= datetime.timedelta(days=14)):
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-        elif row.r in ['x', 'X'] and (tour.type == 'Open_Reservation'
-                                      and tour.date == datetime.datetime.strptime('1/1/1900', "%m/%d/%Y")) \
-                or (tour.status == 'Rescheduled' and (tour.date - current_date) >= datetime.timedelta(days=0)) \
-                and tour.type != 'Audition':
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-        elif row.x in ['x', 'X'] and tour.status == 'Canceled' and tour.type != 'Audition':
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-        elif row.u in ['x', 'X'] and tour.type == 'Minivac' and ((tour.date - current_date) >= datetime.timedelta(days=-1)):
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-        elif row.t in ['x', 'X'] and tour.type == 'Day_Drive' \
-                and ((tour.date - current_date) >= datetime.timedelta(days=-1)):
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-    if correct_tour is None:
-        for tour in tours_list:
-            if tour.type != 'Audition' and tour.status != 'Error':
-                print('Couldn\'t find correct tour')
-                pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-                correct_tour = tour
-                break
+    df, pretty_df = cf.create_accommodations_dataframe()
+    # Returns the top tour that is Showed, not an Audition, and at most a week before the date we entered.
+    # tour_number is the index of the correct tour. Ex: 1 if the second tour is the correct one.
+    try:
+        tour_number = df[(df.Tour_Status == 'Showed') & (df.Tour_Type != 'Audition') &
+                         ((date - df.Date) <= datetime.timedelta(days=7))].index[attempt_number - 1]
+    except IndexError:
+        tour_number = df[(df.Tour_Status == 'No_Show') & (df.Tour_Type != 'Audition')].index[0]
+    pyautogui.doubleClick(x + 469, y + 67 + 13 * tour_number)
     # Checks if "You need to change sites" message comes up
     # Messed up here and had to make it confusing
     screen_shot = None
@@ -119,7 +69,6 @@ def select_tour(tours_list, row):
             screen_shot = str(mss.tools.to_png(im.rgb, im.size))
     if screen_shot != sc.no_incorrect_site:
         pyautogui.click(m2['yes_change_sites'])
-    return correct_tour
 
 
 def count_accommodations():
@@ -160,27 +109,7 @@ def count_deposits():
             y += 13
 
 
-def count_premiums():
-    number_of_premiums = 0
-    sc.get_m3_coordinates()
-    x, y = m3['title']
-    pyautogui.click(m3['premiums'])
-    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
-                                           region=(514, 245, 889, 566))
-    while image is None:
-        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
-                                               region=(514, 245, 889, 566))
-    while True:
-        premium = cf.take_screenshot_change_color(x + 342, y + 60, 80, 11)
-        if premium == 'nothing':
-            break
-        else:
-            number_of_premiums += 1
-            y += 13
-    return number_of_premiums
-
-
-class ConfirmationSheet:
+class ReflectionsSheet:
 
     def __init__(self, sheet_name):
         self.sheet = self.open_sheet(sheet_name)
@@ -203,13 +132,11 @@ class ConfirmationSheet:
 
 class Row:
 
-    def __init__(self, pid, c, r, x, u, t, completed):
+    def __init__(self, pid, price, date, cash, completed):
         self.pid = str(pid)
-        self.c = c
-        self.r = r
-        self.x = x
-        self.u = u
-        self.t = t
+        self.price = price
+        self.date = datetime.datetime.strptime(date + '/18', "%m/%d/%y")
+        self.cash = cash
         self.completed = completed
 
     def search_pid(self):
@@ -330,9 +257,10 @@ class Deposit:
         self.type = self.deposit_type()
         self.amount = self.amount()
 
+
     def description(self):
         x, y = m3['title']
-        screenshot = cf.take_screenshot_change_color(x + 266, y + 68 + 13 * self.index, 154, 10)
+        screenshot = cf.take_screenshot_change_color(x + 266, y + 68, 154, 10)
         conn = sqlite3.connect('sqlite.sqlite')
         c = conn.cursor()
         try:
@@ -357,16 +285,18 @@ class Deposit:
             pyautogui.click(m6['ok'])
             return description
 
+
     def deposit_type(self):
         if 'refunded' in self.description.lower():
-            deposit_type = 'refunded'
+            deposit_type = 'Refunded'
         elif 'minivac' in self.description.lower() or 'apply' in self.description.lower():
-            deposit_type = 'non_refundable'
+            deposit_type = 'Non_Refundable'
         elif 'ref' in self.description.lower():
-            deposit_type = 'refundable'
+            deposit_type = 'Refundable'
         else:
-            deposit_type = 'non_refundable'
+            deposit_type = 'Non_Refundable'
         return deposit_type
+
 
     def amount(self):
         x, y = m3['title']
@@ -381,55 +311,21 @@ class Deposit:
         return amount
 
 
-class Premium:
-
-    def __init__(self, index):
-        self.index = index
-        self.name = self.name()
-        self.canceled = self.canceled()
-        self.refundable = self.refundable()
-
-    def name(self):
-        x, y = m3['title']
-        premium = sqlite_select(cf.take_screenshot_change_color(x + 342, y + 60 + self.index * 13, 80, 11), 'premiums')
-        return premium
-
-    def canceled(self):
-        global conn
-        c = conn.cursor()
-        x, y = m3['title']
-        screenshot = cf.take_screenshot_change_color(x + 433, y + 60 + self.index * 13, 10, 8)
-        # c.execute("SELECT screenshot FROM premiums WHERE name=?", ['Did Not Issue'])
-        # did_not_issue = c.fetchone[0]
-        if screenshot == 'nothing':
-            return False
-        else:
-            return True
-
-    def refundable(self):
-        if 'DEP' in self.name:
-            return True
-        else:
-            return False
-
 if __name__ == "__main__":
-    confirmation_sheet = ConfirmationSheet("Confirmation Sheet")
+    progress = 0
+    reflections_sheet = ReflectionsSheet("Reflections")
 
     # Count number of rows
-    list_of_rows = confirmation_sheet.read_rows()
-    number_of_rows = confirmation_sheet.count_rows()
+    list_of_rows = reflections_sheet.read_rows()
+    number_of_rows = reflections_sheet.count_rows()
 
     for row in list_of_rows:
-
-        # Changes the sol number if the column 'Sol' is not empty.
-        if row['Sol'] != '':
-            sol = sol_numbers[row['Sol']]
-
         # Create a row object.
-        row = Row(row['PID'], row['conf'], row['rxl'], row['cxl'], row['ug'], row['tav'], row['Completed'])
+        row = Row(str(row['pid']), row['price'], row['date'], row['cash'], row['completed'])
 
         # Skips row if the completed column is checked off.
         if row.completed in ['x', 'X']:
+            progress += 1
             continue
 
         # Enters, searches, and selects the PID.
@@ -464,22 +360,8 @@ if __name__ == "__main__":
             deposits.append(deposit)
 
         print(tour.status, tour.type, tour.wave)
-        print(deposits)
         for deposit in deposits:
-            if deposit.type == 'refundable':
-                number_of_refundable_deposits += 1
             print(deposit.amount, deposit.type)
-
-        # Count number of Premiums
-        number_of_premiums = count_premiums()
-        premiums = []
-        for i in range(number_of_premiums):
-            premium = Premium(i)
-            premiums.append(premium)
-
-        for premium in premiums:
-            print(premium.name, premium.canceled, premium.refundable)
-
         if (tour.status in ['canceled', 'no_tour'] and number_of_accommodations == 0) or \
                 (tour.type == 'minivac' and number_of_accommodations > 0) or \
                 (tour.type == 'Day_drive' and number_of_accommodations == 0):

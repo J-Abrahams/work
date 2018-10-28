@@ -1,6 +1,5 @@
 import csv
 import time
-from tkinter import Tk
 import keyboard
 import mss
 import mss.tools
@@ -10,15 +9,15 @@ import clipboard
 import screenshot_data as sc
 from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10
 import datetime
-from tabulate import tabulate
 import sys
 import pickle
 import openpyxl
-import re
 import core_functions as cf
-
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
+import sqlite3
 # import importlib
-# importlib.reload(cf)
+# importlib.reload(sc)
 transaction_code = 0
 
 
@@ -45,69 +44,21 @@ def read_pickle_file(file_name):
         return pickle.load(file)
 
 
-def check_if_deposit_in_dictionary():
-    global deps
-    sc.get_m8_coordinates()
-    x, y = m8['title']
-    list_temp = []
-    for i in range(10):
-        refund_option = take_screenshot(x + 32, y + 91, 135, 11, save_file=True)
-        try:
-            option = deps[refund_option]
-            print(option)
-        except KeyError:
-            print(i)
-        if i in list_temp:
-            if i == 0:
-                deps[refund_option] = 'nothing'
-            elif i == 1:
-                deps[refund_option] = 'ams cash ref'
-            elif i == 2:
-                deps[refund_option] = 'ams cc ref'
-            elif i == 3:
-                deps[refund_option] = 'ams transfer'
-            elif i == 4:
-                deps[refund_option] = 'ih cash ref'
-            elif i == 5:
-                deps[refund_option] = 'ih credit ref'
-            elif i == 6:
-                deps[refund_option] = 'ih transfer'
-            elif i == 7:
-                deps[refund_option] = 'so transfer'
-            elif i == 8:
-                deps[refund_option] = 'or credit card'
-            elif i == 9:
-                deps[refund_option] = 'sol credit refund'
-        y += 13
-    with open('text_files\\deposit_options.txt', 'a') as file:
-        file.write('{}\n'.format(deps))
-
-
-def take_screenshots_of_refund_options():
-    global deps
-    sc.get_m8_coordinates()
-    x, y = m8['title']
-    deposit_options = []
-    for i in range(10):
-        refund_option = take_screenshot(x + 32, y + 91, 135, 11, save_file=True)
-        option = deps[refund_option]
-
-
-def turn_screenshots_into_date(month_screenshot, day_screenshot, year_screenshot):
+def get_date(month, day, year):
     f = open('text_files\\dates.p', 'rb')
     date_dictionary = pickle.load(f)
     f.close()
     try:
-        month_screenshot = date_dictionary[month_screenshot]
-        day_screenshot = date_dictionary[day_screenshot]
-        year_screenshot = date_dictionary[year_screenshot]
-        if month_screenshot not in ['Nothing', 'Error']:
-            tour_date = ('{}/{}/{}'.format(month_screenshot, day_screenshot, year_screenshot))
+        month = date_dictionary[month]
+        day = date_dictionary[day]
+        year = date_dictionary[year]
+        if month not in ['Nothing', 'Error']:
+            tour_date = ('{}/{}/{}'.format(month, day, year))
             return tour_date
             # datetime.datetime.strptime(tour_date, "%m/%d/%Y")
-        elif month_screenshot == 'Error':
+        elif month == 'Error':
             return 'Error'
-        elif month_screenshot == 'Nothing':
+        elif month == 'Nothing':
             return 'Nothing'
     except KeyError:
         return 'Nothing'
@@ -121,7 +72,7 @@ def search_pid(pid_number):
     pyautogui.click(m1['change'])
 
 
-def accommodations_create_dataframe():
+def create_data_frame():
     """
     Takes screenshots of the tours. Turns the screenshots into a list of dictionaries 'd'. Turns 'd' into a dataframe.
     d is a list of dictionaries such as [{''Date': '7/06/18', 'Tour_Type': 'Audition', 'Tour_Status': 'Showed'},
@@ -133,29 +84,18 @@ def accommodations_create_dataframe():
     pretty_d = []
     x, y = m2['title']
     for i in range(8):
-
-        # Take screenshots of dates
         month = take_screenshot(x + 327, y + 63, 13, 10)
         day = take_screenshot(x + 342, y + 63, 15, 10)
         year = take_screenshot(x + 358, y + 63, 27, 10)
-
-        # Turn the screenshots into a datetime object
-        tour_date = turn_screenshots_into_date(month, day, year)
-
-        # Take screenshots of the tour type and tour status
+        tour_date = get_date(month, day, year)
         tour_type = take_screenshot(x + 402, y + 63, 14, 10)
         tour_status = take_screenshot(x + 484, y + 63, 14, 10)
-
-        # TODO Use pickle file here instead of dictionary in screenshot_data.
-        # Turn screenshot of tour type into string using the dictionary m2_tour_types
         try:
             tour_type = sc.m2_tour_types[tour_type]
         except KeyError:
             print('Unrecognized tour type')
             print(tour_type)
             tour_type = None
-
-        # Turn screenshot of tour status into string using the pickle file m2_tour_status
         try:
             tour_status_dict = read_pickle_file('m2_tour_status.p')
             tour_status = tour_status_dict[tour_status]
@@ -164,31 +104,19 @@ def accommodations_create_dataframe():
             print(tour_status)
             tour_status = None
         y += 13
-        # Turns the screenshots into dictionaries.
         if tour_date != 'Nothing':
             try:
-                # pretty_d uses strings instead of datetime objects because strings look better.
+                # Where the screenshots get turned into dictionaries.
                 pretty_d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
-
-                # Turn strings into datetime objects and creates the dictionaries for the actual dataframe.
                 tour_date = pd.to_datetime(tour_date)
                 d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
             except NameError:
                 pass
-        elif tour_status == 'Error':
-            pretty_d.append({'Date': 'Error', 'Tour_Type': 'Error', 'Tour_Status': 'Error'})
-            d.append({'Date': 'Error', 'Tour_Type': 'Error', 'Tour_Status': 'Error'})
-
-    # Turns d into a dataframe and then reorders the columns in the dataframe.
-    df = pd.DataFrame(d)
-    df = df[['Date', 'Tour_Type', 'Tour_Status']]
-
-    # Turns pretty_d into a dataframe and then reorders the columns in the dataframe.
+    df = pd.DataFrame(d)  # Turn d into a dataframe
+    df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
     pretty_df = pd.DataFrame(pretty_d)
     pretty_df = pretty_df[['Date', 'Tour_Type', 'Tour_Status']]
-
-    # Prints the pretty dataframe, returns the actual dataframe.
-    print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
+    #  print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
     return df
 
 
@@ -247,6 +175,8 @@ def count_deposit_items():
             screenshot = str(mss.tools.to_png(im.rgb, im.size))
         if screenshot == sc.no_deposit_items:
             return number_of_deposit_items
+        elif number_of_deposit_items > 5:
+            count_deposit_items()
         else:
             number_of_deposit_items += 1
             y += 13
@@ -292,6 +222,7 @@ def change_deposit_title(price, cash=None):
                 amount = 0
                 print('Don\'t recognize the amount')
                 print(mss.tools.to_png(im.rgb, im.size))
+                print(deposit_item_amount, x, y)
                 output = 'monitor-1-crop.png'
                 mss.tools.to_png(im.rgb, im.size, output=output)
         attempts += 1
@@ -308,7 +239,6 @@ def change_deposit_title(price, cash=None):
         keyboard.send('ctrl + c')
         old_title = clipboard.paste()
         attempts += 1
-        print(old_title.lower())
     if 'ref' not in old_title.lower():
         if old_title.lower() == 'ams dep':
             old_title = 'AMS/Refunded Deposit'
@@ -374,10 +304,10 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
     sc.get_m6_coordinates()
     sites_dictionary = read_pickle_file('sites.p')
     deposit_options_dictionary = read_pickle_file('deposit_options.p')
-    site = cf.take_screenshot(1517, 1036, 146, 17)
+    site = take_screenshot(1517, 1036, 146, 17)
     if (description == 'ams' and sites_dictionary[site] in ['A1', 'A3']) or \
        (description == 'ir' and sites_dictionary[site] in ['A2', 'A3', 'Northstar', 'Breckenridge']) or \
-       (description == 'sol' and sites_dictionary[site] in ['Breckenridge']):
+       (description == 'sol' and sites_dictionary[site] in ['Northstar', 'Breckenridge']):
         button = 'payment'
     else:
         button = 'insert'
@@ -388,36 +318,92 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
         x, y = m8['title']
         for i in range(9):
             refund_option = take_screenshot(x + 32, y + 91, 135, 11)
-            if deposit_options_dictionary[refund_option] == 'ams cc refund':
-                pyautogui.click(x + 75, y + 91)
-                break
-            else:
+            try:
+                if deposit_options_dictionary[refund_option] == 'ams cc refund':
+                    pyautogui.click(x + 75, y + 91)
+                    break
+                elif i == 8:
+                    sys.exit("Couldn't find correct option.")
+                else:
+                    y += 13
+            except KeyError:
                 y += 13
+                if i == 8:
+                    sys.exit("Couldn't find correct option.")
     elif description == 'ir':
+        if sites_dictionary[site] == 'Timber':
+            correct_option = 'ih cc refund'
+        else:
+            correct_option = 'ir cc refund'
+        pyautogui.click(m6[button])
+        sc.get_m8_coordinates()
+        pyautogui.click(m8['transaction_code'])
+        if button == 'payment':
+            pyautogui.click(m8['transaction_code_scroll_bar'])
+        x, y = m8['title']
+        for i in range(9):
+            refund_option = take_screenshot(x + 32, y + 91, 135, 11)
+            try:
+                if deposit_options_dictionary[refund_option] == correct_option:
+                    pyautogui.click(x + 75, y + 91)
+                    if correct_option == 'ih cc refund':
+                        pyautogui.click(m8['description'])
+                        keyboard.send('ctrl + z')
+                        keyboard.write('IR CREDIT CARD REFUND')
+                    break
+                elif i == 8:
+                    sys.exit("Couldn't find correct option.")
+                else:
+                    y += 13
+            except KeyError:
+                y += 13
+                if i == 8:
+                    sys.exit("Couldn't find correct option.")
+    elif description == 'sol':
+        pyautogui.click(m6[button])
+        sc.get_m8_coordinates()
+        pyautogui.click(m8['transaction_code'])
+        if button == 'payment' or sites_dictionary[site] in ['Cabo', 'A2', 'A3']:
+            pyautogui.click(m8['transaction_code_scroll_bar'])
+            pyautogui.click(m8['transaction_code_scroll_bar'])
+        x, y = m8['title']
+        for i in range(9):
+            refund_option = take_screenshot(x + 32, y + 91, 135, 11)
+            try:
+                if deposit_options_dictionary[refund_option] == 'sol cc refund':
+                    pyautogui.click(x + 75, y + 91)
+                    break
+                elif i == 8:
+                    sys.exit("Couldn't find correct option.")
+                else:
+                    y += 13
+            except KeyError:
+                y += 13
+                if i == 8:
+                    sys.exit("Couldn't find correct option.")
+    elif description == 'ih':
+        button = 'insert'
         pyautogui.click(m6[button])
         sc.get_m8_coordinates()
         pyautogui.click(m8['transaction_code'])
         x, y = m8['title']
         for i in range(9):
             refund_option = take_screenshot(x + 32, y + 91, 135, 11)
-            if deposit_options_dictionary[refund_option] == 'ir cc refund':
-                pyautogui.click(x + 75, y + 91)
-                break
-            else:
+            try:
+                if deposit_options_dictionary[refund_option] == 'ir cc refund':
+                    pyautogui.click(x + 75, y + 91)
+                    pyautogui.click(m8['description'])
+                    keyboard.send('ctrl + z')
+                    keyboard.write('IH REFUND')
+                    break
+                elif i == 8:
+                    sys.exit("Couldn't find correct option.")
+                else:
+                    y += 13
+            except KeyError:
                 y += 13
-    elif description == 'sol':
-        pyautogui.click(m6[button])
-        sc.get_m8_coordinates()
-        pyautogui.click(m8['transaction_code'])
-        pyautogui.click(m8['transaction_code_scroll_bar'])
-        x, y = m8['title']
-        for i in range(9):
-            refund_option = take_screenshot(x + 32, y + 91, 135, 1)
-            if deposit_options_dictionary[refund_option] == 'sol cc refund':
-                pyautogui.click(x + 75, y + 91)
-                break
-            else:
-                y += 13
+                if i == 8:
+                    sys.exit("Couldn't find correct option.")
     if button == 'insert':
         pyautogui.doubleClick(m8['amount'])
         keyboard.write(price)
@@ -634,12 +620,92 @@ def select_ams_refund_payment(date, price, description, reference_number=None):
     pyautogui.click(x - 20, y + 425)
 
 
-def log_error(pids):
-    with open('Deposit_Errors.txt', 'a') as deposit_errors:
-        now = datetime.datetime.now()
-        now_str = now.strftime("%m/%d/%Y")
-        deposit_errors.write('\n{}\n'.format(now_str))
-        deposit_errors.write('{}\n'.format(pids))
+def select_ir_refund_payment(date, price, reference_number=None):
+    sc.get_m6_coordinates()
+    image = None
+    pyautogui.click(m6['insert'])
+    sc.get_m8_coordinates()
+    pyautogui.click(m8['transaction_code'])
+    attempts = 0
+    global transaction_code
+    if transaction_code == 0 or transaction_code == 1:
+        image = pyautogui.locateCenterOnScreen(
+            'C:\\Users\\Jared.Abrahams\\Screenshots\\ir_refund.png', region=(136, 652, 392, 247))
+        while image is None and attempts <= 2:
+            image = pyautogui.locateCenterOnScreen(
+                'C:\\Users\\Jared.Abrahams\\Screenshots\\ir_refund.png', region=(136, 652, 392, 247))
+            attempts += 1
+        if image is not None:
+            transaction_code = 1
+        else:
+            transaction_code = 0
+    if transaction_code == 0 or transaction_code == 2:
+        attempts = 0
+        pyautogui.click(m8['cancel'])
+        pyautogui.click(m6['payment'])
+        sc.get_m8_coordinates()
+        pyautogui.click(m8['transaction_code'])
+        pyautogui.click(m8['transaction_code_scroll_bar'])
+        image = pyautogui.locateCenterOnScreen(
+            'C:\\Users\\Jared.Abrahams\\Screenshots\\ir_cc_refund.png', region=(136, 652, 392, 247))
+        while image is None and attempts <= 2:
+            image = pyautogui.locateCenterOnScreen(
+                'C:\\Users\\Jared.Abrahams\\Screenshots\\ir_cc_refund.png', region=(136, 652, 392, 247))
+            attempts += 1
+        if image is not None:
+            transaction_code = 2
+        else:
+            transaction_code = 0
+            sys.exit("Couldn't find correct choice")
+    pyautogui.click(image)
+    if transaction_code == 1:
+        pyautogui.doubleClick(m8['amount'])
+        keyboard.write(price)
+    pyautogui.doubleClick(m8['reference'])
+    if reference_number is None:
+        keyboard.send('ctrl + v')
+    else:
+        keyboard.write(reference_number)
+    pyautogui.doubleClick(m8['date'])
+    keyboard.write(date)
+    keyboard.send('tab')
+    pyautogui.click(m8['ok'])
+    time.sleep(0.3)
+    pyautogui.click(880, 565)  # Clicking yes to the warning that appears
+    now = datetime.datetime.now()
+    now_str = now.strftime("%Y-%m-%d-%H-%M-%S")
+    outfile = pyautogui.screenshot(
+        'C:\\Users\\Jared.Abrahams\\work\\deposit_screenshots\\ImageFile{}.png'.format(now_str))
+    pyautogui.click(m6['ok'])
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                           region=(514, 245, 889, 566))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                               region=(514, 245, 889, 566))
+    x, y = image
+    pyautogui.click(x + 265, y + 475)
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                           region=(514, 245, 889, 566))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                               region=(514, 245, 889, 566))
+    x, y = image
+    pyautogui.click(x - 20, y + 425)
+
+
+def convert_excel_to_csv():
+    xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\deposit_pids.xlsx")
+    df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
+    df.to_csv('file.csv')
+
+
+def count_number_of_pids():
+    number_of_pids = 0
+    with open('file.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            number_of_pids += 1
+    return number_of_pids
 
 
 def mark_row_as_completed(index):
@@ -652,63 +718,14 @@ def mark_row_as_completed(index):
 def show_progress(pid, progress, number_of_pids):
     percentage = round(progress * 100 / number_of_pids, 2)
     print('{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid)))
-
-
-def convert_excel_to_csv():
-    xls = pd.ExcelFile("C:\\Users\\Jared.Abrahams\\Downloads\\deposit_pids.xlsx")
-    df = xls.parse(sheet_name="Sheet1", index_col=None, na_values=['NA'])
-    df.to_csv('file.csv')
-
-
-def create_data_frame():
-    """
-    Takes screenshots of the tours. Turns the screenshots into a list of dictionaries 'd'. Turns 'd' into a dataframe.
-    d is a list of dictionaries such as [{''Date': '7/06/18', 'Tour_Type': 'Audition', 'Tour_Status': 'Showed'},
-    {'Date': '7/06/18', 'Tour_Type': 'minivac', 'Tour_Status': 'Showed'}]
-    :return:
-    """
-    sc.get_m2_coordinates()
-    d = []
-    pretty_d = []
-    x, y = m2['title']
-    for i in range(8):
-        month = take_screenshot(x + 327, y + 63, 13, 10)
-        day = take_screenshot(x + 342, y + 63, 15, 10)
-        year = take_screenshot(x + 358, y + 63, 27, 10)
-        tour_date = get_date(month, day, year)
-        tour_type = take_screenshot(x + 402, y + 63, 14, 10)
-        tour_status = take_screenshot(x + 484, y + 63, 14, 10)
-        try:
-            tour_type = sc.m2_tour_types[tour_type]
-        except KeyError:
-            print('Unrecognized tour type')
-            print(tour_type)
-            tour_type = None
-        try:
-            tour_status_dict = read_pickle_file('m2_tour_status.p')
-            tour_status = tour_status_dict[tour_status]
-        except KeyError:
-            print('Unrecognized tour status')
-            print(tour_status)
-            tour_status = None
-        y += 13
-        if tour_date != 'Nothing':
-            try:
-                # Where the screenshots get turned into dictionaries.
-                pretty_d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
-                tour_date = pd.to_datetime(tour_date)
-                d.append({'Date': tour_date, 'Tour_Type': tour_type, 'Tour_Status': tour_status})
-            except NameError:
-                pass
-    df = pd.DataFrame(d)  # Turn d into a dataframe
-    df = df[['Date', 'Tour_Type', 'Tour_Status']]  # Reorders the columns in the dataframe.
-    pretty_df = pd.DataFrame(pretty_d)
-    pretty_df = pretty_df[['Date', 'Tour_Type', 'Tour_Status']]
-    #  print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
-    return df
+    return '{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid))
 
 
 def use_excel_sheet():
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name('Phone-6ad41718c799.json', scope)
+    client = gspread.authorize(creds)
+    sheet = client.open("Reflections").sheet1
     convert_excel_to_csv()
     number_of_pids = count_number_of_pids()
     progress = 1
@@ -724,7 +741,7 @@ def use_excel_sheet():
             date = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d')
             cash = row['cash']
             index = row['']
-            show_progress(pids, progress, number_of_pids)
+            formatted_progress = show_progress(pids, progress, number_of_pids)
             print('{} - {}\n'.format(price, date))
             if cash == 'x' or cash == 'X':
                 cash_or_cc = 'cash'
@@ -754,32 +771,43 @@ def use_excel_sheet():
                     sc.get_m6_coordinates()
                     pyautogui.click(m6['ok'])
                     pyautogui.click(m6['ok'])
-                    image = pyautogui.locateCenterOnScreen(
-                        'C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
-                        region=(514, 245, 889, 566))
+                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                                           region=(514, 245, 889, 566))
                     while image is None:
                         image = pyautogui.locateCenterOnScreen(
                             'C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
                             region=(514, 245, 889, 566))
                     x, y = image
                     pyautogui.click(x + 265, y + 475)
-                    image = pyautogui.locateCenterOnScreen(
-                        'C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
-                        region=(514, 245, 889, 566))
+                    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                           region=(514, 245, 889, 566))
                     while image is None:
                         image = pyautogui.locateCenterOnScreen(
                             'C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
                             region=(514, 245, 889, 566))
                     x, y = image
                     pyautogui.click(x - 20, y + 425)
+                # ams_ir_or_sol = input('ams, ir, or sol:')
+                # old_reference = input('Reference Number starting with D:')
+                # reference_number = old_reference.replace("D-", "R-")
+                # if ams_ir_or_sol == 'ams':
+                #     select_ams_refund_payment(date, price, 'ams', reference_number)
+                # elif ams_ir_or_sol == 'ir':
+                #     select_ams_refund_payment(date, price, 'ir', reference_number)
+                # elif ams_ir_or_sol == 'sol':
+                #     select_ams_refund_payment(date, price, 'sol', reference_number)
             if deposit_type == 'ams':
                 select_ams_refund_payment(date, price, 'ams')
             elif deposit_type == 'ir':
                 select_ams_refund_payment(date, price, 'ir')
             elif deposit_type == 'sol':
                 select_ams_refund_payment(date, price, 'sol')
+            elif deposit_type == 'ih':
+                select_ams_refund_payment(date, price, 'ih')
             mark_row_as_completed(index)
+            sheet.update_cell(2, 1, formatted_progress)
             progress += 1
 
 
+cf.pause('Minimize Pycharm')
 use_excel_sheet()
