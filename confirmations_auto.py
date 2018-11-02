@@ -716,6 +716,7 @@ def count_pids():
 def show_progress(pid, progress, number_of_pids):
     percentage = round(progress * 100 / number_of_pids, 2)
     print('{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid)))
+    log.info('\n{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid)))
 
 
 def assign_variables(row):
@@ -914,7 +915,7 @@ if __name__ == "__main__":
     log = logging.getLogger(__name__)
     log.setLevel(logging.DEBUG)
     formatter = logging.Formatter(fmt="%(asctime)s:%(filename)s:%(levelname)s:%(message)s",
-                                  datefmt="%Y-%m-%d - %H:%M:%S")
+                                  datefmt="%Y-%m-%d-%H:%M:%S")
     fh = logging.FileHandler("mylog.log")
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(formatter)

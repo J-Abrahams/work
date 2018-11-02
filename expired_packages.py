@@ -8,7 +8,7 @@ import pandas as pd
 import pyautogui
 import clipboard
 import screenshot_data as sc
-from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10
+from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14
 import datetime
 from tabulate import tabulate
 import sys
@@ -65,6 +65,12 @@ def open_sheet(sheet_name='Confirmation Sheet'):
     return sheet
 
 
+def show_progress(pid, progress, number_of_pids):
+    percentage = round(int(progress) * 100 / int(number_of_pids), 2)
+    print('{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid)))
+    return '{} / {} - {} - {}'.format(str(progress), str(number_of_pids), str(percentage) + '%', str(pid))
+
+
 def count_rows(sheet):
     dictionaries = sheet.get_all_records()
     number_of_rows = len(sheet.get_all_records())
@@ -76,40 +82,13 @@ def select_tour(tours_list, row):
     current_date = cf.get_current_date()
     correct_tour = None
     for tour in tours_list:
-        if row.c in ['x', 'X'] and tour.type != 'Audition' \
-                and tour.status in ['Showed', 'Confirmed', 'No_Show', 'On_Tour'] \
-                and ((tour.date - current_date) >= datetime.timedelta(days=-1)
-                     or (tour.date - current_date) <= datetime.timedelta(days=14)):
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-        elif row.r in ['x', 'X'] and (tour.type == 'Open_Reservation'
-                                      and tour.date == datetime.datetime.strptime('1/1/1900', "%m/%d/%Y")) \
-                or (tour.status == 'Rescheduled' and (tour.date - current_date) >= datetime.timedelta(days=0)) \
-                and tour.type != 'Audition':
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-        elif row.x in ['x', 'X'] and tour.status == 'Canceled' and tour.type != 'Audition':
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-        elif row.u in ['x', 'X'] and tour.type == 'Minivac' and ((tour.date - current_date) >= datetime.timedelta(days=-1)):
-            pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-            correct_tour = tour
-            break
-        elif row.t in ['x', 'X'] and tour.type == 'Day_Drive' \
-                and ((tour.date - current_date) >= datetime.timedelta(days=-1)):
+        if tour.type == 'Open_Reservation' and tour.status == 'No_Tour' and \
+                tour.date == datetime.datetime.strptime('1/1/1900', "%m/%d/%Y"):
             pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
             correct_tour = tour
             break
     if correct_tour is None:
-        for tour in tours_list:
-            if tour.type != 'Audition' and tour.status != 'Error':
-                print('Couldn\'t find correct tour')
-                pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
-                correct_tour = tour
-                break
+        return 'error'
     # Checks if "You need to change sites" message comes up
     # Messed up here and had to make it confusing
     screen_shot = None
@@ -204,13 +183,8 @@ class ConfirmationSheet:
 
 class Row:
 
-    def __init__(self, pid, c, r, x, u, t, completed):
+    def __init__(self, pid, completed):
         self.pid = str(pid)
-        self.c = c
-        self.r = r
-        self.x = x
-        self.u = u
-        self.t = t
         self.completed = completed
 
     def search_pid(self):
@@ -416,26 +390,27 @@ class Premium:
         else:
             return 'no'
 
+
 if __name__ == "__main__":
-    confirmation_sheet = ConfirmationSheet("Confirmation Sheet")
-
+    cf.pause('Minimize Pycharm')
+    google_sheet = ConfirmationSheet("expired_packages")
     # Count number of rows
-    list_of_rows = confirmation_sheet.read_rows()
-    number_of_rows = confirmation_sheet.count_rows()
-
+    list_of_rows = google_sheet.read_rows()
+    number_of_rows = google_sheet.count_rows()
+    progress = 1
+    index = 1
     for row in list_of_rows:
-
-        # Changes the sol number if the column 'Sol' is not empty.
-        if row['Sol'] != '':
-            sol = sol_numbers[row['Sol']]
+        index += 1
 
         # Create a row object.
-        row = Row(row['PID'], row['conf'], row['rxl'], row['cxl'], row['ug'], row['tav'], row['Completed'])
+        row = Row(row['pid'], row['completed'])
 
         # Skips row if the completed column is checked off.
         if row.completed in ['x', 'X']:
+            progress += 1
             continue
-
+        formatted_progress = show_progress(row.pid, progress, number_of_rows)
+        google_sheet.sheet.update_cell(1, 3, formatted_progress)
         # Enters, searches, and selects the PID.
         row.search_pid()
 
@@ -445,64 +420,57 @@ if __name__ == "__main__":
         tours = []
         for i in range(8):
             tour = M2Tour(row, i)
+            if tour.type == 'Open_Reservation' and tour.type == 'No_Tour':
+                break
             if tour.date == pd.to_datetime('1/1/2000') and tour.type == '' and tour.status == '':
                 break
             else:
                 tours.append(tour)
-                print(tour.date, tour.type, tour.status, tour.site)
         # Selects correct tour
         correct_tour = select_tour(tours, row)
-
-        # Creates a tour object with all the face info.
+        if correct_tour == 'error':
+            google_sheet.sheet.update_cell(index, 3, 'Couldn\'t find correct tour')
+            google_sheet.sheet.update_cell(index, 2, 'x')
+            progress += 1
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                                   region=(514, 245, 889, 566))
+            while image is None:
+                image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                                       region=(514, 245, 889, 566))
+            x, y = image
+            pyautogui.click(x + 265, y + 475)
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                   region=(514, 245, 889, 566))
+            while image is None:
+                image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                       region=(514, 245, 889, 566))
+            x, y = image
+            pyautogui.click(x - 20, y + 425)
+            pyautogui.click(1318, 420)
+            continue
         sc.get_m3_coordinates()
-        tour = Tour(correct_tour, row)
-
-        # Count number of Accommodations
-        number_of_accommodations, number_of_canceled_accommodations = count_accommodations()
-
-        # Count number of Deposits
-        number_of_deposits = count_deposits()
-        deposits = []
-        deposits_df = []
-        for i in range(number_of_deposits):
-            deposit = Deposit(i)
-            deposits.append(deposit)
-            deposits_df.append({'description': deposit.type, 'amount': deposit.amount})
-        deposits_df = pd.DataFrame(deposits_df)
-        print(deposits_df)
-        print(tour.status, tour.type, tour.wave)
-        number_of_refundable_deposits = 0
-        for deposit in deposits:
-            if deposit.type == 'refundable':
-                number_of_refundable_deposits += 1
-            print('1', deposit.amount, deposit.type)
-
-        # Count number of Premiums
-        number_of_premiums = count_premiums()
-        premiums = []
-        premiums_df = []
-        for i in range(number_of_premiums):
-            premium = Premium(i)
-            premiums.append(premium)
-            premiums_df.append({'premium': premium.name, 'refundable': premium.refundable, 'canceled': premium.canceled})
-        premiums_df = pd.DataFrame(premiums_df)
-        print(premiums_df)
-        for premium in premiums:
-            print(premium.name, premium.canceled, premium.refundable)
-
-        if (tour.status in ['canceled', 'no_tour'] and number_of_accommodations == 0) or \
-                (tour.type == 'Minivac' and number_of_accommodations > 0) or \
-                (tour.type == 'Day_drive' and number_of_accommodations == 0):
-            cf.print_colored_text(f'{tour.type} - {str(number_of_accommodations)}', 'green')
-        else:
-            cf.print_colored_text(f'{tour.type} - {str(number_of_accommodations)}', 'red')
-        if len(premiums) != len(set(premiums)):
-            cf.print_colored_text(f'{len(premiums)} Premium(s) - DUPLICATES', 'red')
-        else:
-            cf.print_colored_text(f'{len(premiums)} Premium(s) - No Duplicates', 'green')
-        if len(deposits_df) != 0 and len(premiums_df) != 0:
-            if len(deposits_df[deposits_df['description'] == 'refundable']) == len(premiums_df[premiums_df['refundable'] == 'yes']):
-                print('good')
-        # for premium in premiums:
-        #     if premium.refundable is True and premium.canceled is False:
-        #         pass
+        pyautogui.click(m3['tour_status'])
+        keyboard.send('c')
+        pyautogui.click(m3['notes'])
+        x, y = m3['title']
+        pyautogui.click(x, y + 435)
+        sc.get_m14_coordinates()
+        keyboard.write('P')
+        pyautogui.click(m14['ok'])
+        progress += 1
+        google_sheet.sheet.update_cell(index, 2, 'x')
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                               region=(514, 245, 889, 566))
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                                   region=(514, 245, 889, 566))
+        x, y = image
+        pyautogui.click(x + 265, y + 475)
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                               region=(514, 245, 889, 566))
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                   region=(514, 245, 889, 566))
+        x, y = image
+        pyautogui.click(x - 20, y + 425)
+        pyautogui.click(1318, 420)

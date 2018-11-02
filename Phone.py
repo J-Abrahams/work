@@ -62,10 +62,10 @@ with open('text_files\\phones\\phone.csv') as csvfile:
         pids = row['PID'].replace('.0', '')
         phone_1 = row['phone_1']
         phone_2 = row['phone_2']
-        if phone_1 != phone_2:
+        if phone_1 != phone_2 and len(phone_1) == len(phone_2):
             search_pid(pids)
             status = enter_phone_number(phone_2)
-            if status == "Error" or len(phone_1) != len(phone_2):
+            if status == "Error":
                 if errors == 0:
                     sheet.append_row([now_str, pids, phone_1, phone_2])
                 else:
@@ -73,6 +73,12 @@ with open('text_files\\phones\\phone.csv') as csvfile:
                 errors += 1
                 # with open('text_files\\phones\\Phone_Errors.txt', 'a') as out:
                 #     out.write('{} {} {}\n'.format(pids, phone_1, phone_2))
+        elif len(phone_1) != len(phone_2):
+            if errors == 0:
+                sheet.append_row([now_str, pids, phone_1, phone_2])
+            else:
+                sheet.append_row(['', pids, phone_1, phone_2])
+            errors += 1
         else:
             duplicate_phone_numbers += 1
         progress += 1
