@@ -56,15 +56,13 @@ def sqlite_select(screenshot, table):
     return name
 
 
-def select_tour(status, date):
-    current_date = cf.get_current_date()
+def select_tour():
     df, pretty_df = cf.create_accommodations_dataframe()
     # print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
     # Returns the top tour that is Showed, not an Audition, and at most a week before the date we entered.
     # tour_number is the index of the correct tour. Ex: 1 if the second tour is the correct one.
     try:
-        tour_number = df[(df.Tour_Status == 'No_Tour') & (df.Tour_Type != 'Audition') &
-                         (df.Date == date)].index[0]
+        tour_number = df[(df.Tour_Status == 'No_Tour') & (df.Tour_Type != 'Audition')].index[0]
         x, y = m2['title']
         pyautogui.doubleClick(x + 469, y + 67 + 13 * tour_number)
 
@@ -84,7 +82,7 @@ def select_tour(status, date):
         print('Couldn\'t find correct tour')
         tour_number = df[(df.Tour_Type != 'Audition') & (df.Tour_Status != 'Error')].index[0]
     try:
-        tour_number = df[(df.Tour_Type != 'Audition') & (df.Date == date)].index[0]
+        tour_number = df[(df.Tour_Type != 'Audition')].index[0]
         x, y = m2['title']
         pyautogui.doubleClick(x + 469, y + 67 + 13 * tour_number)
 
@@ -171,13 +169,13 @@ def select_premium(balance, index):
     if balance == '0' and total_number_of_dep_premiums == 0:
         return 'no note'
     elif balance != '0' and total_number_of_dep_premiums == 0:
-        sheet.update_cell(index, 6, 'No DEPs')
+        sheet.update_cell(index, 4, 'No DEPs')
         return 'no note'
     elif total_number_of_dep_premiums > 1:
-        sheet.update_cell(index, 6, 'Multiple DEPs')
+        sheet.update_cell(index, 4, 'Multiple DEPs')
         return 'no note'
     elif total_number_of_dep_premiums == '0' and f"DEP ${balance} Cash" in premium_list:
-        sheet.update_cell(index, 6, 'Already done')
+        sheet.update_cell(index, 4, 'Already done')
         return 'no note'
     else:
         x, y = m3['title']
@@ -245,19 +243,14 @@ index = 1
 for row in dictionaries:
     status = []
     index += 1
-    pid, date, balance, tour_status, completed = str(row['pid']), str(row['date']), str(row['balance']), row['tour status'], row['completed']
-    if date == '':
-        date = '1/1/1900'
+    pid, balance, completed = str(row['pid']), str(row['balance']), row['completed']
     if completed in ['x', 'X']:
         # if balance not in ['50', '40'] or completed in ['x', 'X']:
         progress += 1
         continue
-    date = datetime.datetime.strptime(date, '%m/%d/%Y')
-    if tour_status == 'No Tour':
-        tour_status = 'No_Tour'
     show_progress(pid, progress, number_of_rows)
     cf.search_pid(pid)
-    select_tour(tour_status, date)
+    select_tour()
     found_premium = select_premium(balance, index)
     if found_premium != 'no note':
         add_note()
@@ -265,5 +258,5 @@ for row in dictionaries:
     pyautogui.click(m3['ok'])
     sc.get_m2_coordinates()
     pyautogui.click(m2['ok'])
-    sheet.update_cell(index, 5, 'x')
+    sheet.update_cell(index, 3, 'x')
     progress += 1

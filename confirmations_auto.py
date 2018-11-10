@@ -35,7 +35,7 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Sergio Espinoza': 'SOL23542', 'Olivia Larimer': 'SOL5463', 'Grayson Corbin': 'SOL1604',
                'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125', 'Deeandra Castillo': 'SOL5495',
                'Kenan Williams': 'SOL27567', 'Jenniffer Abbott': 'SOL5456', 'Met Austin Simon': 'SOL27647',
-               'Dana Durant': 'SOL27561', 'Seo Ra Yoo': 'SOL27551'}
+               'Dana Durant': 'SOL27561', 'Seo Ra Yoo': 'SOL27551', 'Steven Fobbs': 'SOL26725'}
 conn = sqlite3.connect('sqlite.sqlite')
 f = open('text_files\\premiums.p', 'rb')
 premium_dict = pickle.load(f)
@@ -115,7 +115,7 @@ def select_tour(status, attempt_number=1):
     x, y = m2['title']
     current_date = cf.get_current_date()
     df, pretty_df = cf.create_accommodations_dataframe()
-    print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
+    # print(tabulate(pretty_df, headers='keys', tablefmt='psql'))
     # Returns the top tour that is Showed, not an Audition, and at most a week before the date we entered.
     # tour_number is the index of the correct tour. Ex: 1 if the second tour is the correct one.
     if 'c' in status:
@@ -210,7 +210,7 @@ def check_tour_type(number_of_tours, status):
     if (tour_type == 'Day_Drive' or tour_type == 'Canceled' or tour_type == 'Open_Reservation') and number_of_tours > 0:
         cf.print_colored_text(tour_type + ' - ' + str(number_of_tours), 'red')
         errors += 1
-    elif tour_type == 'Minivac' and number_of_tours < 1:
+    elif tour_type == 'Minivac' and 'x' not in status and number_of_tours < 1:
         cf.print_colored_text(tour_type + ' - ' + str(number_of_tours), 'red')
         errors += 1
     else:
@@ -545,7 +545,6 @@ def check_for_dep_premium(deposit_df, premiums):
 def confirm_tour_status(status):
     """Checks that the tour status is correct"""
     global errors
-    tour_status = None
     pyautogui.click(m3['tour'])
     pyautogui.click(m3['accommodations'])
     x, y = m3['title']
@@ -603,10 +602,10 @@ def notes(status):
             errors += 1
             pyautogui.click(x_2 + 200, y_2 + 250)
             return
-        for key, value in sol_numbers.items():
-            words = re.findall(r'\w+', key)
-            if words[1].lower() in result.lower() and words[1].lower() != 'major':
-                print(u"\u001b[31m" + 'IMPORTANT NOTE' + u"\u001b[0m")
+        # for key, value in sol_numbers.items():
+        #     words = re.findall(r'\w+', key)
+        #     if words[1].lower() in result.lower() and words[1].lower() != 'major':
+        #         print(u"\u001b[31m" + 'IMPORTANT NOTE' + u"\u001b[0m")
         if status == 'c' and 'conf' in result.lower():
             print(u"\u001b[32m" + 'Confirm note is present' + u"\u001b[0m")
             pyautogui.click(x_2 + 200, y_2 + 250)
@@ -663,6 +662,7 @@ def enter_personnel(sol, status):
         pyautogui.click(m3['insert_personnel'])
         sc.get_m12_coordinates()
         x, y = m12['title']
+        pyautogui.click(m12['by_personnel_number'])
         screenshot = cf.take_screenshot_change_color(x + 44, y + 16, 9, 27)
         screenshot_2 = sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['by_personnel_number_selected'])
         while screenshot != screenshot_2:
@@ -798,7 +798,7 @@ def automatic_confirmation():
         deposit_df, number_of_refundable_deposits = create_deposit_dataframe()
         try:
             rows, columns = deposit_df.shape
-            print(tabulate(deposit_df, headers='keys', tablefmt='psql'))
+            # print(tabulate(deposit_df, headers='keys', tablefmt='psql'))
             if rows > 1 and deposit_df.Deposit_Type[0] == 'Refundable' and (deposit_df.Price[1] == '9' or
                                                                             deposit_df.Price[1] == '19' or
                                                                             deposit_df.Price[1] == '29'):

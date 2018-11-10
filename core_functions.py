@@ -140,8 +140,8 @@ def take_screenshot_change_color(x, y, width, height, save_file=False):
     white = [255, 255, 255, 255]
     black = [0, 0, 0, 255]
 
-    # if np.all(img == white):
-    #     return 'nothing'
+    if np.all(img == white):
+        return 'nothing'
 
     if np.any(img[:, 0] == 107):
         for x in range(0, width):
@@ -199,7 +199,8 @@ def print_colored_text(text, color):
         print('{}{}{}'.format(u"\u001b[31m", text, u"\u001b[0m"))
     elif color == 'green':
         print('{}{}{}'.format(u"\u001b[32m", text, u"\u001b[0m"))
-
+    elif color == 'yellow':
+        print('{}{}{}'.format(u"\u001b[33;1m", text, u"\u001b[0m"))
 
 def remove_duplicate_pickle_keys():
     """

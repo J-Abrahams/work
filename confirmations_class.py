@@ -8,7 +8,7 @@ import pandas as pd
 import pyautogui
 import clipboard
 import screenshot_data as sc
-from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10
+from screenshot_data import m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13
 import datetime
 from tabulate import tabulate
 import sys
@@ -21,6 +21,7 @@ import logging
 import sqlite3
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
+import timeit
 
 sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'Katherine Albini': 'SOL23521',
                'Katherine England/Abini': 'SOL23521', 'Justin Locke': 'SOL4967', 'Brian Bennett': 'SOL3055',
@@ -31,7 +32,6 @@ sol_numbers = {'Jennifer Gordon': 'SOL2956', 'Katherine England': 'SOL23521', 'K
                'Deonte Keller': 'SOL27498', 'Rayven Alexander': 'SOL24125', 'Deeandra Castillo': 'SOL5495',
                'Kenan Williams': 'SOL27567', 'Jenniffer Abbott': 'SOL5456', 'Met Austin Simon': 'SOL27647',
                'Dana Durant': 'SOL27561', 'Seo Ra Yoo': 'SOL27551'}
-
 
 conn = sqlite3.connect('sqlite.sqlite')
 
@@ -47,6 +47,8 @@ def sqlite_select(screenshot, table):
             name = ''
         elif table == 'premiums':
             name = 'Old Premium'
+        else:
+            name = ''
     return name
 
 
@@ -76,29 +78,30 @@ def select_tour(tours_list, row):
     current_date = cf.get_current_date()
     correct_tour = None
     for tour in tours_list:
-        if row.c in ['x', 'X'] and tour.type != 'Audition' \
+        if 'c' in row.type and tour.type != 'Audition' \
                 and tour.status in ['Showed', 'Confirmed', 'No_Show', 'On_Tour'] \
                 and ((tour.date - current_date) >= datetime.timedelta(days=-1)
                      or (tour.date - current_date) <= datetime.timedelta(days=14)):
             pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
             correct_tour = tour
             break
-        elif row.r in ['x', 'X'] and (tour.type == 'Open_Reservation'
-                                      and tour.date == datetime.datetime.strptime('1/1/1900', "%m/%d/%Y")) \
+        elif 'r' in row.type and (tour.type == 'Open_Reservation'
+                                  and tour.date == datetime.datetime.strptime('1/1/1900', "%m/%d/%Y")) \
                 or (tour.status == 'Rescheduled' and (tour.date - current_date) >= datetime.timedelta(days=0)) \
                 and tour.type != 'Audition':
             pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
             correct_tour = tour
             break
-        elif row.x in ['x', 'X'] and tour.status == 'Canceled' and tour.type != 'Audition':
+        elif 'x' in row.type and tour.status == 'Canceled' and tour.type != 'Audition':
             pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
             correct_tour = tour
             break
-        elif row.u in ['x', 'X'] and tour.type == 'Minivac' and ((tour.date - current_date) >= datetime.timedelta(days=-1)):
+        elif 'u' in row.type and tour.type == 'Minivac' and (
+                (tour.date - current_date) >= datetime.timedelta(days=-1)):
             pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
             correct_tour = tour
             break
-        elif row.t in ['x', 'X'] and tour.type == 'Day_Drive' \
+        elif 't' in row.type and tour.type == 'Day_Drive' \
                 and ((tour.date - current_date) >= datetime.timedelta(days=-1)):
             pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
             correct_tour = tour
@@ -106,10 +109,53 @@ def select_tour(tours_list, row):
     if correct_tour is None:
         for tour in tours_list:
             if tour.type != 'Audition' and tour.status != 'Error':
-                print('Couldn\'t find correct tour')
+                cf.print_colored_text('Couldn\'t find correct tour', 'yellow')
                 pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
                 correct_tour = tour
                 break
+    # Checks if "You need to change sites" message comes up
+    # Messed up here and had to make it confusing
+    screen_shot = None
+    while screen_shot == sc.no_popup or screen_shot is None:
+        with mss.mss() as sct:
+            monitor = {'top': 507, 'left': 941, 'width': 23, 'height': 13}
+            im = sct.grab(monitor)
+            screen_shot = str(mss.tools.to_png(im.rgb, im.size))
+    if screen_shot != sc.no_incorrect_site:
+        pyautogui.click(m2['yes_change_sites'])
+    return correct_tour
+
+
+def select_tour_fast(tour, row):
+    x, y = m2['title']
+    current_date = cf.get_current_date()
+    correct_tour = None
+    if 'c' in row.type and tour.type != 'Audition' \
+            and tour.status in ['Showed', 'Confirmed', 'No_Show', 'On_Tour'] \
+            and (((tour.date - current_date) >= datetime.timedelta(days=-1)
+                  or (tour.date - current_date) <= datetime.timedelta(days=14))
+                 or (tour.site == '8' and (tour.date - current_date) >= datetime.timedelta(days=-1))):
+        pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
+        correct_tour = tour
+    elif 'r' in row.type and (tour.type == 'Open_Reservation'
+                              and tour.date == datetime.datetime.strptime('1/1/1900', "%m/%d/%Y")) \
+            or (tour.status == 'Rescheduled' and (tour.date - current_date) >= datetime.timedelta(days=0)) \
+            and tour.type != 'Audition':
+        pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
+        correct_tour = tour
+    elif 'x' in row.type and tour.status == 'Canceled' and tour.type != 'Audition':
+        pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
+        correct_tour = tour
+    elif 'u' in row.type and tour.type == 'Minivac' and (
+            (tour.date - current_date) >= datetime.timedelta(days=-1)):
+        pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
+        correct_tour = tour
+    elif 't' in row.type and tour.type == 'Day_Drive' \
+            and ((tour.date - current_date) >= datetime.timedelta(days=-1)):
+        pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
+        correct_tour = tour
+    if correct_tour is None:
+        return correct_tour
     # Checks if "You need to change sites" message comes up
     # Messed up here and had to make it confusing
     screen_shot = None
@@ -181,12 +227,147 @@ def count_premiums():
     return number_of_premiums
 
 
+def check_tour_status(tour, row):
+    if 'c' in row.type and tour.status not in ['Confirmed', 'Showed', 'On_Tour', 'No_Show']:
+        print(u"\u001b[33;1m" + 'TOUR STATUS MIGHT BE INCORRECT' + u"\u001b[0m")
+    elif 'r' in row.type and tour.status not in ['Rescheduled', 'No_Tour']:
+        print(u"\u001b[33;1m" + 'TOUR STATUS MIGHT BE INCORRECT' + u"\u001b[0m")
+    elif 'x' in row.type and tour.status not in ['Canceled']:
+        print(u"\u001b[33;1m" + 'TOUR STATUS MIGHT BE INCORRECT' + u"\u001b[0m")
+    else:
+        cf.print_colored_text(f'Tour Status - {tour.status}', 'green')
+
+
+def count_items_in_deposit():
+    sc.get_m6_coordinates()
+    number_of_deposit_items = 0
+    x, y = m6['title']
+    while True:
+        screenshot = cf.take_screenshot_change_color(x + 339, y + 189, 10, 8)
+        if screenshot == "nothing":
+            return number_of_deposit_items
+        else:
+            number_of_deposit_items += 1
+            y += 13
+
+
+def apply_to_mv(deposit_df):
+    pyautogui.click(m3['tour_packages'])
+    pyautogui.click(m3['deposit_1'])
+    pyautogui.click(m3['change_deposit'])
+    deposit_item_amount = count_items_in_deposit()
+    sc.get_m6_coordinates()
+    x, y = m6['deposit_1']
+    y = y + 13 * (deposit_item_amount - 1)
+    pyautogui.click(x, y)
+    keyboard.send('alt + v')
+    sc.get_m7_coordinates()
+    pyautogui.doubleClick(m7['reference'])
+    keyboard.press_and_release('ctrl + c')
+    time.sleep(0.5)
+    old_reference = clipboard.paste()
+    old_reference = old_reference.upper()
+    if old_reference[0] != 'D':
+        sys.exit("Wrong Reference")
+    new_reference = old_reference.replace("D-", "U-")
+    clipboard.copy(str(new_reference))
+    pyautogui.click(m7['cancel'])
+    sc.get_m6_coordinates()
+    pyautogui.click(m6['description'])
+    keyboard.send('ctrl + z')
+    keyboard.send('ctrl + c')
+    r = Tk()
+    old_description = r.selection_get(selection="CLIPBOARD")
+    if 'AMS' in old_description:
+        keyboard.write('AMS/Minivac')
+    pyautogui.click(m6['payment'])
+    sc.get_m8_coordinates()
+    pyautogui.click(m8['transaction_code'])
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\apply_to_mv.png',
+                                           region=(136, 652, 392, 247))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\apply_to_mv.png',
+                                               region=(136, 652, 392, 247))
+    pyautogui.click(image)
+    pyautogui.click(m8['reference'])
+    keyboard.write('APPLY TO MV')
+    pyautogui.click(m8['ok'])
+    time.sleep(0.3)
+    pyautogui.click(880, 565)
+    pyautogui.click(m6['payment'])
+    sc.get_m8_coordinates()
+    time.sleep(0.3)
+    pyautogui.click(m8['transaction_code'])
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\ams_credit_payment.png',
+                                           region=(136, 652, 392, 247))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\ams_credit_payment.png',
+                                               region=(136, 652, 392, 247))
+    pyautogui.click(image)
+    pyautogui.doubleClick(m8['amount'])
+    keyboard.write(deposit_df.Price[0])
+    pyautogui.click(m8['reference'])
+    keyboard.write(new_reference)
+    cf.pause('Ok?')
+    pyautogui.click(m8['ok'])
+    sc.get_m6_coordinates()
+    pyautogui.click(m6['ok'])
+    print('Applied Refundable Deposit to Minivac')
+    deposit_df.Deposit_Type[0] = 'Non_Refundable'
+
+
+def enter_personnel(sol, row):
+    sc.get_m3_coordinates()
+    for i in row.type:
+        pyautogui.click(m3['personnel'])
+        pyautogui.click(m3['insert_personnel'])
+        sc.get_m12_coordinates()
+        x, y = m12['title']
+        screenshot = cf.take_screenshot_change_color(x + 44, y + 16, 9, 27)
+        screenshot_2 = sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['by_personnel_number_selected'])
+        test = 0
+        while screenshot != screenshot_2:
+            pyautogui.click(m12['by_personnel_number'])
+            screenshot = cf.take_screenshot_change_color(x + 44, y + 16, 9, 27)
+            screenshot_2 = sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['by_personnel_number_selected'])
+            test += 1
+            if test >= 5:
+                print(x, y, m12['by_personnel_number'])
+        keyboard.write(sol)
+        pyautogui.click(m12['select'])
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu.png',
+                                               region=(514, 245, 889, 566))
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_personnel_titles_menu'
+                                                   '.png', region=(514, 245, 889, 566))
+        x_3, y_3 = image
+        pyautogui.click(x_3 + 75, y_3 + 150)  # Close
+        sc.get_m13_coordinates()
+        if cf.take_screenshot_change_color(m13['title'][0] + 26, m13['title'][1] + 73, 45, 15) != \
+                sqlite_get_item("SELECT screenshot FROM misc WHERE name=?", ['confirmer']):
+            pyautogui.click(m13['title_personnel'])
+            keyboard.write("cc")
+        pyautogui.click(m13['type'])
+        if i == 'c':
+            keyboard.write("cc")
+        elif i == 'r':
+            keyboard.write("r")
+        elif i == 'x':
+            keyboard.write("c")
+        elif i == 'u':
+            keyboard.write("u")
+        elif i == 't':
+            keyboard.write("t")
+        pyautogui.click(m13['ok'])
+
+
 class ConfirmationSheet:
 
     def __init__(self, sheet_name):
         self.sheet = self.open_sheet(sheet_name)
 
-    def open_sheet(self, sheet_name):
+    @staticmethod
+    def open_sheet(sheet_name):
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         creds = ServiceAccountCredentials.from_json_keyfile_name('Phone-6ad41718c799.json', scope)
         client = gspread.authorize(creds)
@@ -204,13 +385,10 @@ class ConfirmationSheet:
 
 class Row:
 
-    def __init__(self, pid, c, r, x, u, t, completed):
+    def __init__(self, pid, type, index, completed):
         self.pid = str(pid)
-        self.c = c
-        self.r = r
-        self.x = x
-        self.u = u
-        self.t = t
+        self.type = type
+        self.index = index
         self.completed = completed
 
     def search_pid(self):
@@ -300,7 +478,7 @@ class M2Tour:
 
 class Tour:
 
-    def __init__(self, chosen_tour, row):
+    def __init__(self, chosen_tour):
         self.campaign = None
         self.type = chosen_tour.type
         self.status = chosen_tour.status
@@ -309,7 +487,8 @@ class Tour:
         self.wave = self.wave()
         self.site = chosen_tour.site
 
-    def wave(self):
+    @staticmethod
+    def wave():
         sc.get_m3_coordinates()
         x, y = m3['title']
         conn = sqlite3.connect('sqlite.sqlite')
@@ -345,7 +524,7 @@ class Deposit:
             return description
         except TypeError:
             clipboard.copy('bad')
-            pyautogui.click(x + 266, y + 68 + 13 * self.index)
+            pyautogui.click(x + 272, y + 68 + 13 * self.index)
             pyautogui.click(m3['change_deposit'])
             sc.get_m6_coordinates()
             pyautogui.click(m6['description'])
@@ -374,7 +553,8 @@ class Deposit:
 
     def amount(self):
         x, y = m3['title']
-        hundreds = str(sqlite_select(cf.take_screenshot_change_color(x + 467, y + 69 + self.index * 13, 6, 9), 'numbers'))
+        hundreds = str(
+            sqlite_select(cf.take_screenshot_change_color(x + 467, y + 69 + self.index * 13, 6, 9), 'numbers'))
         tens = str(sqlite_select(cf.take_screenshot_change_color(x + 473, y + 69 + self.index * 13, 6, 9), 'numbers'))
         ones = str(sqlite_select(cf.take_screenshot_change_color(x + 479, y + 69 + self.index * 13, 6, 9), 'numbers'))
         if hundreds == 'nothing':
@@ -399,12 +579,8 @@ class Premium:
         return premium
 
     def canceled(self):
-        global conn
-        c = conn.cursor()
         x, y = m3['title']
         screenshot = cf.take_screenshot_change_color(x + 433, y + 60 + self.index * 13, 10, 8)
-        # c.execute("SELECT screenshot FROM premiums WHERE name=?", ['Did Not Issue'])
-        # did_not_issue = c.fetchone[0]
         if screenshot == 'nothing':
             return 'no'
         else:
@@ -416,6 +592,7 @@ class Premium:
         else:
             return 'no'
 
+
 if __name__ == "__main__":
     confirmation_sheet = ConfirmationSheet("Confirmation Sheet")
 
@@ -423,14 +600,15 @@ if __name__ == "__main__":
     list_of_rows = confirmation_sheet.read_rows()
     number_of_rows = confirmation_sheet.count_rows()
 
+    index = 1
     for row in list_of_rows:
-
+        index += 1
         # Changes the sol number if the column 'Sol' is not empty.
         if row['Sol'] != '':
             sol = sol_numbers[row['Sol']]
 
         # Create a row object.
-        row = Row(row['PID'], row['conf'], row['rxl'], row['cxl'], row['ug'], row['tav'], row['Completed'])
+        row = Row(row['PID'], row['conf'], index, row['Completed'])
 
         # Skips row if the completed column is checked off.
         if row.completed in ['x', 'X']:
@@ -443,19 +621,24 @@ if __name__ == "__main__":
         row.double_check_pid()
         # For each tour that is listed for the PID on M2, creates an instance of M2Tour and adds it to the list tours.
         tours = []
+        correct_tour = None
         for i in range(8):
             tour = M2Tour(row, i)
+            print(tour.site)
             if tour.date == pd.to_datetime('1/1/2000') and tour.type == '' and tour.status == '':
                 break
+            elif tour.type == 'Audition':
+                continue
             else:
-                tours.append(tour)
-                print(tour.date, tour.type, tour.status, tour.site)
-        # Selects correct tour
-        correct_tour = select_tour(tours, row)
-
+                correct_tour = select_tour_fast(tour, row)
+                if correct_tour is not None:
+                    break
+            tours.append(tour)
+        if correct_tour is None:
+            correct_tour = select_tour(tours, row)
         # Creates a tour object with all the face info.
         sc.get_m3_coordinates()
-        tour = Tour(correct_tour, row)
+        tour = Tour(correct_tour)
 
         # Count number of Accommodations
         number_of_accommodations, number_of_canceled_accommodations = count_accommodations()
@@ -475,34 +658,81 @@ if __name__ == "__main__":
         for deposit in deposits:
             if deposit.type == 'refundable':
                 number_of_refundable_deposits += 1
-            print('1', deposit.amount, deposit.type)
+            print(deposit.amount, deposit.type)
 
-        # Count number of Premiums
+        # Count number of premiums.
         number_of_premiums = count_premiums()
+
+        # Creates a list of premiums and a dataframe of premiums.
         premiums = []
         premiums_df = []
         for i in range(number_of_premiums):
             premium = Premium(i)
             premiums.append(premium)
-            premiums_df.append({'premium': premium.name, 'refundable': premium.refundable, 'canceled': premium.canceled})
+            premiums_df.append({'premium': premium.name, 'refundable': premium.refundable,
+                                'canceled': premium.canceled})
         premiums_df = pd.DataFrame(premiums_df)
         print(premiums_df)
         for premium in premiums:
             print(premium.name, premium.canceled, premium.refundable)
 
-        if (tour.status in ['canceled', 'no_tour'] and number_of_accommodations == 0) or \
+        enter_personnel(sol, row)
+
+        # Checks that the tour status is correct.
+        if any(letter in row.type for letter in ['c', 'r', 'x']):
+            check_tour_status(tour, row)
+
+        # Checks if the tour type and number of accommodations are correct.
+        if (tour.status in ['Canceled', 'No_Tour'] and number_of_accommodations == 0) or \
                 (tour.type == 'Minivac' and number_of_accommodations > 0) or \
                 (tour.type == 'Day_drive' and number_of_accommodations == 0):
             cf.print_colored_text(f'{tour.type} - {str(number_of_accommodations)}', 'green')
         else:
             cf.print_colored_text(f'{tour.type} - {str(number_of_accommodations)}', 'red')
+
+        # Makes sure tav is only for Day Drives and upgrades for Minivacs
+        if tour.type == 'Minivac' and 't' in row.type:
+            cf.print_colored_text('TAVS are only for Day Drives.', 'red')
+        elif tour.type == 'Day_drive' and 'u' in row.type:
+            cf.print_colored_text('Can\'t upgrade day drive', 'red')
+
+        # Checks if you need to apply to mv.
+        if (number_of_deposits > 1) and (deposits_df.iloc[0]['description'] == 'refundable') and \
+                deposits_df.iloc[1]['amount'] in ['9', '19', '29']:
+            cf.print_colored_text('Apply to MV', 'yellow')
+
+        # Checks for duplicate premiums
         if len(premiums) != len(set(premiums)):
             cf.print_colored_text(f'{len(premiums)} Premium(s) - DUPLICATES', 'red')
         else:
             cf.print_colored_text(f'{len(premiums)} Premium(s) - No Duplicates', 'green')
+
+        # Checks if the number of refundable deposits and premiums matches
         if len(deposits_df) != 0 and len(premiums_df) != 0:
-            if len(deposits_df[deposits_df['description'] == 'refundable']) == len(premiums_df[premiums_df['refundable'] == 'yes']):
-                print('good')
-        # for premium in premiums:
-        #     if premium.refundable is True and premium.canceled is False:
-        #         pass
+            number_of_refundable_deposits = len(deposits_df[deposits_df['description'] == 'refundable'])
+            number_of_refundable_premiums = len(premiums_df[premiums_df['refundable'] == 'yes'])
+            if number_of_refundable_deposits == number_of_refundable_premiums:
+                cf.print_colored_text(f'{number_of_refundable_deposits} Refundable Deposit(s) - '
+                                      f'{number_of_refundable_premiums} Refundable Premium(s)', 'green')
+            else:
+                cf.print_colored_text(f'{number_of_refundable_deposits} Refundable Deposit(s) - '
+                                      f'{number_of_refundable_premiums} Refundable Premium(s)', 'red')
+
+        confirmation_sheet.sheet.update_cell(index, 8, 'x')
+        cf.pause("Everything ok?")
+        # if errors > 0 or tour_type == 'Minivac':
+        # pause("Everything ok?")
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                               region=(514, 245, 889, 566))
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_menu.png',
+                                                   region=(514, 245, 889, 566))
+        x, y = image
+        pyautogui.click(x + 265, y + 475)
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                               region=(514, 245, 889, 566))
+        while image is None:
+            image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\sc_tour_date.png',
+                                                   region=(514, 245, 889, 566))
+        x, y = image
+        pyautogui.click(x - 20, y + 425)

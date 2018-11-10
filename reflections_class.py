@@ -34,14 +34,6 @@ def sqlite_select(screenshot, table):
     return name
 
 
-def open_sheet(sheet_name='Reflections'):
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name('Phone-6ad41718c799.json', scope)
-    client = gspread.authorize(creds)
-    sheet = client.open(sheet_name).sheet1
-    return sheet
-
-
 def count_rows(sheet):
     dictionaries = sheet.get_all_records()
     number_of_rows = len(sheet.get_all_records())
@@ -170,10 +162,11 @@ class M2Tour:
     def __init__(self, row, tour_number):
         self.row = row
         self.index = tour_number
-        self.date = self.tour_date()
         self.type = self.tour_type()
-        self.status = self.tour_status()
-        self.site = self.site()
+        if self.type != 'Audition':
+            self.date = self.tour_date()
+            self.status = self.tour_status()
+            self.site = self.site()
 
     def tour_date(self):
         x, y = m2['title']
@@ -216,8 +209,13 @@ class M2Tour:
         c = conn.cursor()
         screenshot = cf.take_screenshot_change_color(x + 687, y + 64 + self.index * 13, 6, 9)
         if screenshot != 'nothing':
-            c.execute("SELECT name FROM numbers WHERE screenshot=?", [screenshot])
-            tour_site = str(c.fetchone()[0])
+            try:
+                c.execute("SELECT name FROM numbers WHERE screenshot=?", [screenshot])
+                tour_site = str(c.fetchone()[0])
+            except TypeError:
+                screenshot = cf.take_screenshot_change_color(x + 671, y + 64 + 0 * 13, 6, 9)
+                c.execute("SELECT name FROM numbers WHERE screenshot=?", [screenshot])
+                tour_site = str(c.fetchone()[0])
             return tour_site
 
 
@@ -337,7 +335,10 @@ if __name__ == "__main__":
         tours = []
         for i in range(8):
             tour = M2Tour(row, i)
-            if tour.date == pd.to_datetime('1/1/2000') and tour.type == '' and tour.status == '':
+            print(tour.index, tour.type)
+            if tour.type == 'Audition':
+                continue
+            elif tour.date == pd.to_datetime('1/1/2000') and tour.type == '' and tour.status == '':
                 break
             else:
                 tours.append(M2Tour(row, i))
