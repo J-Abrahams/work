@@ -40,6 +40,27 @@ def count_rows(sheet):
     return number_of_rows, dictionaries
 
 
+def select_tour_fast(tour, row):
+    x, y = m2['title']
+    correct_tour = None
+    if tour.status == 'Showed' and tour.type != 'Audition' and ((row.date - tour.date) <= datetime.timedelta(days=7)):
+        pyautogui.doubleClick(x + 469, y + 67 + 13 * tour.index)
+        correct_tour = tour
+    if correct_tour is None:
+        return correct_tour
+    # Checks if "You need to change sites" message comes up
+    # Messed up here and had to make it confusing
+    screen_shot = None
+    while screen_shot == sc.no_popup or screen_shot is None:
+        with mss.mss() as sct:
+            monitor = {'top': 507, 'left': 941, 'width': 23, 'height': 13}
+            im = sct.grab(monitor)
+            screen_shot = str(mss.tools.to_png(im.rgb, im.size))
+    if screen_shot != sc.no_incorrect_site:
+        pyautogui.click(m2['yes_change_sites'])
+    return correct_tour
+
+
 def select_tour(attempt_number, date):
     x, y = m2['title']
     df, pretty_df = cf.create_accommodations_dataframe()
@@ -99,6 +120,26 @@ def count_deposits():
         else:
             number_of_deposits += 1
             y += 13
+
+
+def count_premiums():
+    number_of_premiums = 0
+    sc.get_m3_coordinates()
+    x, y = m3['title']
+    pyautogui.click(m3['premiums'])
+    image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
+                                           region=(514, 245, 889, 566))
+    while image is None:
+        image = pyautogui.locateCenterOnScreen('C:\\Users\\Jared.Abrahams\\Screenshots\\issued.png',
+                                               region=(514, 245, 889, 566))
+    while True:
+        premium = cf.take_screenshot_change_color(x + 342, y + 60, 80, 11)
+        if premium == 'nothing':
+            break
+        else:
+            number_of_premiums += 1
+            y += 13
+    return number_of_premiums
 
 
 class ReflectionsSheet:
@@ -255,10 +296,9 @@ class Deposit:
         self.type = self.deposit_type()
         self.amount = self.amount()
 
-
     def description(self):
         x, y = m3['title']
-        screenshot = cf.take_screenshot_change_color(x + 266, y + 68, 154, 10)
+        screenshot = cf.take_screenshot_change_color(x + 266, y + 68 + 13 * self.index, 154, 10)
         conn = sqlite3.connect('sqlite.sqlite')
         c = conn.cursor()
         try:
@@ -267,7 +307,7 @@ class Deposit:
             return description
         except TypeError:
             clipboard.copy('bad')
-            pyautogui.click(x + 266, y + 68 + 13 * self.index)
+            pyautogui.click(x + 272, y + 68 + 13 * self.index)
             pyautogui.click(m3['change_deposit'])
             sc.get_m6_coordinates()
             pyautogui.click(m6['description'])
@@ -280,25 +320,23 @@ class Deposit:
                 keyboard.send('ctrl + z')
                 keyboard.send('ctrl + c')
                 description = r.selection_get(selection="CLIPBOARD")
-            pyautogui.click(m6['ok'])
             return description
-
 
     def deposit_type(self):
         if 'refunded' in self.description.lower():
-            deposit_type = 'Refunded'
+            deposit_type = 'refunded'
         elif 'minivac' in self.description.lower() or 'apply' in self.description.lower():
-            deposit_type = 'Non_Refundable'
+            deposit_type = 'non_refundable'
         elif 'ref' in self.description.lower():
-            deposit_type = 'Refundable'
+            deposit_type = 'refundable'
         else:
-            deposit_type = 'Non_Refundable'
+            deposit_type = 'non_refundable'
         return deposit_type
-
 
     def amount(self):
         x, y = m3['title']
-        hundreds = str(sqlite_select(cf.take_screenshot_change_color(x + 467, y + 69 + self.index * 13, 6, 9), 'numbers'))
+        hundreds = str(
+            sqlite_select(cf.take_screenshot_change_color(x + 467, y + 69 + self.index * 13, 6, 9), 'numbers'))
         tens = str(sqlite_select(cf.take_screenshot_change_color(x + 473, y + 69 + self.index * 13, 6, 9), 'numbers'))
         ones = str(sqlite_select(cf.take_screenshot_change_color(x + 479, y + 69 + self.index * 13, 6, 9), 'numbers'))
         if hundreds == 'nothing':
@@ -307,6 +345,50 @@ class Deposit:
             tens = ''
         amount = hundreds + tens + ones
         return amount
+
+
+class Premium:
+
+    def __init__(self, index):
+        self.index = index
+        self.name = self.name()
+        self.canceled = self.canceled()
+        self.refundable = self.refundable()
+        if self.refundable == 'yes':
+            self.amount == self.amount()
+        else:
+            self.amount == None
+
+    def name(self):
+        x, y = m3['title']
+        premium = sqlite_select(cf.take_screenshot_change_color(x + 342, y + 60 + self.index * 13, 80, 11), 'premiums')
+        return premium
+
+    def canceled(self):
+        x, y = m3['title']
+        screenshot = cf.take_screenshot_change_color(x + 433, y + 60 + self.index * 13, 10, 8)
+        if screenshot == 'nothing':
+            return 'no'
+        else:
+            return 'yes'
+
+    def refundable(self):
+        if 'DEP' in self.name:
+            return 'yes'
+        else:
+            return 'no'
+
+    def amount(self):
+        if '20' in self.name:
+            return 20
+        elif '40' in self.name:
+            return 40
+        elif '50' in self.name:
+            return 50
+        elif '99' in self.name:
+            return 99
+        elif '100' in self.name:
+            return 100
 
 
 if __name__ == "__main__":
@@ -346,26 +428,37 @@ if __name__ == "__main__":
         # Selects correct tour
         correct_tour = select_tour(tours, row)
 
-        # Creates a tour object with all the face info.
+        # Counts number of premiums
         sc.get_m3_coordinates()
-        tour = Tour(correct_tour, row)
+        number_of_premiums = count_premiums()
 
-        # Count number of Accommodations
-        number_of_accommodations, number_of_canceled_accommodations = count_accommodations()
+        # Creates a list of premiums and a dataframe of premiums.
+        premiums = []
+        premiums_df = []
+        for i in range(number_of_premiums):
+            premium = Premium(i)
+            premiums.append(premium)
+            premiums_df.append({'premium': premium.name, 'refundable': premium.refundable,
+                                'canceled': premium.canceled, 'amount': premium.amount})
+        premiums_df = pd.DataFrame(premiums_df)
+        print(premiums_df)
 
         # Count number of Deposits
         number_of_deposits = count_deposits()
         deposits = []
+        deposits_df = []
         for i in range(number_of_deposits):
             deposit = Deposit(i)
+            if deposit.amount in premiums_df['amount']:
+                print('yes')
             deposits.append(deposit)
-
-        print(tour.status, tour.type, tour.wave)
+            deposits_df.append({'description': deposit.type, 'amount': deposit.amount})
+        deposits_df = pd.DataFrame(deposits_df)
+        print(deposits_df)
+        number_of_refundable_deposits = 0
         for deposit in deposits:
+            if deposit.type == 'refundable':
+                number_of_refundable_deposits += 1
             print(deposit.amount, deposit.type)
-        if (tour.status in ['canceled', 'no_tour'] and number_of_accommodations == 0) or \
-                (tour.type == 'minivac' and number_of_accommodations > 0) or \
-                (tour.type == 'Day_drive' and number_of_accommodations == 0):
-            print(cf.print_colored_text(f'{tour.type} - {str(number_of_accommodations)}', 'green'))
-        else:
-            print(cf.print_colored_text(f'{tour.type} - {str(number_of_accommodations)}', 'red'))
+
+

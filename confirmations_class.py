@@ -505,6 +505,12 @@ class Tour:
         return wave
 
 
+class Accommodation:
+
+    def __init__(self, index):
+        self.index = index
+
+
 class Deposit:
 
     def __init__(self, index):
@@ -702,15 +708,19 @@ if __name__ == "__main__":
             cf.print_colored_text('Apply to MV', 'yellow')
 
         # Checks for duplicate premiums
-        if len(premiums) != len(set(premiums)):
-            cf.print_colored_text(f'{len(premiums)} Premium(s) - DUPLICATES', 'red')
-        else:
-            cf.print_colored_text(f'{len(premiums)} Premium(s) - No Duplicates', 'green')
+        try:
+            if len(premiums_df[premiums_df.duplicated()]) > 0:
+                cf.print_colored_text(f'{len(premiums)} Premium(s) - DUPLICATES', 'red')
+            else:
+                cf.print_colored_text(f'{len(premiums)} Premium(s) - No Duplicates', 'green')
+        except ValueError:
+            cf.print_colored_text('No Premiums', 'green')
 
         # Checks if the number of refundable deposits and premiums matches
         if len(deposits_df) != 0 and len(premiums_df) != 0:
             number_of_refundable_deposits = len(deposits_df[deposits_df['description'] == 'refundable'])
-            number_of_refundable_premiums = len(premiums_df[premiums_df['refundable'] == 'yes'])
+            number_of_refundable_premiums = len(premiums_df[(premiums_df['refundable'] == 'yes') &
+                                                            (premiums_df['canceled'] == 'no')])
             if number_of_refundable_deposits == number_of_refundable_premiums:
                 cf.print_colored_text(f'{number_of_refundable_deposits} Refundable Deposit(s) - '
                                       f'{number_of_refundable_premiums} Refundable Premium(s)', 'green')
